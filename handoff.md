@@ -1,12 +1,12 @@
 # FlashDock — Agent Handoff Document
 
 **Date:** 2026-10-12  
-**Current Phase:** **Phase 16: Production Hardening, System Self-Test, Crash Reporter & v1.0.0 Release (100% Core & Extended Scope Completed)**  
+**Current Phase:** **Production Hardening, System Self-Test, Laptop Setup Wizard, Hardware Key Controls & UI Decluttering (100% Scope Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — One-Click Personal Desktop Android Service Workstation  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
-**Distribution:** Standalone Windows Executable (`dist/FlashDock/FlashDock.exe`, 2.67 MB) & Release Archive (`dist/FlashDock-v1.0.0-windows-x64.zip`, 56.16 MB)  
-**Test Suite:** **378 Passed Unit & Integration Tests across 39 test modules (`python -m pytest tests/`, 100% success rate)**  
+**Distribution:** Standalone Windows Executable (`dist/FlashDock/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.0.0-windows-x64.zip`)  
+**Test Suite:** **385 Passed Unit & Integration Tests across 41 test modules (`python -m pytest tests/`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
 ---
@@ -24,7 +24,7 @@ FlashDock is an Apple Human Interface Guidelines (HIG)-styled desktop Android fl
 
 ---
 
-## 2. Complete Phase Breakdown (Phases 1–16)
+## 2. Complete Phase Breakdown (Phases 1–16 + Extended UX & Workstation Setup)
 
 ### Phase 1–3: Core Engine & Device Detection
 - **ADB & Fastboot wrappers** (`flashdock/tools/adb.py`, `flashdock/tools/fastboot.py`) with timeout management, device enumeration, and property parsing.
@@ -85,26 +85,27 @@ FlashDock is an Apple Human Interface Guidelines (HIG)-styled desktop Android fl
 ### Phase 14: Play Integrity Fixer & Fingerprint Spoofer
 - **Integrity Engine** (`flashdock/core/integrity.py`): Play Integrity API check guidance, PIF `pif.json` manager, custom `keybox.xml` injector, and Zygisk module injection.
 - **Integrity Screen** (`flashdock/ui/screens/integrity_screen.py`): 4-tab dashboard for device status, fingerprint manager, keybox injector, and certification instructions.
+- **Banking Protection Redesign**: Completely overhauled Banking / Root Hiding Guard tab into a spacious, scrollable 2-column card layout, fixing the crowded and overlapping button bugs.
 
 ### Phase 15: Logs, Telemetry & Interactive Troubleshooting Center
 - **Troubleshooter Engine** (`flashdock/core/troubleshooter.py`): automated ADB daemon restart, Windows Device Manager launcher (`devmgmt.msc`), device logcat dump & buffer clearing, and kernel dmesg capture.
 - **Logs & Help Screen** (`flashdock/ui/screens/logs_help_screen.py`): 4-tab screen for application logs, device logcat, guided interactive triage cards, and partition architecture reference.
 
-### Phase 16: Production Hardening, System Self-Test, Crash Reporter & Release Packaging
-- **System Self-Tester** (`flashdock/core/selftest.py`): automated diagnostics verifying Python version, OS environment, filesystem read/write permissions, binary toolchains (ADB/Fastboot), SQLite cache storage, and network socket connectivity.
-- **Universal Crash Reporter** (`flashdock/core/crash_reporter.py`): intercepts unhandled exceptions in Python runtime and Qt event loops (`sys.excepthook` and `threading.excepthook`), masks device serials (`[SERIAL]`) and username paths (`[USER]`), writes diagnostic crash dumps to `data/logs/crash_<stamp>.log`.
-- **Apple HIG Dialogs**:
-  - `SelfTestDialog` (`flashdock/ui/widgets/selftest_dialog.py`): system health cards, status badges (PASS / WARN / FAIL), report copier, and re-run.
-  - `CrashDialog` (`flashdock/ui/widgets/crash_dialog.py`): non-fatal recovery modal with masked traceback viewer, logs folder opener, and clean restart.
-- **Release Automation Pipeline** (`scripts/release_build.py`):
-  - Automatically runs and validates all 378 unit tests.
-  - Compiles PyInstaller standalone distribution (`dist/FlashDock/FlashDock.exe`, 2.67 MB).
-  - Creates release distribution archive (`dist/FlashDock-v1.0.0-windows-x64.zip`, 56.16 MB).
-  - Computes and records SHA-256 hashes in `dist/SHA256SUMS.txt`.
+### Phase 16 & UX Hardening: Production Polish, Setup Wizard & Phone Controls
+- **Laptop & Workstation Setup Wizard** (`flashdock/ui/widgets/setup_wizard_dialog.py`):
+  - 4-step wizard: platform-tools auto-install, OEM Windows driver setup, laptop USB port & sleep best practices, live connection test.
+- **Hardware Phone Controls & Navigation Guide** (`flashdock/ui/widgets/key_guide_dialog.py`):
+  - Physical button combination guide (Vol+, Vol-, Power) for entering Bootloader, Recovery, FastbootD, EDL, and Download modes across Google, Samsung, Xiaomi, OnePlus, Motorola, LG, and MTK.
+  - Sidebar hardware key controls (`🔊 +`, `🔉 -`, `⚡ Pwr`) and modal button launcher.
+- **System Self-Tester & Modal Dialog** (`flashdock/core/selftest.py`, `flashdock/ui/widgets/selftest_dialog.py`):
+  - Dark/light mode Apple HIG cards (`#1C1C1E` dark mode background), fast 2-second timeout, `CREATE_NO_WINDOW` flags preventing hangs.
+- **Scrcpy Guard**: Guarded device property lookups in `scrcpy_dialog.py`, fixing the `NoneType` brand crash when launched without a connected phone.
+- **Telemetry Spam Elimination**: Lowered missing tool runner logging from error to debug and added disk existence guards in device manager cycle.
+- **UI Decluttering**: Removed redundant Quick Access chip row to give the 15 main action cards plenty of breathing room, and broadened the Sort dropdown to 160px min-width to avoid text clipping.
 
 ---
 
-## 3. Workstation Navigation Index (All 15 Tools)
+## 3. Workstation Navigation Index (All Tools & Modals)
 
 | Action ID | Tool Name | Category | Screen / Dialog | Page Index |
 |---|---|---|---|---|
@@ -124,15 +125,17 @@ FlashDock is an Apple Human Interface Guidelines (HIG)-styled desktop Android fl
 | `scrcpy` | Screen Mirror (scrcpy) | Device | `ScrcpyDialog` | Modal Dialog |
 | `logs_help` | Logs & Help | Device | `LogsHelpScreen` | `PAGE_LOGS_HELP = 14` |
 | `selftest` | System Self-Test | Device | `SelfTestDialog` | Modal Dialog |
+| `setup_wizard` | Laptop Setup Wizard | Workstation | `SetupWizardDialog` | Modal Dialog |
+| `key_guide` | Hardware Key Guide | Controls | `HardwareKeyGuideDialog` | Modal Dialog |
 
 ---
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **378 passed in 40.35s** (100% pass rate).
-- **Test Modules**: 39 individual test files in `tests/`.
-- **Standalone Binary**: `dist/FlashDock/FlashDock.exe` (2.67 MB, Exit code 0).
-- **Release Archive**: `dist/FlashDock-v1.0.0-windows-x64.zip` (56.16 MB).
+- **Unit & Integration Tests**: **385 passed in 30.22s** (100% pass rate).
+- **Test Modules**: 41 individual test files in `tests/`.
+- **Standalone Binary**: `dist/FlashDock/FlashDock.exe` (2.70 MB, Exit code 0).
+- **Release Archive**: `dist/FlashDock-v1.0.0-windows-x64.zip` (56.18 MB).
 - **Integrity Hashes**:
-  - `FlashDock.exe`: `44374216b65d19023aceaad28aa7985ed420b227732099b60eaaf6ec3a7d4809`
-  - `Release ZIP`: `9b36b5d121061f9ee9320e8f19348e6c245b9970823a24999feb2453228c17fe`
+  - `FlashDock.exe`: `657d338fde38983cd6604901c090ba1bdbebff30b1f3d4de0d5963a2064a12c8`
+  - `Release ZIP`: `749d2dd3aa68724627c4681c1eaacb78f4a358f429a7ce3ddeed054764a59778`

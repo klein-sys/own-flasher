@@ -93,6 +93,11 @@ class TestADBBinarySearch:
         assert adb.available is True
         assert adb.binary_path == "/fake/adb.exe"
 
+    def test_binary_path_can_be_refreshed_after_tool_update(self):
+        adb = ADB(binary="/old/adb.exe")
+        adb.binary_path = "/new/adb.exe"
+        assert adb.binary_path == "/new/adb.exe"
+
 
 class TestADBDeviceParsing:
     """Test that devices() parses adb output correctly."""

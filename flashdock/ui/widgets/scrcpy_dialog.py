@@ -87,9 +87,14 @@ class ScrcpyDialog(QDialog):
         dev_card.setProperty("cssClass", "card_subtle")
         d_lay = QHBoxLayout(dev_card)
         d_lay.setContentsMargins(12, 10, 12, 10)
-        serial_str = self._device.serial if self._device else "Default Device"
-        model_str = f"{self._device.brand or ''} {self._device.model or ''}".strip() or "Android Device"
-        self._device_lbl = QLabel(f"📱 <b>Target:</b> {model_str}  <span style='color:#8E8E93;'>({serial_str})</span>")
+        if self._device:
+            serial_str = self._device.serial or "Default Device"
+            brand = self._device.brand or ""
+            model = self._device.model or ""
+            model_str = f"{brand} {model}".strip() or "Android Device"
+            self._device_lbl = QLabel(f"📱 <b>Target:</b> {model_str}  <span style='color:#8E8E93;'>({serial_str})</span>")
+        else:
+            self._device_lbl = QLabel("📱 <b>Target:</b> <span style='color:#E5A93C;'>No Device Connected</span> — connect phone via USB")
         d_lay.addWidget(self._device_lbl)
         layout.addWidget(dev_card)
 
@@ -248,7 +253,14 @@ class ScrcpyDialog(QDialog):
 
     @Slot()
     def _on_launch(self) -> None:
-        serial = self._device.serial if self._device else None
+        if not self._device or not self._device.serial:
+            QMessageBox.information(
+                self,
+                "Device Required",
+                "Please connect your Android device via USB with USB Debugging enabled before launching screen mirror.",
+            )
+            return
+        serial = self._device.serial
         stay_awake = self._stay_awake_cb.isChecked()
         turn_screen_off = self._turn_off_cb.isChecked()
         audio = self._audio_cb.isChecked()

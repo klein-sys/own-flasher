@@ -142,3 +142,9 @@ def test_unisoc_flash_pipeline(tmp_path: Path):
     assert transport.stage == 2  # Both FDL1 and FDL2 executed
     assert len(progress_events) >= 1
     assert any(e[0] == "BOOT" for e in progress_events)
+
+
+def test_unisoc_pipeline_without_transport_fails_closed():
+    pipeline = UnisocFlashPipeline()
+    assert pipeline.connect() is False
+    assert pipeline.connected is False

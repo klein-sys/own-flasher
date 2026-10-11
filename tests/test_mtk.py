@@ -133,6 +133,12 @@ def test_brom_manager_connect_and_probe():
     assert brom.connected is False
 
 
+def test_brom_manager_without_transport_fails_closed():
+    brom = MTKBROMManager()
+    assert brom.connect() is False
+    assert brom.connected is False
+
+
 def test_auth_bypass_handler():
     transport = MockMTKTransport(hw_code=0x0766, sla_enabled=True)
     brom = MTKBROMManager(transport=transport)

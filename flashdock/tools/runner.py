@@ -175,7 +175,7 @@ def run_command(
         return_code = -1
         timed_out = True
     except FileNotFoundError:
-        log.error("Binary not found: %s", cmd[0])
+        log.debug("Binary not found: %s", cmd[0])
         stdout = ""
         stderr = f"Binary not found: {cmd[0]}"
         return_code = -1

@@ -27,6 +27,35 @@ from flashdock.ui.widgets.crash_dialog import CrashDialog
 log = get_logger(__name__)
 
 
+def _bootstrap_bundled_tools() -> None:
+    """Ensure bundled platform-tools are present in TOOLS_DIR."""
+    import shutil
+    from pathlib import Path
+    from flashdock.constants import TOOLS_DIR
+
+    target_pt = TOOLS_DIR / "platform-tools"
+    exe_name = "adb.exe" if sys.platform == "win32" else "adb"
+    if (target_pt / exe_name).is_file():
+        return
+
+    candidates = [
+        Path(sys.executable).parent / "data" / "tools" / "platform-tools",
+        Path(sys.executable).parent / "tools" / "platform-tools",
+        Path(__file__).resolve().parent.parent / "data" / "tools" / "platform-tools",
+    ]
+    for c in candidates:
+        if (c / exe_name).is_file():
+            try:
+                target_pt.mkdir(parents=True, exist_ok=True)
+                for item in c.iterdir():
+                    if item.is_file():
+                        shutil.copy2(item, target_pt / item.name)
+                log.info("Bootstrapped platform-tools from %s to %s", c, target_pt)
+                return
+            except Exception as e:
+                log.warning("Could not bootstrap platform-tools: %s", e)
+
+
 def run() -> int:
     """Entry point for the GUI application.  Returns the exit code."""
 
@@ -58,6 +87,9 @@ def run() -> int:
             pass
 
     set_crash_dialog_callback(_show_crash_modal)
+
+    # ---- Bootstrap Bundled Tools -------------------------------------------
+    _bootstrap_bundled_tools()
 
     # ---- Tools -------------------------------------------------------------
     dry_run = config.dry_run

@@ -67,6 +67,8 @@ from flashdock.ui.widgets.side_terminal import SideTerminalHandler, SideTerminal
 from flashdock.ui.widgets.status_bar import StatusBarWidget
 from flashdock.ui.widgets.workflow_guide import WorkflowGuideDialog
 from flashdock.ui.widgets.selftest_dialog import SelfTestDialog
+from flashdock.ui.widgets.key_guide_dialog import HardwareKeyGuideDialog
+from flashdock.ui.widgets.setup_wizard_dialog import SetupWizardDialog
 
 log = get_logger(__name__)
 
@@ -327,9 +329,17 @@ class MainWindow(QMainWindow):
         theme_menu.addAction(self._action("&Dark Theme", partial(self._set_theme, "dark")))
         theme_menu.addAction(self._action("&Light Theme", partial(self._set_theme, "light")))
 
+        # ---- Tools ----
+        tools_menu = menu.addMenu("&Tools")
+        tools_menu.addAction(self._action("&Laptop & Workstation Setup Wizard", self._show_setup_wizard))
+        tools_menu.addAction(self._action("&Phone Hardware Keys Guide", self._show_key_guide))
+        tools_menu.addAction(self._action("&System Health & Self-Test", self._show_selftest))
+
         # ---- Help ----
         help_menu = menu.addMenu("&Help")
         help_menu.addAction(self._action("&Workflow & Function Guide", self._show_guide))
+        help_menu.addAction(self._action("&Laptop Setup Wizard", self._show_setup_wizard))
+        help_menu.addAction(self._action("&Phone Hardware Keys Guide", self._show_key_guide))
         help_menu.addAction(self._action("&About FlashDock", self._show_about))
 
     def _action(
@@ -418,6 +428,20 @@ class MainWindow(QMainWindow):
         title_col.addWidget(subtitle)
         top_bar.addLayout(title_col, 1)
 
+        # Setup Laptop button (User Request)
+        setup_btn = QPushButton("🛠️  Setup Laptop")
+        setup_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        setup_btn.setToolTip("Configure laptop prerequisites, install ADB, Fastboot & OEM USB drivers")
+        setup_btn.clicked.connect(self._show_setup_wizard)
+        top_bar.addWidget(setup_btn)
+
+        # Phone Key Guide button (User Request)
+        key_guide_btn = QPushButton("📱  Key Guide")
+        key_guide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        key_guide_btn.setToolTip("Hardware button combinations (Vol+, Vol-, Power) for boot menus")
+        key_guide_btn.clicked.connect(self._show_key_guide)
+        top_bar.addWidget(key_guide_btn)
+
         # Guide button (User Addition 7)
         guide_btn = QPushButton("📖  Workflow Guide")
         guide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -486,34 +510,7 @@ class MainWindow(QMainWindow):
         search_shortcut.activated.connect(self._search_input.setFocus)
 
         nav_hub_layout.addLayout(search_row)
-
-        # 2. Quick Task Shortcuts Row
-        quick_row = QHBoxLayout()
-        quick_row.setSpacing(8)
-
-        quick_lbl = QLabel("⚡ Quick Access:")
-        quick_lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
-        quick_row.addWidget(quick_lbl)
-
         self._quick_buttons = []
-        quick_presets = [
-            ("🚑 Fix Bootloop", "unbrick"),
-            ("🌱 Root Phone", "root"),
-            ("💾 Flash ROM", "flash_rom"),
-            ("🖥️ Screen Mirror", "scrcpy"),
-            ("🛡️ Play Integrity", "integrity"),
-            ("⬇️ Install Drivers", "downloads"),
-            ("🩺 Debloat & Tweaks", "diagnostics"),
-        ]
-        for q_label, q_action in quick_presets:
-            q_btn = QPushButton(q_label)
-            q_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            q_btn.clicked.connect(partial(self._on_action, q_action))
-            quick_row.addWidget(q_btn)
-            self._quick_buttons.append(q_btn)
-
-        quick_row.addStretch(1)
-        nav_hub_layout.addLayout(quick_row)
 
         # 3. Category Filter Pills, Sort Dropdown & Count Badge
         filter_row = QHBoxLayout()
@@ -550,6 +547,7 @@ class MainWindow(QMainWindow):
         filter_row.addWidget(sort_lbl)
 
         self._sort_combo = QComboBox()
+        self._sort_combo.setMinimumWidth(160)
         self._sort_combo.addItem("📌 Recommended", "recommended")
         self._sort_combo.addItem("🔤 Alphabetical (A → Z)", "az")
         self._sort_combo.addItem("🔤 Alphabetical (Z → A)", "za")
@@ -1143,10 +1141,12 @@ class MainWindow(QMainWindow):
 
         self._device_mgr.on_device_changed = _on_device_changed
 
-        # Phone control panel -> device manager & scrcpy
+        # Phone control panel -> device manager & scrcpy & hardware keys
         self._phone_panel.reboot_requested.connect(self._on_reboot_requested)
         self._phone_panel.refresh_requested.connect(self._refresh_device)
         self._phone_panel.scrcpy_requested.connect(self._launch_scrcpy)
+        self._phone_panel.key_event_requested.connect(self._on_key_event_requested)
+        self._phone_panel.key_guide_requested.connect(self._show_key_guide)
 
         # Device selector -> device manager
         self._device_selector.serial_locked.connect(self._device_mgr.lock_serial)
@@ -1407,6 +1407,35 @@ class MainWindow(QMainWindow):
         """Open the system diagnostics and self-test dialog (Phase 16)."""
         dlg = SelfTestDialog(self)
         dlg.exec()
+
+    @Slot()
+    def _show_setup_wizard(self) -> None:
+        """Open the Laptop & Workstation Setup Wizard."""
+        dlg = SetupWizardDialog(adb=self._adb, fastboot=self._fastboot, parent=self)
+        dlg.exec()
+
+    @Slot()
+    def _show_key_guide(self) -> None:
+        """Open the phone hardware button navigation guide modal."""
+        dlg = HardwareKeyGuideDialog(adb=self._adb, parent=self)
+        dlg.exec()
+
+    @Slot(int)
+    def _on_key_event_requested(self, keycode: int) -> None:
+        """Send virtual hardware key press to connected device via ADB."""
+        if not self._device_mgr.device or self._device_mgr.device.mode != "system":
+            QMessageBox.information(
+                self,
+                "Phone Hardware Keys",
+                "Virtual hardware key control requires a phone connected in normal System mode with USB debugging enabled.\n\n"
+                "If your phone is currently in Bootloader or Recovery mode, use the physical hardware buttons on the phone (see Key Guide).",
+            )
+            return
+        log.info("Sending hardware keycode %d via ADB", keycode)
+        try:
+            self._adb.shell(["input", "keyevent", str(keycode)], serial=self._device_mgr.device.serial)
+        except Exception as e:
+            log.warning("Failed to send keycode %d: %s", keycode, e)
 
     @Slot()
     def _toggle_theme(self) -> None:

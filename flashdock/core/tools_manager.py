@@ -145,6 +145,7 @@ class PlatformToolsManager:
                 capture_output=True,
                 text=True,
                 timeout=5,
+                env={**os.environ, **ADB._adb_environment()},
             )
             out = res.stdout + res.stderr
             match = re.search(r"version\s+([0-9]+\.[0-9]+\.[0-9]+)", out)
@@ -191,12 +192,14 @@ class PlatformToolsManager:
                 capture_output=True,
                 text=True,
                 timeout=10,
+                env={**os.environ, **ADB._adb_environment()},
             )
             res = subprocess.run(
                 [str(adb_p), "start-server"],
                 capture_output=True,
                 text=True,
                 timeout=15,
+                env={**os.environ, **ADB._adb_environment()},
             )
             if res.returncode == 0:
                 log.info("ADB daemon restarted successfully.")

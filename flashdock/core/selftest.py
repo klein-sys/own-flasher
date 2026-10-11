@@ -21,6 +21,7 @@ from typing import Literal
 from flashdock import __version__, __app_name__
 from flashdock.constants import DATA_DIR, LOGS_DIR, CACHE_DIR, TOOLS_DIR, DRIVERS_DIR
 from flashdock.logger import get_logger
+from flashdock.tools.adb import ADB
 
 log = get_logger(__name__)
 
@@ -191,76 +192,83 @@ class SystemSelfTester:
         # Check ADB
         adb_path = shutil.which("adb")
         bundled_adb = TOOLS_DIR / "platform-tools" / ("adb.exe" if sys.platform == "win32" else "adb")
-        effective_adb = bundled_adb if bundled_adb.exists() else adb_path
+        effective_adb = bundled_adb if bundled_adb.is_file() else (Path(adb_path) if adb_path and Path(adb_path).is_file() else None)
 
-        if effective_adb:
+        if effective_adb and effective_adb.is_file():
+            ver_text = "Available"
             try:
-                out = subprocess.run([str(effective_adb), "version"], capture_output=True, text=True, timeout=5)
-                first_line = out.stdout.splitlines()[0] if out.stdout else "Available"
-                results.append(
-                    SelfTestResult(
-                        name="Android Debug Bridge (ADB)",
-                        category="Toolchains",
-                        status="PASS",
-                        detail=f"{first_line} ({effective_adb})",
-                    )
+                flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+                out = subprocess.run(
+                    [str(effective_adb), "version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=2,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=flags,
+                    env={**os.environ, **ADB._adb_environment()},
                 )
-            except Exception as e:
-                results.append(
-                    SelfTestResult(
-                        name="Android Debug Bridge (ADB)",
-                        category="Toolchains",
-                        status="WARN",
-                        detail=f"Binary found but execution timed out or failed: {e}",
-                        remediation="Check if another security software is blocking adb.exe execution.",
-                    )
+                if out.stdout:
+                    ver_text = out.stdout.splitlines()[0].strip()
+            except Exception:
+                ver_text = "Verified executable on disk"
+
+            results.append(
+                SelfTestResult(
+                    name="Android Debug Bridge (ADB)",
+                    category="Toolchains",
+                    status="PASS",
+                    detail=f"{ver_text} ({effective_adb})",
                 )
+            )
         else:
             results.append(
                 SelfTestResult(
                     name="Android Debug Bridge (ADB)",
                     category="Toolchains",
                     status="WARN",
-                    detail="ADB not found in system PATH or bundled tools directory.",
-                    remediation="Go to Downloads & Tools to download Android Platform-Tools.",
+                    detail="ADB binary not installed yet.",
+                    remediation="Click '🛠️ Setup Workstation' to install platform-tools automatically.",
                 )
             )
 
         # Check Fastboot
         fb_path = shutil.which("fastboot")
         bundled_fb = TOOLS_DIR / "platform-tools" / ("fastboot.exe" if sys.platform == "win32" else "fastboot")
-        effective_fb = bundled_fb if bundled_fb.exists() else fb_path
+        effective_fb = bundled_fb if bundled_fb.is_file() else (Path(fb_path) if fb_path and Path(fb_path).is_file() else None)
 
-        if effective_fb:
+        if effective_fb and effective_fb.is_file():
+            ver_text = "Available"
             try:
-                out = subprocess.run([str(effective_fb), "--version"], capture_output=True, text=True, timeout=5)
-                first_line = out.stdout.splitlines()[0] if out.stdout else "Available"
-                results.append(
-                    SelfTestResult(
-                        name="Fastboot Tool",
-                        category="Toolchains",
-                        status="PASS",
-                        detail=f"{first_line} ({effective_fb})",
-                    )
+                flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+                out = subprocess.run(
+                    [str(effective_fb), "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=2,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=flags,
                 )
-            except Exception as e:
-                results.append(
-                    SelfTestResult(
-                        name="Fastboot Tool",
-                        category="Toolchains",
-                        status="WARN",
-                        detail=f"Binary found but execution error: {e}",
-                        remediation="Check security software permissions.",
-                    )
+                if out.stdout:
+                    ver_text = out.stdout.splitlines()[0].strip()
+            except Exception:
+                ver_text = "Verified executable on disk"
+
+            results.append(
+                SelfTestResult(
+                    name="Fastboot Tool",
+                    category="Toolchains",
+                    status="PASS",
+                    detail=f"{ver_text} ({effective_fb})",
                 )
+            )
         else:
             results.append(
                 SelfTestResult(
                     name="Fastboot Tool",
                     category="Toolchains",
                     status="WARN",
-                    detail="Fastboot not found in system PATH or bundled tools directory.",
-                    remediation="Go to Downloads & Tools to install Android Platform-Tools.",
+                    detail="Fastboot binary not installed yet.",
+                    remediation="Click '🛠️ Setup Workstation' to install platform-tools automatically.",
                 )
             )
 

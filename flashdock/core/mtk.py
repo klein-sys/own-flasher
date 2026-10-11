@@ -308,13 +308,19 @@ class MTKBROMManager:
     """Manages BootROM and Preloader connections and device identification."""
 
     def __init__(self, transport: Optional[MockMTKTransport] = None) -> None:
-        self.transport = transport or MockMTKTransport()
+        # A mock transport is useful for deterministic tests, but must never
+        # be silently used by the desktop application: that would make a
+        # flash workflow report success without talking to a physical phone.
+        self.transport = transport
         self.connected: bool = False
         self.hw_code: int = 0
         self.hw_name: str = "Unknown"
 
     def connect(self) -> bool:
         """Executes the standard MediaTek BROM sync handshake."""
+        if self.transport is None:
+            log.error("MTK BROM backend is unavailable; refusing simulated connection.")
+            return False
         log.info("Sending MTK BROM handshake sequence...")
         self.transport.write(BROM_HANDSHAKE_SEND)
         resp = self.transport.read(4)

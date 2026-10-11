@@ -352,9 +352,18 @@ class IntegrityScreen(QWidget):
     # -----------------------------------------------------------------
 
     def _setup_banking_tab(self) -> None:
-        layout = QVBoxLayout(self._tab_banking)
+        outer_lay = QVBoxLayout(self._tab_banking)
+        outer_lay.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setStyleSheet("background: transparent;")
+
+        container = QWidget()
+        layout = QVBoxLayout(container)
         layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(14)
+        layout.setSpacing(16)
 
         desc = QLabel(
             "Prevent banking, payments, and high-security apps from detecting unlocked bootloaders or root.\n"
@@ -368,24 +377,46 @@ class IntegrityScreen(QWidget):
         quick_box = QGroupBox("Recommended Apps Protection")
         quick_box.setStyleSheet("font-weight: 600; font-size: 13px;")
         qb_layout = QVBoxLayout(quick_box)
+        qb_layout.setContentsMargins(12, 16, 12, 12)
         qb_layout.setSpacing(10)
 
         grid = QGridLayout()
-        grid.setSpacing(8)
+        grid.setSpacing(10)
 
-        cols = 3
+        cols = 2
         for idx, (pkg, name) in enumerate(RECOMMENDED_PROTECTED_PACKAGES):
-            btn = QPushButton(f"🛡️  {name}\n({pkg})")
+            app_card = QFrame()
+            app_card.setStyleSheet(
+                "QFrame { background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); "
+                "border-radius: 8px; padding: 6px 10px; min-height: 44px; }"
+            )
+            c_lay = QHBoxLayout(app_card)
+            c_lay.setContentsMargins(6, 4, 6, 4)
+            c_lay.setSpacing(8)
+
+            info_col = QVBoxLayout()
+            info_col.setSpacing(1)
+            name_lbl = QLabel(f"🛡️  {name}")
+            name_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #FFFFFF;")
+            pkg_lbl = QLabel(pkg)
+            pkg_lbl.setStyleSheet("font-size: 10px; color: #8E8E93;")
+            info_col.addWidget(name_lbl)
+            info_col.addWidget(pkg_lbl)
+            c_lay.addLayout(info_col, 1)
+
+            btn = QPushButton("➕ Protect")
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(
-                "QPushButton { text-align: left; padding: 8px 12px; font-size: 11px; "
-                "background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; } "
-                "QPushButton:hover { background-color: rgba(10, 132, 255, 0.15); border-color: #0A84FF; }"
+                "QPushButton { background-color: rgba(10, 132, 255, 0.15); color: #0A84FF; font-weight: 600; font-size: 11px; "
+                "border: 1px solid rgba(10, 132, 255, 0.3); border-radius: 6px; padding: 5px 12px; } "
+                "QPushButton:hover { background-color: #0A84FF; color: #FFFFFF; }"
             )
             btn.clicked.connect(lambda _, p=pkg: self._add_denylist_pkg(p))
+            c_lay.addWidget(btn)
+
             r = idx // cols
-            c = idx % cols
-            grid.addWidget(btn, r, c)
+            c_idx = idx % cols
+            grid.addWidget(app_card, r, c_idx)
 
         qb_layout.addLayout(grid)
         layout.addWidget(quick_box)
@@ -394,18 +425,19 @@ class IntegrityScreen(QWidget):
         custom_box = QGroupBox("Add Custom Package to DenyList")
         custom_box.setStyleSheet("font-weight: 600; font-size: 13px;")
         cb_layout = QHBoxLayout(custom_box)
+        cb_layout.setContentsMargins(12, 16, 12, 12)
         cb_layout.setSpacing(10)
 
         self._custom_pkg_input = QLineEdit()
         self._custom_pkg_input.setPlaceholderText("Enter Android package name (e.g. com.starlingbank.android)")
-        self._custom_pkg_input.setMinimumHeight(32)
+        self._custom_pkg_input.setMinimumHeight(36)
         cb_layout.addWidget(self._custom_pkg_input, 1)
 
         add_custom_btn = QPushButton("➕ Add to DenyList")
         add_custom_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_custom_btn.setStyleSheet(
             "QPushButton { background-color: #0A84FF; color: #FFFFFF; font-weight: 600; "
-            "border-radius: 6px; padding: 6px 16px; min-height: 20px; } "
+            "border-radius: 6px; padding: 8px 16px; min-height: 20px; } "
             "QPushButton:hover { background-color: #0071E3; }"
         )
         add_custom_btn.clicked.connect(self._add_custom_denylist_pkg)
@@ -420,6 +452,8 @@ class IntegrityScreen(QWidget):
         layout.addWidget(self._banking_log)
 
         layout.addStretch(1)
+        scroll.setWidget(container)
+        outer_lay.addWidget(scroll)
 
     # -----------------------------------------------------------------
     # Tab 3: Guide & Architecture

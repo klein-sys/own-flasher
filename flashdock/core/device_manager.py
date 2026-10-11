@@ -259,6 +259,12 @@ class DeviceManager:
 
     def _detect_cycle(self) -> None:
         """Run one detection cycle."""
+        if not self._adb.available and not self._fb.available:
+            self.all_devices = []
+            if self.device is not None:
+                self._update_device(None)
+            return
+
         serial = self._config.locked_serial or ""
 
         # Detect all ADB devices for the selector

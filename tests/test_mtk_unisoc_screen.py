@@ -63,16 +63,12 @@ def test_mtk_tab_interactions(qapp, monkeypatch):
     screen = MtkUnisocScreen()
     assert screen._btn_mtk_bypass.isEnabled() is False
 
-    # Connect
+    # The production screen must not simulate a BROM connection without a
+    # physical transport backend.
     screen._on_mtk_connect()
-    assert screen._brom_mgr.connected is True
-    assert screen._btn_mtk_bypass.isEnabled() is True
-    assert screen._btn_mtk_reboot.isEnabled() is True
-
-    # Bypass
-    screen._on_mtk_bypass()
-    assert screen._auth_handler.bypassed is True
-    assert "Bypassed" in screen._mtk_auth_lbl.text()
+    assert screen._brom_mgr.connected is False
+    assert screen._btn_mtk_bypass.isEnabled() is False
+    assert screen._btn_mtk_reboot.isEnabled() is False
 
 
 def test_scatter_file_load(qapp, tmp_path: Path):

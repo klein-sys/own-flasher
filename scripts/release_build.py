@@ -62,7 +62,13 @@ def main() -> int:
     else:
         print("  [OK] All test suites passed.")
 
-    # 2. Invoke PyInstaller
+    # 2. Terminate any running FlashDock processes and invoke PyInstaller
+    if sys.platform == "win32":
+        try:
+            subprocess.run(["taskkill", "/F", "/IM", "FlashDock.exe"], capture_output=True)
+        except Exception:
+            pass
+
     print("\n[2/4] Compiling standalone Windows distribution via PyInstaller...")
     spec_path = ROOT_DIR / "flashdock.spec"
     pyinstaller_res = subprocess.run(

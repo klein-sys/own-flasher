@@ -62,6 +62,7 @@ class Fastboot:
 
     @property
     def available(self) -> bool:
+        """True if fastboot was found."""
         return self._binary is not None
 
     @property

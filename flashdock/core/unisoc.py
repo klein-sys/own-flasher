@@ -396,11 +396,16 @@ class UnisocFlashPipeline:
     """
 
     def __init__(self, transport: Optional[MockUnisocTransport] = None) -> None:
-        self.transport = transport or MockUnisocTransport()
+        # Production must not fall back to a mock device.  A real serial/USB
+        # backend is required before this pipeline may communicate or flash.
+        self.transport = transport
         self.connected: bool = False
 
     def connect(self) -> bool:
         """Sends BSL_CMD_CONNECT to establish synchronization."""
+        if self.transport is None:
+            log.error("Unisoc BSL backend is unavailable; refusing simulated connection.")
+            return False
         log.info("Sending Unisoc BSL connect packet...")
         packet = FDLProtocolHandler.encode_packet(BSL_CMD_CONNECT)
         self.transport.write(packet)

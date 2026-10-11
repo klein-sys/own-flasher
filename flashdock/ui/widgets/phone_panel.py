@@ -74,6 +74,8 @@ class PhoneControlPanel(QFrame):
     reboot_requested = Signal(str)
     refresh_requested = Signal()
     scrcpy_requested = Signal()
+    key_event_requested = Signal(int)
+    key_guide_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -152,12 +154,51 @@ class PhoneControlPanel(QFrame):
         self._mirror_btn.clicked.connect(self.scrcpy_requested.emit)
         root.addWidget(self._mirror_btn)
 
-        # ---- Refresh button (always enabled) ----
-        refresh_btn = QPushButton("🔄  Refresh connection")
-        refresh_btn.setObjectName("refresh_btn")
-        refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        refresh_btn.clicked.connect(self.refresh_requested.emit)
-        root.addWidget(refresh_btn)
+    # ---- Remote hardware button controls (User Request) ----
+        sep3 = QFrame()
+        sep3.setProperty("cssClass", "separator")
+        root.addWidget(sep3)
+
+        key_header = QLabel("PHONE KEYS")
+        key_header.setStyleSheet("font-size: 11px; font-weight: 700; letter-spacing: 0.6px; color: #8E8E93;")
+        root.addWidget(key_header)
+
+        key_row = QHBoxLayout()
+        key_row.setSpacing(4)
+
+        btn_vol_up = QPushButton("🔊 +")
+        btn_vol_up.setObjectName("btn_key_volup")
+        btn_vol_up.setToolTip("Volume Up (input keyevent 24)")
+        btn_vol_up.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_vol_up.setStyleSheet("padding: 5px 8px; font-weight: 700; font-size: 11px;")
+        btn_vol_up.clicked.connect(lambda: self.key_event_requested.emit(24))
+        key_row.addWidget(btn_vol_up)
+
+        btn_vol_down = QPushButton("🔉 -")
+        btn_vol_down.setObjectName("btn_key_voldown")
+        btn_vol_down.setToolTip("Volume Down (input keyevent 25)")
+        btn_vol_down.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_vol_down.setStyleSheet("padding: 5px 8px; font-weight: 700; font-size: 11px;")
+        btn_vol_down.clicked.connect(lambda: self.key_event_requested.emit(25))
+        key_row.addWidget(btn_vol_down)
+
+        btn_power = QPushButton("⚡ Pwr")
+        btn_power.setObjectName("btn_key_power")
+        btn_power.setToolTip("Power button (input keyevent 26)")
+        btn_power.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_power.setStyleSheet("padding: 5px 8px; font-weight: 700; font-size: 11px;")
+        btn_power.clicked.connect(lambda: self.key_event_requested.emit(26))
+        key_row.addWidget(btn_power)
+
+        root.addLayout(key_row)
+
+        btn_guide = QPushButton("📖 Hardware Key Guide")
+        btn_guide.setObjectName("btn_key_guide")
+        btn_guide.setToolTip("View physical key combinations and bootloader navigation guide")
+        btn_guide.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_guide.setStyleSheet("font-size: 11px; padding: 5px 8px;")
+        btn_guide.clicked.connect(self.key_guide_requested.emit)
+        root.addWidget(btn_guide)
 
         root.addStretch()
 

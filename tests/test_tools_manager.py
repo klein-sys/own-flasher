@@ -120,6 +120,8 @@ class TestPlatformToolsManager:
         assert success is True
         assert (dest_dir / "adb.exe").exists()
         assert (dest_dir / "fastboot.exe").exists()
+        assert mgr.adb.binary_path == str(dest_dir / "adb.exe")
+        assert mgr.fastboot.binary_path == str(dest_dir / "fastboot.exe")
 
 
 class TestDriverManager:

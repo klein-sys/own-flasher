@@ -96,6 +96,21 @@ def test_check_binary_toolchains():
         assert r.status in ("PASS", "WARN")
 
 
+def test_check_binary_toolchains_warns_when_binary_returns_error(tmp_path: Path):
+    adb = tmp_path / "adb.exe"
+    fastboot = tmp_path / "fastboot.exe"
+    adb.write_text("fake")
+    fastboot.write_text("fake")
+
+    tester = SystemSelfTester()
+    failed = MagicMock(returncode=1, stdout="", stderr="blocked")
+    with patch("flashdock.core.selftest.TOOLS_DIR", tmp_path), \
+         patch("subprocess.run", return_value=failed):
+        results = tester.check_binary_toolchains()
+
+    assert all(result.status == "WARN" for result in results)
+
+
 def test_run_all_checks():
     tester = SystemSelfTester()
     report = tester.run_all_checks()

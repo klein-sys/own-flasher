@@ -324,9 +324,10 @@ class MtkUnisocScreen(QWidget):
         else:
             QMessageBox.warning(
                 self,
-                "Connection Failed",
-                "Could not establish handshake with MediaTek BROM.\n\n"
-                "Please hold Volume Up + Volume Down and reconnect the USB cable.",
+                "MTK Backend Unavailable",
+                "This build does not include a physical MediaTek BROM USB backend, so no simulated "
+                "connection or flash will be performed.\n\nUse Fastboot/ADB tools, or install a supported "
+                "vendor backend before attempting low-level recovery.",
             )
 
     def _on_mtk_bypass(self) -> None:
@@ -448,9 +449,10 @@ class MtkUnisocScreen(QWidget):
         else:
             QMessageBox.warning(
                 self,
-                "Connection Failed",
-                "Could not establish handshake with Unisoc BSL.\n\n"
-                "Please hold Volume Down and reconnect the USB cable.",
+                "Unisoc Backend Unavailable",
+                "This build does not include a physical Unisoc BSL USB backend, so no simulated "
+                "connection or flash will be performed.\n\nUse Fastboot/ADB tools, or install a supported "
+                "vendor backend before attempting low-level recovery.",
             )
 
     def _on_browse_pac(self) -> None:

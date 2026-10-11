@@ -3,22 +3,22 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-1D1D1F.svg)](https://github.com/klein-sys/own-flasher)
 [![License](https://img.shields.io/badge/license-MIT-30D158.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-378%20%2F%20378%20passing-30D158.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-385%20%2F%20385%20passing-30D158.svg)](tests/)
 [![Architecture](https://img.shields.io/badge/design-Apple%20HIG%20Aesthetics-BF5AF2.svg)](flashdock/ui/styles.py)
 
 **Personal, one-click Android service workstation for Windows.**
 
-FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing, Samsung Odin tar extraction, Qualcomm EDL 9008 Sahara/Firehose rescue, MediaTek BROM scatter flashing, Unisoc PAC recovery, bootloop unbricking, Play Integrity spoofing, offline partition backup & restore, live screen mirroring (scrcpy), and interactive troubleshooting — all through a clean, guided Apple Human Interface Guidelines (HIG) desktop GUI.
+FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing, Samsung Odin tar extraction, Qualcomm EDL 9008 Sahara/Firehose rescue, MediaTek BROM scatter flashing, Unisoc PAC recovery, bootloop unbricking, Play Integrity spoofing, offline partition backup & restore, live screen mirroring (scrcpy), hardware button navigation, laptop setup assistance, and interactive troubleshooting — all through a clean, guided Apple Human Interface Guidelines (HIG) desktop GUI.
 
 > ⚠️ **Safety Warning:** This tool modifies device firmware. Always back up your critical partitions before flashing. FlashDock is designed strictly for servicing your own devices and does not support carrier bypass, FRP bypass, or IMEI modifications.
 
 ---
 
-## 🏆 Current Status — Phase 16 Complete (v1.0.0 Release) ✅
+## 🏆 Current Status — Complete Production Release (v1.0.0) ✅
 
-FlashDock has achieved **100% completion across all 16 planned engineering phases**. Every tool is implemented, tested with 378 automated test cases, and packaged into a standalone Windows distribution.
+FlashDock has achieved **100% completion across all 16 engineering phases plus UX decluttering and workstation setup tools**. Every tool is verified with 385 automated test cases and packaged into a standalone Windows distribution.
 
-| # | Phase | Domain | Status | Key Deliverables |
+| # | Phase / Feature | Domain | Status | Key Deliverables |
 |---|---|---|---|---|
 | 1 | **Foundation & Architecture** | Core | ✅ Done | Rotating logger, thread-safe config, online/offline monitor, serial masking |
 | 2 | **ADB & Fastboot Engine** | Device | ✅ Done | Subprocess wrappers, fastboot device tracking, Phone Control Panel |
@@ -33,9 +33,12 @@ FlashDock has achieved **100% completion across all 16 planned engineering phase
 | 11 | **MediaTek & Unisoc Engine** | Flashing | ✅ Done | MTK BROM scatter parser, SLA/DAA auth bypass, Unisoc PAC extractor, FDL HDLC protocol |
 | 12 | **Downloads & OEM Driver Manager** | Device | ✅ Done | Driver installer (Google, Samsung, Qualcomm 9008, MTK, Unisoc), platform-tools downloader |
 | 13 | **Emergency Unbrick & EDL Flasher** | Rescue | ✅ Done | Qualcomm Emergency Download (EDL 9008), Samsung Odin PIT/TAR, MTK SP Flash, Fastboot unbrick |
-| 14 | **Play Integrity & Fingerprint Spoofer** | Root | ✅ Done | PIF `pif.json` manager, custom `keybox.xml` injector, Google Play Integrity attestation guides |
+| 14 | **Play Integrity & Fingerprint Spoofer** | Root | ✅ Done | PIF `pif.json` manager, custom `keybox.xml` injector, banking root-hiding card grid |
 | 15 | **Logs, Telemetry & Troubleshooting** | Device | ✅ Done | Rotating application log viewer, device logcat streamer, kernel dmesg, guided interactive triage |
 | 16 | **Production Hardening & Release** | Release | ✅ Done | Automated System Self-Test, non-fatal Crash Reporter, release packaging & SHA-256 checksums |
+| + | **Laptop Setup Wizard** | Workstation | ✅ Done | 4-step wizard for platform-tools, OEM drivers, laptop USB power/sleep settings & live test |
+| + | **Hardware Key Guide & Remote** | Controls | ✅ Done | Bootloader/Recovery Vol+/Vol-/Power combinations guide & sidebar virtual keypads |
+| + | **Clean & Spacious Apple HIG UX** | UI / UX | ✅ Done | Decluttered home screen, dark-mode cards in Self-Test, fixed sort clipping, scrcpy guard |
 
 ---
 
@@ -48,7 +51,7 @@ FlashDock Workstation
 ├── 🌱 Root & Modules
 │   ├── Root my phone (Magisk, KernelSU, APatch, SukiSU)
 │   ├── Manage Modules (Batch install, repository, kill-switch)
-│   └── Fix Play Integrity (PIF spoofing, keybox injection)
+│   └── Fix Play Integrity (PIF spoofing, keybox injection, banking protection)
 ├── 💾 Flashing & ROMs
 │   ├── Unlock Bootloader (Multi-brand wizards & fastboot)
 │   ├── Return to Stock (Factory images & anti-relock protection)
@@ -64,6 +67,8 @@ FlashDock Workstation
     ├── Downloads & Tools (Platform-tools, USB drivers, firmware finder)
     ├── Screen Mirror (Live scrcpy display & keyboard/touch control)
     ├── Logs & Help (Application telemetry, logcat streamer, triage)
+    ├── 🛠️ Setup Laptop (Platform-tools, USB drivers, laptop power setup)
+    ├── 📱 Key Guide (Physical Vol+/Vol-/Power combinations & remote)
     └── ⚡ Self-Test (Prerequisites, toolchain, & permission diagnostics)
 ```
 
