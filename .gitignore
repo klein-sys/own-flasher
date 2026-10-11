@@ -1,0 +1,43 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller & Build artifacts
+dist/
+dist_build/
+build/
+*.spec.bak
+
+# Pytest & Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local FlashDock Data & Device Logs
+data/logs/*
+!data/logs/.gitkeep
+data/cache/*
+!data/cache/.gitkeep
+data/backups/*
+!data/backups/.gitkeep
+data/firmware/*
+!data/firmware/.gitkeep
+data/config.json
+
+# Platform-tools binaries & driver downloads (downloaded on demand)
+data/tools/platform-tools/
+data/tools/scrcpy/
+data/tools/drivers/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

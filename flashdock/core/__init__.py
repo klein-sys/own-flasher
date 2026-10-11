@@ -1,0 +1,1 @@
+# FlashDock — Core engine package.

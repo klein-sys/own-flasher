@@ -1,0 +1,1 @@
+# FlashDock — UI widgets package.
