@@ -89,7 +89,28 @@ class StatusBarWidget(QFrame):
         self._cache_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace;")
         layout.addWidget(self._cache_label)
 
+        # ---- Connection Badge (GSM Suite Persistent Badge) ----
+        self._connection_badge = QLabel("USB: Disconnected")
+        self._connection_badge.setStyleSheet(
+            "background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); "
+            "border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #8E8E93;"
+        )
+        layout.addWidget(self._connection_badge)
+
         layout.addStretch()
+
+        # ---- Smooth QProgressBar ----
+        from PySide6.QtWidgets import QProgressBar
+        self._progress_bar = QProgressBar()
+        self._progress_bar.setFixedWidth(160)
+        self._progress_bar.setFixedHeight(12)
+        self._progress_bar.setTextVisible(False)
+        self._progress_bar.setVisible(False)
+        self._progress_bar.setStyleSheet(
+            "QProgressBar { background-color: rgba(255, 255, 255, 0.08); border-radius: 6px; border: none; } "
+            "QProgressBar::chunk { background-color: #007AFF; border-radius: 6px; }"
+        )
+        layout.addWidget(self._progress_bar)
 
         # ---- Version ----
         from flashdock import __version__
@@ -145,3 +166,48 @@ class StatusBarWidget(QFrame):
     def update_cache_age(self, age_text: str) -> None:
         """Show how old the compatibility cache is."""
         self._cache_label.setText(f"Cache: {age_text}")
+
+    @Slot(str, str, dict)
+    def update_connection_badge(self, mode: str, port_or_serial: str, details: Optional[dict] = None) -> None:
+        """Update persistent GSM Suite USB connection badge (e.g. 'MTK BROM (COM4) Connected')."""
+        if mode in ("disconnected", "not_connected") or not port_or_serial:
+            self._connection_badge.setText("USB: Disconnected")
+            self._connection_badge.setStyleSheet(
+                "background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); "
+                "border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #8E8E93;"
+            )
+            return
+
+        mode_upper = mode.upper().replace("_", " ")
+        display_text = f"{mode_upper} ({port_or_serial}) Connected"
+
+        # Color badges by mode
+        if "BROM" in mode_upper or "EDL" in mode_upper or "SPRD" in mode_upper:
+            # High-visibility amber / red for low-level recovery ports
+            color = "#FF9F0A"
+            bg = "rgba(255, 159, 10, 0.15)"
+        elif "FASTBOOT" in mode_upper:
+            color = "#0A84FF"
+            bg = "rgba(10, 132, 255, 0.15)"
+        else:
+            color = "#30D158"
+            bg = "rgba(48, 209, 88, 0.15)"
+
+        self._connection_badge.setText(display_text)
+        self._connection_badge.setStyleSheet(
+            f"background-color: {bg}; border: 1px solid {color}; "
+            f"border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: {color};"
+        )
+
+    @Slot(int)
+    def set_progress(self, percentage: int) -> None:
+        """Update progress bar percentage (0-100)."""
+        pct = max(0, min(100, percentage))
+        self._progress_bar.setVisible(True)
+        self._progress_bar.setValue(pct)
+
+    @Slot()
+    def hide_progress(self) -> None:
+        """Hide the status bar progress bar."""
+        self._progress_bar.setVisible(False)
+        self._progress_bar.setValue(0)

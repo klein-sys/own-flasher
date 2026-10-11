@@ -185,23 +185,33 @@ class SideTerminalWidget(QWidget):
         """Thread-safe public method to log a line to the terminal."""
         self.log_signal.emit(text, level)
 
+    def append_colored_stream(self, level: str, message: str) -> None:
+        """Stream log message with explicit colored GSM Suite prefix."""
+        self.log_signal.emit(message, level)
+
     @Slot(str, str)
     def _append_formatted(self, text: str, level: str) -> None:
         now = datetime.now().strftime("%H:%M:%S")
-        prefix = f"[{now}]"
+        time_tag = f"<span style='color:#8E8E93;'>[{now}]</span>"
+        lvl_key = level.upper().strip()
 
-        color_map = {
-            "info": "#a1a1aa",     # Neutral secondary
-            "command": "#3b82f6",  # SaaS Blue
-            "warning": "#eab308",  # Amber
-            "error": "#ef4444",    # Destructive Red
-            "critical": "#dc2626", # Deep Red
+        # Prefix color mapping: Blue [INFO], Amber [WARN], Green [SUCCESS], Red [ERROR]
+        prefix_styles = {
+            "INFO": ("#007AFF", "[INFO]"),
+            "WARN": ("#FF9F0A", "[WARN]"),
+            "WARNING": ("#FF9F0A", "[WARN]"),
+            "SUCCESS": ("#30D158", "[SUCCESS]"),
+            "ERROR": ("#FF453A", "[ERROR]"),
+            "CRITICAL": ("#FF453A", "[CRITICAL]"),
+            "COMMAND": ("#0A84FF", "[CMD]"),
         }
-        color = color_map.get(level.lower(), "#f4f4f5")
+
+        color, tag_text = prefix_styles.get(lvl_key, ("#8E8E93", f"[{lvl_key}]"))
+        prefix_badge = f"<b style='color:{color};'>{tag_text}</b>"
 
         # HTML formatting for colored log lines
         clean_text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        html_line = f"<span style='color:#52525b;'>{prefix}</span> <span style='color:{color};'>{clean_text}</span>"
+        html_line = f"{time_tag} {prefix_badge} <span style='color:#E5E5EA;'>{clean_text}</span>"
         self._text_edit.appendHtml(html_line)
 
         # Auto-scroll to bottom

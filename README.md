@@ -3,20 +3,41 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-1D1D1F.svg)](https://github.com/klein-sys/own-flasher)
 [![License](https://img.shields.io/badge/license-MIT-30D158.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-385%20%2F%20385%20passing-30D158.svg)](tests/)
-[![Architecture](https://img.shields.io/badge/design-Apple%20HIG%20Aesthetics-BF5AF2.svg)](flashdock/ui/styles.py)
+[![Tests](https://img.shields.io/badge/tests-413%20%2F%20413%20passing-30D158.svg)](tests/)
+[![Architecture](https://img.shields.io/badge/architecture-GSM%20Suite%20%2B%20macOS%20Big%20Sur-BF5AF2.svg)](flashdock/ui/styles.py)
 
 **Personal, one-click Android service workstation for Windows.**
 
-FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing, Samsung Odin tar extraction, Qualcomm EDL 9008 Sahara/Firehose rescue, MediaTek BROM scatter flashing, Unisoc PAC recovery, bootloop unbricking, Play Integrity spoofing, offline partition backup & restore, live screen mirroring (scrcpy), hardware button navigation, laptop setup assistance, and interactive troubleshooting — all through a clean, guided Apple Human Interface Guidelines (HIG) desktop GUI.
+FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing, Samsung Odin tar extraction, Qualcomm EDL 9008 Sahara/Firehose rescue, MediaTek BROM scatter flashing, Unisoc PAC recovery, bootloop unbricking, Play Integrity spoofing, offline partition backup & restore, live screen mirroring (scrcpy), hardware button navigation, laptop setup assistance, and interactive troubleshooting — all through a clean, guided macOS Big Sur-inspired interface with multi-chipset repair tool architecture (UnlockTool, TFT, Chimera).
 
 > ⚠️ **Safety Warning:** This tool modifies device firmware. Always back up your critical partitions before flashing. FlashDock is designed strictly for servicing your own devices and does not support carrier bypass, FRP bypass, or IMEI modifications.
 
 ---
 
-## 🏆 Current Status — Complete Production Release (v1.0.0) ✅
+## 🏆 Current Status — GSM Suite Architecture & Complete Production Release (v1.0.0) ✅
 
-FlashDock has achieved **100% completion across all 16 engineering phases plus UX decluttering and workstation setup tools**. Every tool is verified with 385 automated test cases and packaged into a standalone Windows distribution.
+FlashDock features a fully modular, thread-safe, and asynchronous **GSM Suite Core Architecture** inspired by professional multi-chipset repair platforms:
+
+### 🧩 Four Major GSM Subsystems:
+1. **Connection Monitoring & Hardware Polling Engine (`device_monitor.py`)**:
+   - Asynchronous `QThread` scanning USB/COM ports via zero-dependency Windows Registry enumeration.
+   - Comprehensive Hardware ID (VID/PID) resolution: ADB, Fastboot, MediaTek BROM (`0E8D:0003`), MTK Preloader (`0E8D:2000`), Qualcomm EDL 9008 (`05C6:9008`), Qualcomm Diag (`05C6:9006`), Unisoc SPRD U2S Diag (`1782:4D00`), and FDL Download (`1782:4D02`).
+   - Multi-tiered resolution prioritizing emergency recovery ports over standard user-space daemons.
+2. **Device Diagnostics & Info Extraction Engine (`diagnostics_engine.py`)**:
+   - Deep ADB property extraction: brand, model, manufacturer, build display, Android OS, baseband, security patch level, and battery level/temperature.
+   - Root detection (`su` binary verification, Magisk/KSU version) and Samsung Knox warranty bit tracking.
+   - Deep Fastboot `getvar all` parsing: active partition slot (`_a`/`_b`), bootloader unlocked status, Secure Boot state, CID, and max-download-size with structured fallback dictionaries.
+3. **Firmware Flashing, Partition Management & Safety Backups (`flash_engine.py`)**:
+   - Decoupled `QThread` external binary execution with byte-accurate progress reporting.
+   - Mandatory calibration pre-backups targeting telemetry blocks (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) with SHA-256 verification.
+   - Chunked single-image flashing (`boot`, `init_boot`, `recovery`, `super`, `system`) with pre-flash checksum verification.
+   - Bootloader unlock (`flashing unlock`, `oem unlock`) and relock controllers.
+4. **UI Architecture & macOS Big Sur Styling (`main_window.py` & `styles.py`)**:
+   - Top Segmented Bar for high-volume OEMs (Xiaomi, Samsung, Transsion, Universal Android) and Universal Chipsets (MediaTek BROM, Qualcomm EDL, Unisoc SPRD).
+   - Left Operations Panel: Device Diagnostics, Partition Backup, Flash Firmware, Bootloader Tools, and Reboot Shortcuts.
+   - Right Console Pane: Persistent read-only terminal with color-coded stream prefixes (`[INFO]` in Blue, `[WARN]` in Amber, `[SUCCESS]` in Green, `[ERROR]` in Red).
+   - Bottom Status Bar: Persistent USB connection badge and smooth `QProgressBar`.
+   - Authentic macOS Big Sur design tokens: `#F5F5F7` canvas, `#FFFFFF` rounded containers with subtle borders, `#007AFF` accent, and SF Pro typography hierarchy.
 
 | # | Phase / Feature | Domain | Status | Key Deliverables |
 |---|---|---|---|---|
@@ -36,8 +57,9 @@ FlashDock has achieved **100% completion across all 16 engineering phases plus U
 | 14 | **Play Integrity & Fingerprint Spoofer** | Root | ✅ Done | PIF `pif.json` manager, custom `keybox.xml` injector, banking root-hiding card grid |
 | 15 | **Logs, Telemetry & Troubleshooting** | Device | ✅ Done | Rotating application log viewer, device logcat streamer, kernel dmesg, guided interactive triage |
 | 16 | **Production Hardening & Release** | Release | ✅ Done | Automated System Self-Test, non-fatal Crash Reporter, release packaging & SHA-256 checksums |
+| 17 | **GSM Suite Core Subsystems** | Core / UI | ✅ Done | 4-subsystem engine (Hardware Polling QThread, Deep Diagnostics, FlashEngineWorker, macOS Big Sur UI) |
 | + | **Transsion Brands Engine** | Brands | ✅ Done | Complete handlers for Tecno (HiOS), Infinix (XOS), itel (itelOS), and Carlcare firmware portal |
-| + | **Vector Brand Badges** | UI / UX | ✅ Done | Pixel-perfect vector SVG brand logos (Google, Samsung, Xiaomi, Tecno, Infinix, itel, etc.) replacing emojis |
+| + | **Vector Brand Badges** | UI / UX | ✅ Done | Pixel-perfect vector SVG brand logos (Google, Samsung, Xiaomi, Tecno, Infinix, itel, etc.) |
 | + | **Smart Connection & Keys Helper** | Controls | ✅ Done | Interactive sidebar connection troubleshooter (USB debugging/RSA key) & contextual Hardware Key Guide |
 | + | **Laptop Setup Wizard** | Workstation | ✅ Done | 4-step wizard for platform-tools, OEM drivers, laptop USB power/sleep settings & live test |
 

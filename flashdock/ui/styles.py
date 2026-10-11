@@ -628,6 +628,27 @@ SideTerminalWidget QPlainTextEdit {
     border-bottom: none;
     color: #A1A1AA;
 }
+
+/* GSM Suite macOS Big Sur Tokens (Dark) */
+QFrame[cssClass="segmented_control"] {
+    background-color: #1E1E20;
+    border-bottom: 1px solid #2C2C2E;
+    border-radius: 0px;
+    padding: 2px 14px;
+}
+
+QFrame[cssClass="operations_panel"] {
+    background-color: #242426;
+    border: 1px solid #38383A;
+    border-radius: 10px;
+}
+
+QLabel#connection_badge {
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+}
 """
 
 
@@ -1230,6 +1251,27 @@ SideTerminalWidget QPlainTextEdit {
     border-right: none;
     border-bottom: none;
     color: #E4E4E7;
+}
+
+/* GSM Suite macOS Big Sur Tokens (Light) */
+QFrame[cssClass="segmented_control"] {
+    background-color: #EBEBEF;
+    border-bottom: 1px solid #D2D2D7;
+    border-radius: 0px;
+    padding: 2px 14px;
+}
+
+QFrame[cssClass="operations_panel"] {
+    background-color: #FFFFFF;
+    border: 1px solid #E5E5E7;
+    border-radius: 10px;
+}
+
+QLabel#connection_badge {
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
 }
 """
 

@@ -1,26 +1,25 @@
 # FlashDock — Agent Handoff Document
 
 **Date:** 2026-10-12  
-**Current Phase:** **Production Hardening, System Self-Test, Laptop Setup Wizard, Hardware Key Controls & UI Decluttering (100% Scope Completed)**  
+**Current Phase:** **GSM Suite Core Architecture & Feature Expansion (Subsystems 1–4, 100% Scope Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
-**Application:** FlashDock — One-Click Personal Desktop Android Service Workstation  
+**Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
-**Distribution:** Standalone Windows Executable (`dist/FlashDock/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.0.0-windows-x64.zip`)  
-**Test Suite:** **385 Passed Unit & Integration Tests across 41 test modules (`python -m pytest tests/`, 100% success rate)**  
+**Distribution:** Standalone Windows Executable (`dist/FlashDock_App/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.0.0-windows-x64.zip`)  
+**Test Suite:** **413 Passed Unit & Integration Tests across 42 test modules (`python -m pytest tests/`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
 ---
 
 ## 1. Project Overview & Architecture
 
-FlashDock is an Apple Human Interface Guidelines (HIG)-styled desktop Android flashing and service utility for Windows 10/11 (64-bit). It provides a guided, safe, 1-click interface for managing Android devices across standard ADB, Fastboot, FastbootD, Recovery, Qualcomm EDL 9008, Samsung Odin, MediaTek BROM, and Unisoc FDL modes.
+FlashDock is a macOS Big Sur-inspired desktop Android flashing and service workstation for Windows 10/11 (64-bit), modeled on industry-standard multi-chipset repair platforms (UnlockTool, TFT Unlocker, Chimera Tool). It features a clean, thread-safe, and asynchronous core architecture across four primary subsystems:
 
 ### Key Architectural Pillars
-- **Safety Pre-Flight Engine**: Hardware pre-flight checks (battery $\ge 30\%$, unlocked bootloader, proper connection mode), typed confirmation prompts for high-risk operations, rollback counter protection, and strict anti-relock gate.
-- **Offline Capability**: Local offline repository for Custom ROMs, GSIs, modules, root solutions, drivers, and stock firmwares. Online actions are automatically shaded (`opacity: 0.45; dashed border`) and disabled when offline.
-- **Read-Only Side Terminal**: A dedicated, read-only terminal panel displaying active ADB/Fastboot commands and subprocess output in real time without allowing accidental user edits.
-- **Modern Partition Support**: Native handling of A/B slots, dynamic partitions (`super.img`), Android 10+ FastbootD transition, and recovery embedding (`boot` vs `init_boot` vs `recovery`).
-- **Apple HIG Styling**: Refined Athens Gray (`#F5F5F7` light, `#1C1C1E` dark) canvas, subtle drop shadows, System Blue (`#007AFF`) accents, and category pill badges.
+- **Hardware Polling & VID/PID Engine (`device_monitor.py`)**: Non-blocking `QThread` polling USB/COM ports via Windows Registry enumeration (`SYSTEM\CurrentControlSet\Enum\USB` and `HARDWARE\DEVICEMAP\SERIALCOMM`). Comprehensive VID/PID mapping for ADB, Fastboot, MediaTek BROM (`0E8D:0003`), Preloader (`0E8D:2000`), Qualcomm EDL 9008 (`05C6:9008`), Qualcomm Diag (`05C6:9006`), Unisoc U2S Diag (`1782:4D00`), and FDL (`1782:4D02`).
+- **Device Diagnostics Engine (`diagnostics_engine.py`)**: Batch `getprop` query extracting model, brand, manufacturer, build ID, Android OS, baseband, security patch level, root status (`su` binary, Magisk/KSU), and Samsung Knox warranty bit. Safe Fastboot `getvar all` parser detecting active slot (`_a`/`_b`), bootloader unlocked status, Secure Boot state, CID, and max-download-size.
+- **Flashing & Calibration Backup Engine (`flash_engine.py`)**: Asynchronous worker thread supporting chunked single-image write operations (`boot`, `init_boot`, `recovery`, `super`, `system`), byte progress updates (`progress_changed`), pre-flash calibration backups targeting telemetry blocks (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) with SHA-256 validation, and bootloader unlock/relock controllers.
+- **UI Architecture & macOS Big Sur Styling (`main_window.py` & `styles.py`)**: Top segmented control for high-volume OEMs (Xiaomi, Samsung, Transsion, Universal Android) and Universal Chipsets (MediaTek BROM, Qualcomm EDL, Unisoc SPRD). Left Operations Panel for mode-specific action triggers. Right Console Pane streaming color-coded process telemetry (`[INFO]` in Blue, `[WARN]` in Amber, `[SUCCESS]` in Green, `[ERROR]` in Red). Persistent connection badge and progress bar in status bar. Authentic macOS Big Sur design tokens (`#F5F5F7` background, `#FFFFFF` rounded containers with subtle borders, `#007AFF` accent).
 
 ---
 
@@ -103,6 +102,23 @@ FlashDock is an Apple Human Interface Guidelines (HIG)-styled desktop Android fl
 - **Telemetry Spam Elimination**: Lowered missing tool runner logging from error to debug and added disk existence guards in device manager cycle.
 - **UI Decluttering**: Removed redundant Quick Access chip row to give the 15 main action cards plenty of breathing room, and broadened the Sort dropdown to 160px min-width to avoid text clipping.
 
+### Phase 17: GSM Suite Core Architecture & Multi-Chipset Subsystems
+- **Subsystem 1 — Hardware Polling Engine (`flashdock/workers/device_monitor.py`)**:
+  - Non-blocking `QThread` polling Windows registry for USB and serial devices without external dependencies.
+  - VID/PID table for ADB, Fastboot, MTK BROM (`0E8D:0003`), Preloader (`0E8D:2000`), Qualcomm EDL 9008 (`05C6:9008`), Unisoc U2S Diag (`1782:4D00`), and FDL (`1782:4D02`).
+  - Signals: `device_connected(mode, ident, details)` and `device_disconnected()`.
+- **Subsystem 2 — Device Diagnostics Engine (`flashdock/core/diagnostics_engine.py`)**:
+  - Batch `getprop` query: brand, model, Android version, baseband, security patch level, Knox void bit, root presence (`su` binary, Magisk/KSU), and battery telemetry.
+  - Deep Fastboot `getvar all` query: active partition slot (`_a`/`_b`), unlocked bootloader flag, Secure Boot flag, CID, and max download size. Structured fallback dictionaries for offline/unauthorized states.
+- **Subsystem 3 — Flashing & Calibration Backup Engine (`flashdock/workers/flash_engine.py`)**:
+  - Asynchronous flashing worker with chunked single-image writing (`boot`, `init_boot`, `recovery`, `super`, `system`), byte progress reporting (`progress_changed`), and pre-flash calibration backups (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) with SHA-256 verification.
+  - Bootloader unlock (`flashing unlock`, `oem unlock`) and relock controllers.
+- **Subsystem 4 — UI Architecture & macOS Big Sur Styling (`flashdock/ui/main_window.py` & `flashdock/ui/styles.py`)**:
+  - Top segmented control for high-volume OEMs (Xiaomi, Samsung, Transsion, Universal Android) and Universal Chipsets (MediaTek BROM, Qualcomm EDL, Unisoc SPRD).
+  - Left Operations Panel: Device Diagnostics, Partition Backup, Flash Firmware, Bootloader Tools, and Reboot Shortcuts.
+  - Right Console Pane: Persistent read-only terminal with color-coded stream prefixes (`[INFO]` in Blue, `[WARN]` in Amber, `[SUCCESS]` in Green, `[ERROR]` in Red).
+  - Bottom Status Bar: Persistent USB connection badge and smooth `QProgressBar`.
+
 ---
 
 ## 3. Workstation Navigation Index (All Tools & Modals)
@@ -132,8 +148,8 @@ FlashDock is an Apple Human Interface Guidelines (HIG)-styled desktop Android fl
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **392 passed in 40.31s** (100% pass rate).
-- **Test Modules**: 41 individual test files in `tests/`.
+- **Unit & Integration Tests**: **413 passed in 43.60s** (100% pass rate).
+- **Test Modules**: 42 individual test files in `tests/`.
 - **Standalone Binary**: `dist/FlashDock_App/FlashDock.exe` (2.71 MB, Exit code 0).
 - **Release Archive**: `dist/FlashDock-v1.0.0-windows-x64.zip` (56.25 MB).
 - **Integrity Hashes**:

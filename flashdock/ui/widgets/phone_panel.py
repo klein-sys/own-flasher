@@ -78,10 +78,12 @@ class PhoneControlPanel(QFrame):
     key_guide_requested = Signal()
     setup_wizard_requested = Signal()
     restart_adb_requested = Signal()
+    action_requested = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setFixedWidth(220)
+        self.setProperty("cssClass", "operations_panel")
 
         root = QVBoxLayout(self)
         root.setContentsMargins(14, 18, 14, 18)
@@ -146,12 +148,47 @@ class PhoneControlPanel(QFrame):
         helper_lay.addLayout(helper_btn_row)
         root.addWidget(self._helper_card)
 
+        # ---- Section: GSM Operations Panel ----
+        ops_header = QLabel("OPERATIONS")
+        ops_header.setProperty("cssClass", "subheading")
+        ops_header.setStyleSheet("font-size: 10px; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px; color: #8E8E93;")
+        root.addWidget(ops_header)
+
+        self._btn_op_info = QPushButton("🔍  Device Diagnostics")
+        self._btn_op_info.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_op_info.setToolTip("Deep device property inspection & root/Knox detection")
+        self._btn_op_info.clicked.connect(lambda: self.action_requested.emit("check_phone"))
+        root.addWidget(self._btn_op_info)
+
+        self._btn_op_backup = QPushButton("💼  Partition Backup")
+        self._btn_op_backup.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_op_backup.setToolTip("Back up calibration blocks (NVRAM, EFS, Persist)")
+        self._btn_op_backup.clicked.connect(lambda: self.action_requested.emit("backup"))
+        root.addWidget(self._btn_op_backup)
+
+        self._btn_op_flash = QPushButton("⚡  Flash Firmware")
+        self._btn_op_flash.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_op_flash.setToolTip("Flash images, fastboot packages, or Treble GSIs")
+        self._btn_op_flash.clicked.connect(lambda: self.action_requested.emit("flash_rom"))
+        root.addWidget(self._btn_op_flash)
+
+        self._btn_op_unlock = QPushButton("🔓  Bootloader Tools")
+        self._btn_op_unlock.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_op_unlock.setToolTip("Brand-aware bootloader unlock / relock wizard")
+        self._btn_op_unlock.clicked.connect(lambda: self.action_requested.emit("unlock_bl"))
+        root.addWidget(self._btn_op_unlock)
+
         # ---- Separator ----
         sep = QFrame()
         sep.setProperty("cssClass", "separator")
         root.addWidget(sep)
 
-        # ---- Reboot buttons ----
+        # ---- Section: Reboot shortcuts ----
+        reboot_header = QLabel("REBOOT SHORTCUTS")
+        reboot_header.setProperty("cssClass", "subheading")
+        reboot_header.setStyleSheet("font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: #8E8E93;")
+        root.addWidget(reboot_header)
+
         self._buttons: dict[str, QPushButton] = {}
         button_defs = [
             ("system",     "⟳  Reboot",          "Reboot into Android"),

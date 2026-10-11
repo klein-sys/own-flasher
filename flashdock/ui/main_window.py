@@ -69,6 +69,21 @@ from flashdock.ui.widgets.workflow_guide import WorkflowGuideDialog
 from flashdock.ui.widgets.selftest_dialog import SelfTestDialog
 from flashdock.ui.widgets.key_guide_dialog import HardwareKeyGuideDialog
 from flashdock.ui.widgets.setup_wizard_dialog import SetupWizardDialog
+from flashdock.workers.device_monitor import (
+    DeviceMonitorWorker,
+    HardwareMode,
+    HARDWARE_VID_PID_MAP,
+)
+from flashdock.workers.flash_engine import (
+    FlashEngineWorker,
+    FlashOperationType,
+    FlashTask,
+)
+from flashdock.core.diagnostics_engine import (
+    DiagnosticsEngine,
+    AdbDiagnosticsResult,
+    FastbootDiagnosticsResult,
+)
 
 log = get_logger(__name__)
 
@@ -252,6 +267,9 @@ class MainWindow(QMainWindow):
         self._adb = adb
         self._fastboot = fastboot
         self._scrcpy_mgr = ScrcpyManager(tools_dir=TOOLS_DIR)
+        self._diagnostics_engine = DiagnosticsEngine(adb=self._adb, fastboot=self._fastboot)
+        self._monitor_worker = DeviceMonitorWorker(adb=self._adb, fastboot=self._fastboot)
+        self._flash_worker = FlashEngineWorker(adb=self._adb, fastboot=self._fastboot)
         self._action_buttons: dict[str, QPushButton] = {}
         self._action_descs: dict[str, str] = {}
 
@@ -368,6 +386,10 @@ class MainWindow(QMainWindow):
         self._device_selector = DeviceSelector()
         root_layout.addWidget(self._device_selector)
 
+        # ---- Top Navigation Bar: GSM Suite Segmented Control ----
+        self._top_segmented_bar = self._build_top_segmented_bar()
+        root_layout.addWidget(self._top_segmented_bar)
+
         # ---- Top area: sidebar + content ----
         body = QHBoxLayout()
         body.setContentsMargins(0, 0, 0, 0)
@@ -405,6 +427,96 @@ class MainWindow(QMainWindow):
         # ---- Status bar (bottom) ----
         self._status_bar = StatusBarWidget()
         root_layout.addWidget(self._status_bar)
+
+    def _build_top_segmented_bar(self) -> QWidget:
+        """Build the GSM Suite segmented control bar for high-volume OEMs and Universal Chipsets."""
+        self._seg_frame = QFrame()
+        self._seg_frame.setFixedHeight(38)
+        self._seg_frame.setProperty("cssClass", "segmented_control")
+        seg_layout = QHBoxLayout(self._seg_frame)
+        seg_layout.setContentsMargins(0, 0, 0, 0)
+        seg_layout.setSpacing(6)
+
+        label = QLabel("GSM SUITE:")
+        label.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93; letter-spacing: 0.5px;")
+        seg_layout.addWidget(label)
+
+        self._gsm_segments = [
+            ("Xiaomi", "xiaomi", "Xiaomi / POCO / Redmi (MIUI & HyperOS)"),
+            ("Samsung", "samsung", "Samsung Galaxy (One UI, Knox, Odin)"),
+            ("Transsion", "transsion", "Tecno (HiOS), Infinix (XOS), itel (itelOS)"),
+            ("Universal Android", "universal", "AOSP, Pixel, OnePlus, Motorola, Treble GSIs"),
+            ("MediaTek BROM", "mtk_brom", "MTK Helio/Dimensity BootROM & Preloader (BROM/DA)"),
+            ("Qualcomm EDL", "qualcomm_edl", "Snapdragon Emergency Download 9008 (EDL/Firehose)"),
+            ("Unisoc SPRD", "unisoc_sprd", "Spreadtrum / Unisoc Diag & FDL Download Mode"),
+        ]
+
+        self._gsm_btn_group: dict[str, QPushButton] = {}
+        for title, key, desc in self._gsm_segments:
+            btn = QPushButton(title)
+            btn.setCheckable(True)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setToolTip(desc)
+            btn.clicked.connect(lambda checked, k=key, t=title: self._on_gsm_segment_selected(k, t))
+            seg_layout.addWidget(btn)
+            self._gsm_btn_group[key] = btn
+
+        seg_layout.addStretch()
+        self._update_gsm_segments_style()
+        return self._seg_frame
+
+    def _update_gsm_segments_style(self) -> None:
+        """Update top GSM segmented bar colors according to current theme."""
+        if not hasattr(self, "_seg_frame") or not hasattr(self, "_gsm_btn_group"):
+            return
+        theme = self._config.get("theme", "dark").lower()
+        if theme == "light":
+            self._seg_frame.setStyleSheet(
+                "background-color: #EBEBEF; border-bottom: 1px solid #D2D2D7; padding: 2px 14px;"
+            )
+            btn_style = (
+                "QPushButton { background: transparent; border: 1px solid rgba(0, 0, 0, 0.12); "
+                "border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 500; color: #1D1D1F; } "
+                "QPushButton:checked { background: #007AFF; color: #FFFFFF; font-weight: 600; border-color: #007AFF; } "
+                "QPushButton:hover:!checked { background: rgba(0, 122, 255, 0.08); color: #007AFF; }"
+            )
+        else:
+            self._seg_frame.setStyleSheet(
+                "background-color: #1E1E20; border-bottom: 1px solid #2C2C2E; padding: 2px 14px;"
+            )
+            btn_style = (
+                "QPushButton { background: transparent; border: 1px solid rgba(255, 255, 255, 0.12); "
+                "border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 500; color: #E5E5EA; } "
+                "QPushButton:checked { background: #0A84FF; color: #FFFFFF; font-weight: 600; border-color: #0A84FF; } "
+                "QPushButton:hover:!checked { background: rgba(10, 132, 255, 0.15); color: #0A84FF; }"
+            )
+        for btn in self._gsm_btn_group.values():
+            btn.setStyleSheet(btn_style)
+
+    @Slot(str, str)
+    def _on_gsm_segment_selected(self, key: str, title: str) -> None:
+        """Handle switching between GSM Suite chipset and OEM profiles."""
+        for k, btn in self._gsm_btn_group.items():
+            btn.setChecked(k == key)
+
+        self._side_terminal.append_colored_stream("INFO", f"Active GSM Suite Profile: {title}")
+
+        if key == "xiaomi":
+            self._stack.setCurrentIndex(PAGE_UNLOCK)
+            self._unlock_screen._load_manual_brand("xiaomi")
+        elif key == "samsung":
+            self._stack.setCurrentIndex(PAGE_RETURN_STOCK)
+        elif key == "transsion":
+            self._stack.setCurrentIndex(PAGE_UNLOCK)
+            self._unlock_screen._load_manual_brand("tecno")
+        elif key == "universal":
+            self._stack.setCurrentIndex(PAGE_FLASH_ROM)
+        elif key == "mtk_brom":
+            self._stack.setCurrentIndex(PAGE_MTK_UNISOC)
+        elif key == "qualcomm_edl":
+            self._stack.setCurrentIndex(PAGE_UNBRICK)
+        elif key == "unisoc_sprd":
+            self._stack.setCurrentIndex(PAGE_MTK_UNISOC)
 
     def _build_home_page(self) -> None:
         """Build the home screen with search, category filtering, quick access presets and 14 action cards."""
@@ -1149,6 +1261,17 @@ class MainWindow(QMainWindow):
         self._phone_panel.key_guide_requested.connect(self._show_key_guide)
         self._phone_panel.setup_wizard_requested.connect(self._show_setup_wizard)
         self._phone_panel.restart_adb_requested.connect(self._restart_adb_server)
+        self._phone_panel.action_requested.connect(self._on_action)
+
+        # GSM Suite Hardware Monitor Worker
+        self._monitor_worker.device_connected.connect(self._on_hardware_device_connected)
+        self._monitor_worker.device_disconnected.connect(self._on_hardware_device_disconnected)
+        self._monitor_worker.status_message.connect(lambda msg: self._side_terminal.append_colored_stream("INFO", msg))
+
+        # GSM Suite Flash Engine Worker
+        self._flash_worker.progress_changed.connect(lambda cur, tot, pct: self._status_bar.set_progress(pct))
+        self._flash_worker.log_emitted.connect(lambda lvl, msg: self._side_terminal.append_colored_stream(lvl, msg))
+        self._flash_worker.flash_finished.connect(self._on_flash_finished)
 
         # Device selector -> device manager
         self._device_selector.serial_locked.connect(self._device_mgr.lock_serial)
@@ -1157,6 +1280,41 @@ class MainWindow(QMainWindow):
         # Initial status push
         self._status_bar.update_network(self._network.is_online)
         self._status_bar.update_mode(self._mode_display_text())
+
+    # ==================================================================
+    # GSM Suite Hardware & Flash Slots
+    # ==================================================================
+
+    @Slot(str, str, dict)
+    def _on_hardware_device_connected(self, mode: str, ident: str, details: dict) -> None:
+        """Handle hardware device connection from background monitor worker."""
+        log.info("Hardware monitor detected %s [%s]", mode, ident)
+        self._status_bar.update_connection_badge(mode, ident, details)
+        self._phone_panel.set_mode(mode)
+        self._side_terminal.append_colored_stream(
+            "INFO", f"Device connected: {details.get('display_name', mode)} [{ident}]"
+        )
+        if mode in ("mtk_brom", "qualcomm_edl", "unisoc_sprd"):
+            self._side_terminal.append_colored_stream(
+                "WARN", f"Emergency interface active: {mode.upper()} port ({ident})"
+            )
+
+    @Slot()
+    def _on_hardware_device_disconnected(self) -> None:
+        """Handle hardware disconnection from background monitor worker."""
+        self._status_bar.update_connection_badge("disconnected", "")
+        self._side_terminal.append_colored_stream("WARN", "Device disconnected from USB/COM bus.")
+
+    @Slot(bool, str)
+    def _on_flash_finished(self, success: bool, message: str) -> None:
+        """Handle completion of background flash engine task."""
+        self._status_bar.hide_progress()
+        if success:
+            self._side_terminal.append_colored_stream("SUCCESS", f"Flashing finished: {message}")
+            QMessageBox.information(self, "Flash Complete", f"Operation completed successfully!\n\n{message}")
+        else:
+            self._side_terminal.append_colored_stream("ERROR", f"Flashing failed: {message}")
+            QMessageBox.warning(self, "Flash Failed", f"Operation failed:\n\n{message}")
 
     # ==================================================================
     # Device handling
@@ -1480,6 +1638,8 @@ class MainWindow(QMainWindow):
             self._update_quick_buttons_style()
         if hasattr(self, "_search_input"):
             self._update_search_style()
+        if hasattr(self, "_seg_frame"):
+            self._update_gsm_segments_style()
 
         self._update_network_buttons(self._network.is_online)
         log.info("Theme switched to: %s", theme_name)
@@ -1536,6 +1696,12 @@ class MainWindow(QMainWindow):
     # Window lifecycle
     # ==================================================================
 
+    def showEvent(self, event) -> None:  # noqa: N802
+        """Handle window show event: start non-blocking hardware polling."""
+        super().showEvent(event)
+        if hasattr(self, "_monitor_worker") and not self._monitor_worker.isRunning():
+            self._monitor_worker.start_polling()
+
     def closeEvent(self, event) -> None:  # noqa: N802
         """Save window geometry and stop background threads."""
         if is_flash_locked():
@@ -1557,6 +1723,10 @@ class MainWindow(QMainWindow):
         self._config.set("window_height", geo.height(), save=False)
         self._config.set("window_x", geo.x(), save=False)
         self._config.set("window_y", geo.y())
+        if hasattr(self, "_monitor_worker") and self._monitor_worker.isRunning():
+            self._monitor_worker.stop_polling()
+        if hasattr(self, "_flash_worker") and self._flash_worker.isRunning():
+            self._flash_worker.cancel()
         self._device_mgr.stop()
         self._network.stop()
         log.info("MainWindow closed -- geometry saved.")
