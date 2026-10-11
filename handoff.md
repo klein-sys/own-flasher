@@ -132,10 +132,34 @@ FlashDock is an Apple Human Interface Guidelines (HIG)-styled desktop Android fl
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **385 passed in 30.22s** (100% pass rate).
+- **Unit & Integration Tests**: **392 passed in 40.31s** (100% pass rate).
 - **Test Modules**: 41 individual test files in `tests/`.
-- **Standalone Binary**: `dist/FlashDock/FlashDock.exe` (2.70 MB, Exit code 0).
-- **Release Archive**: `dist/FlashDock-v1.0.0-windows-x64.zip` (56.18 MB).
+- **Standalone Binary**: `dist/FlashDock_App/FlashDock.exe` (2.71 MB, Exit code 0).
+- **Release Archive**: `dist/FlashDock-v1.0.0-windows-x64.zip` (56.25 MB).
 - **Integrity Hashes**:
-  - `FlashDock.exe`: `657d338fde38983cd6604901c090ba1bdbebff30b1f3d4de0d5963a2064a12c8`
-  - `Release ZIP`: `749d2dd3aa68724627c4681c1eaacb78f4a358f429a7ce3ddeed054764a59778`
+  - `FlashDock.exe`: `82271f2d47862d3a28ce250bfa997001ae785c90415fcf54a3cac47e5147f6ed`
+  - `Release ZIP`: `36788d1a6067629f871cc713151f9acb26e16e86ff54104d5a55d3f65874be2f`
+
+---
+
+## 5. Recent Additions & Enhancements
+
+1. **Transsion Holdings Support**:
+   - Implemented `flashdock/brands/transsion.py` providing complete handlers for **Tecno** (HiOS), **Infinix** (XOS), and **itel** (itelOS).
+   - Bootloader unlock flows with `fastboot flashing unlock` and `fastboot flashing unlock_critical`, Volume Up hardware confirmation guides, and Carlcare official firmware portals.
+   - Updated `DeviceInfo.brand_normalized` and cataloged `transsion_usb` and `unisoc_spd` driver packages.
+
+2. **Clean Vector Brand Badges & Icons**:
+   - Created `flashdock/ui/brand_assets.py` rendering high-resolution, pixel-perfect vector SVG brand logos (Google, Samsung, Xiaomi, Tecno, Infinix, itel, OnePlus, Motorola, MediaTek, Qualcomm, Unisoc, Android).
+   - Replaced emoji stickers in `DeviceCard` and `UnlockScreen` with modern vector badges.
+
+3. **Smart Connection Helper & Troubleshooting**:
+   - Added connection guidance card in the sidebar: informs users when phone is in MTP/Charge mode, guides enabling USB Debugging, and displays high-visibility amber prompt when RSA key is unauthorized.
+   - 1-click **Setup Wizard** and **Restart ADB & Re-prompt** actions for quick resolution.
+
+4. **Hardware Key Guide & Remote**:
+   - Replaced loose sidebar sticker buttons with dedicated, contextual `HardwareKeyGuideDialog` modal detailing hardware combinations for Recovery, Fastboot, Bootloader unlock confirmation, and force restarts.
+
+5. **Driver Links & Portal Fix**:
+   - Fixed SP Flash Tool 404 URL by updating root portal to `https://spflashtool.com/`.
+   - Added official Transsion Carlcare, Tecno, and Infinix stock ROM repositories to Firmware Finder.

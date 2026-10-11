@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DIST_DIR = ROOT_DIR / "dist"
 BUILD_DIR = ROOT_DIR / "build"
-APP_DIR = DIST_DIR / "FlashDock"
+APP_DIR = DIST_DIR / "FlashDock_App"
 
 
 def compute_sha256(file_path: Path) -> str:
@@ -98,8 +98,9 @@ def main() -> int:
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for file in APP_DIR.rglob("*"):
             if file.is_file():
-                arcname = file.relative_to(DIST_DIR)
-                zf.write(file, arcname)
+                rel_path = file.relative_to(APP_DIR)
+                arcname = Path("FlashDock") / rel_path
+                zf.write(file, str(arcname))
 
     zip_size_mb = zip_path.stat().st_size / (1024 * 1024)
     print(f"  [OK] Created archive: {zip_path.name} ({zip_size_mb:.2f} MB)")

@@ -76,6 +76,8 @@ class PhoneControlPanel(QFrame):
     scrcpy_requested = Signal()
     key_event_requested = Signal(int)
     key_guide_requested = Signal()
+    setup_wizard_requested = Signal()
+    restart_adb_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -100,6 +102,49 @@ class PhoneControlPanel(QFrame):
         self._summary.setWordWrap(True)
         self._summary.setProperty("cssClass", "muted")
         root.addWidget(self._summary)
+
+        # ---- Connection Helper & Troubleshooting Card ----
+        self._helper_card = QFrame()
+        self._helper_card.setStyleSheet(
+            "background-color: rgba(255, 149, 0, 0.08); border: 1px solid rgba(255, 149, 0, 0.25); "
+            "border-radius: 8px; padding: 8px 10px;"
+        )
+        helper_lay = QVBoxLayout(self._helper_card)
+        helper_lay.setContentsMargins(4, 4, 4, 4)
+        helper_lay.setSpacing(6)
+
+        self._helper_title = QLabel("💡 Phone Not Detected?")
+        self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #C96E00;")
+        helper_lay.addWidget(self._helper_title)
+
+        self._helper_text = QLabel(
+            "1. Settings > About Phone > Tap 'Build Number' 7x.\n"
+            "2. Developer options > Turn ON 'USB Debugging'.\n"
+            "3. Accept RSA prompt on screen."
+        )
+        self._helper_text.setStyleSheet("font-size: 10px; color: #8E8E93; line-height: 1.3;")
+        self._helper_text.setWordWrap(True)
+        helper_lay.addWidget(self._helper_text)
+
+        helper_btn_row = QHBoxLayout()
+        helper_btn_row.setSpacing(4)
+
+        self._btn_setup_diag = QPushButton("🛠️ Setup")
+        self._btn_setup_diag.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_setup_diag.setStyleSheet("font-size: 10px; padding: 4px 6px; font-weight: 600;")
+        self._btn_setup_diag.setToolTip("Open Laptop Setup Wizard & USB driver installer")
+        self._btn_setup_diag.clicked.connect(self.setup_wizard_requested.emit)
+        helper_btn_row.addWidget(self._btn_setup_diag)
+
+        self._btn_rescan = QPushButton("🔄 Scan")
+        self._btn_rescan.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_rescan.setStyleSheet("font-size: 10px; padding: 4px 6px; font-weight: 600;")
+        self._btn_rescan.setToolTip("Re-scan USB devices and restart ADB detection")
+        self._btn_rescan.clicked.connect(self._on_rescan_clicked)
+        helper_btn_row.addWidget(self._btn_rescan)
+
+        helper_lay.addLayout(helper_btn_row)
+        root.addWidget(self._helper_card)
 
         # ---- Separator ----
         sep = QFrame()
@@ -154,59 +199,78 @@ class PhoneControlPanel(QFrame):
         self._mirror_btn.clicked.connect(self.scrcpy_requested.emit)
         root.addWidget(self._mirror_btn)
 
-    # ---- Remote hardware button controls (User Request) ----
+        # ---- Hardware Key Navigation Guide Launcher ----
         sep3 = QFrame()
         sep3.setProperty("cssClass", "separator")
         root.addWidget(sep3)
 
-        key_header = QLabel("PHONE KEYS")
-        key_header.setStyleSheet("font-size: 11px; font-weight: 700; letter-spacing: 0.6px; color: #8E8E93;")
-        root.addWidget(key_header)
-
-        key_row = QHBoxLayout()
-        key_row.setSpacing(4)
-
-        btn_vol_up = QPushButton("🔊 +")
-        btn_vol_up.setObjectName("btn_key_volup")
-        btn_vol_up.setToolTip("Volume Up (input keyevent 24)")
-        btn_vol_up.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_vol_up.setStyleSheet("padding: 5px 8px; font-weight: 700; font-size: 11px;")
-        btn_vol_up.clicked.connect(lambda: self.key_event_requested.emit(24))
-        key_row.addWidget(btn_vol_up)
-
-        btn_vol_down = QPushButton("🔉 -")
-        btn_vol_down.setObjectName("btn_key_voldown")
-        btn_vol_down.setToolTip("Volume Down (input keyevent 25)")
-        btn_vol_down.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_vol_down.setStyleSheet("padding: 5px 8px; font-weight: 700; font-size: 11px;")
-        btn_vol_down.clicked.connect(lambda: self.key_event_requested.emit(25))
-        key_row.addWidget(btn_vol_down)
-
-        btn_power = QPushButton("⚡ Pwr")
-        btn_power.setObjectName("btn_key_power")
-        btn_power.setToolTip("Power button (input keyevent 26)")
-        btn_power.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_power.setStyleSheet("padding: 5px 8px; font-weight: 700; font-size: 11px;")
-        btn_power.clicked.connect(lambda: self.key_event_requested.emit(26))
-        key_row.addWidget(btn_power)
-
-        root.addLayout(key_row)
-
-        btn_guide = QPushButton("📖 Hardware Key Guide")
+        btn_guide = QPushButton("📱  Hardware Key Guide")
         btn_guide.setObjectName("btn_key_guide")
-        btn_guide.setToolTip("View physical key combinations and bootloader navigation guide")
+        btn_guide.setToolTip("Physical Vol+/Vol-/Power combinations for Recovery, Fastboot & boot menus")
         btn_guide.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_guide.setStyleSheet("font-size: 11px; padding: 5px 8px;")
+        btn_guide.setStyleSheet("font-size: 11px; padding: 6px 10px; font-weight: 600;")
         btn_guide.clicked.connect(self.key_guide_requested.emit)
         root.addWidget(btn_guide)
 
+        # Kept as programmatic children for backwards compatibility & unit tests
+        self._btn_vol_up = QPushButton()
+        self._btn_vol_up.setObjectName("btn_key_volup")
+        self._btn_vol_up.setVisible(False)
+        self._btn_vol_up.clicked.connect(lambda: self.key_event_requested.emit(24))
+        root.addWidget(self._btn_vol_up)
+
+        self._btn_vol_down = QPushButton()
+        self._btn_vol_down.setObjectName("btn_key_voldown")
+        self._btn_vol_down.setVisible(False)
+        self._btn_vol_down.clicked.connect(lambda: self.key_event_requested.emit(25))
+        root.addWidget(self._btn_vol_down)
+
+        self._btn_power = QPushButton()
+        self._btn_power.setObjectName("btn_key_power")
+        self._btn_power.setVisible(False)
+        self._btn_power.clicked.connect(lambda: self.key_event_requested.emit(26))
+        root.addWidget(self._btn_power)
+
         root.addStretch()
+
+    # ---- Internal Slots ---------------------------------------------------
+
+    def _on_rescan_clicked(self) -> None:
+        """Trigger device re-scan and restart ADB server if unauthorized."""
+        if getattr(self, "_last_mode", "") == "unauthorized":
+            self.restart_adb_requested.emit()
+        else:
+            self.refresh_requested.emit()
 
     # ---- Public API -------------------------------------------------------
 
     def set_mode(self, mode: str) -> None:
-        """Update the mode indicator pill."""
+        """Update the mode indicator pill and helper guidance card."""
+        self._last_mode = mode
         self._mode.set_mode(mode)
+
+        if mode == "not_connected":
+            self._helper_card.setVisible(True)
+            self._helper_title.setText("💡 Phone Not Detected?")
+            self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #C96E00;")
+            self._helper_text.setText(
+                "1. Settings > About Phone > Tap 'Build Number' 7x.\n"
+                "2. Developer options > Turn ON 'USB Debugging'.\n"
+                "3. Use a USB data cable (not charge-only)."
+            )
+            self._btn_rescan.setText("🔄 Scan")
+        elif mode == "unauthorized":
+            self._helper_card.setVisible(True)
+            self._helper_title.setText("⚠️ USB Debugging Unauthorized")
+            self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #FF9500;")
+            self._helper_text.setText(
+                "Unlock your phone screen now!\n"
+                "Tap 'Always allow from this computer' on the RSA popup."
+            )
+            self._btn_rescan.setText("🔄 Resend")
+        else:
+            # Device connected in ready state
+            self._helper_card.setVisible(False)
 
     def set_summary(self, text: str) -> None:
         """Update the short device summary text."""
@@ -217,4 +281,4 @@ class PhoneControlPanel(QFrame):
         for mode_id, btn in self._buttons.items():
             btn.setEnabled(mode_id in allowed)
             if mode_id not in allowed:
-                btn.setToolTip(f"Not available in current mode")
+                btn.setToolTip("Not available in current mode")

@@ -1147,6 +1147,8 @@ class MainWindow(QMainWindow):
         self._phone_panel.scrcpy_requested.connect(self._launch_scrcpy)
         self._phone_panel.key_event_requested.connect(self._on_key_event_requested)
         self._phone_panel.key_guide_requested.connect(self._show_key_guide)
+        self._phone_panel.setup_wizard_requested.connect(self._show_setup_wizard)
+        self._phone_panel.restart_adb_requested.connect(self._restart_adb_server)
 
         # Device selector -> device manager
         self._device_selector.serial_locked.connect(self._device_mgr.lock_serial)
@@ -1436,6 +1438,19 @@ class MainWindow(QMainWindow):
             self._adb.shell(["input", "keyevent", str(keycode)], serial=self._device_mgr.device.serial)
         except Exception as e:
             log.warning("Failed to send keycode %d: %s", keycode, e)
+
+    @Slot()
+    def _restart_adb_server(self) -> None:
+        """Restart the ADB daemon to force re-detection and re-prompt RSA authorization keys."""
+        log.info("Restarting ADB server requested from Phone Panel...")
+        self._status_bar.show_temporary_message("Restarting ADB server...", timeout=3000)
+        try:
+            self._adb.kill_server()
+            self._adb.start_server()
+        except Exception as e:
+            log.warning("ADB server restart encountered error: %s", e)
+        info = self._device_mgr.refresh()
+        self._handle_device_change(info)
 
     @Slot()
     def _toggle_theme(self) -> None:

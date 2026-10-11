@@ -13,6 +13,7 @@ from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
+    QComboBox,
     QFrame,
     QHBoxLayout,
     QInputDialog,
@@ -35,6 +36,7 @@ from flashdock.core.device_manager import DeviceManager
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
+from flashdock.ui.brand_assets import get_brand_badge
 
 log = get_logger(__name__)
 
@@ -42,6 +44,7 @@ log = get_logger(__name__)
 import flashdock.brands.google  # noqa: F401
 import flashdock.brands.xiaomi  # noqa: F401
 import flashdock.brands.samsung  # noqa: F401
+import flashdock.brands.transsion  # noqa: F401
 import flashdock.brands.others  # noqa: F401
 
 
@@ -186,15 +189,61 @@ class UnlockScreen(QWidget):
         layout.addWidget(self._scroll, 1)
 
     def load_for_device(self, device: Optional[DeviceInfo]) -> None:
-        """Load the unlock wizard for the detected device."""
+        """Load the unlock wizard for the detected device, or provide brand selector."""
         self._clear_content()
 
         if not device or device.mode == "not_connected":
-            self._subtitle.setText("No device connected. Plug in your phone to begin.")
-            placeholder = QLabel("Connect a phone via USB to see the unlock wizard for your brand.")
-            placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            placeholder.setProperty("cssClass", "muted")
-            self._content_layout.insertWidget(0, placeholder)
+            self._subtitle.setText("No device connected. Select your brand below to view guided unlock instructions or plug in your phone.")
+
+            selector_card = QFrame()
+            selector_card.setProperty("cssClass", "card")
+            s_layout = QVBoxLayout(selector_card)
+            s_layout.setContentsMargins(18, 16, 18, 16)
+            s_layout.setSpacing(12)
+
+            s_title = QLabel("📱 Browse Bootloader Unlock Guides by Brand")
+            s_title.setProperty("cssClass", "subheading")
+            s_layout.addWidget(s_title)
+
+            s_desc = QLabel(
+                "No phone is currently connected with active USB Debugging. "
+                "Select your phone brand below to view official prerequisites, OEM unlocking procedures, "
+                "hardware key confirmation steps, and fastboot unlock commands:"
+            )
+            s_desc.setWordWrap(True)
+            s_desc.setProperty("cssClass", "muted")
+            s_layout.addWidget(s_desc)
+
+            brand_row = QHBoxLayout()
+            brand_row.setSpacing(10)
+
+            combo = QComboBox()
+            combo.setMinimumHeight(34)
+            brands_list = [
+                ("Tecno Mobile (HiOS)", "tecno"),
+                ("Infinix Mobility (XOS)", "infinix"),
+                ("itel Mobile (itelOS)", "itel"),
+                ("Xiaomi / Redmi / POCO (HyperOS / MIUI)", "xiaomi"),
+                ("Google Pixel (Stock Android)", "google"),
+                ("Samsung Galaxy (Knox / Download Mode)", "samsung"),
+                ("OnePlus (OxygenOS)", "oneplus"),
+                ("Motorola (Moto Bootloader)", "motorola"),
+                ("Universal / Other Android", "generic"),
+            ]
+            for label, bid in brands_list:
+                combo.addItem(label, bid)
+
+            load_btn = QPushButton("📖 View Unlock Guide")
+            load_btn.setProperty("cssClass", "primary")
+            load_btn.setMinimumHeight(34)
+            load_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            load_btn.clicked.connect(lambda: self._load_manual_brand(combo.currentData()))
+
+            brand_row.addWidget(combo, 1)
+            brand_row.addWidget(load_btn)
+            s_layout.addLayout(brand_row)
+
+            self._content_layout.insertWidget(0, selector_card)
             return
 
         # Already unlocked?
@@ -223,14 +272,68 @@ class UnlockScreen(QWidget):
         self._subtitle.setText(
             f"{self._flow.brand_display} unlock flow for {device.summary_line}"
         )
-        self._build_flow_ui()
+        self._build_flow_ui(is_manual=False)
 
-    def _build_flow_ui(self) -> None:
-        """Build the wizard UI from the current flow."""
+    def _load_manual_brand(self, brand_id: str) -> None:
+        """Load unlock flow for a manually chosen brand without a connected device."""
+        mock_device = DeviceInfo(
+            serial="MANUAL-SELECTION",
+            mode="system",
+            brand=brand_id,
+            model=f"{brand_id.title()} Device",
+            bootloader_state="locked",
+        )
+        handler = get_handler_for_device(mock_device)
+        if not handler:
+            from flashdock.brands import get_brand_handler
+            handler = get_brand_handler(brand_id) or get_brand_handler("generic")
+        if not handler:
+            return
+        self._clear_content()
+        self._flow = handler.get_unlock_flow(mock_device)
+        self._subtitle.setText(f"{self._flow.brand_display} Bootloader Guide (Manual Preview)")
+        self._build_flow_ui(is_manual=True)
+
+    def _build_flow_ui(self, is_manual: bool = False) -> None:
+        """Build the wizard UI from the current flow with brand badge."""
         if not self._flow:
             return
 
         flow = self._flow
+
+        # Brand Badge Header Card
+        brand_card = QFrame()
+        brand_card.setProperty("cssClass", "card")
+        bc_layout = QHBoxLayout(brand_card)
+        bc_layout.setContentsMargins(14, 10, 14, 10)
+        bc_layout.setSpacing(14)
+
+        badge_lbl = QLabel()
+        badge_pixmap = get_brand_badge(flow.brand_display, width=130, height=36)
+        badge_lbl.setPixmap(badge_pixmap)
+        bc_layout.addWidget(badge_lbl)
+
+        info_col = QVBoxLayout()
+        info_col.setSpacing(2)
+        bc_title = QLabel(f"{flow.brand_display} Bootloader Architecture")
+        bc_title.setStyleSheet("font-weight: 600; font-size: 14px;")
+        info_col.addWidget(bc_title)
+        bc_sub = QLabel(
+            "Follow each step carefully. Automated buttons require a connected device in Fastboot mode."
+            if is_manual
+            else "Guided unlock flow prepared for your connected device."
+        )
+        bc_sub.setProperty("cssClass", "muted")
+        info_col.addWidget(bc_sub)
+        bc_layout.addLayout(info_col, 1)
+
+        if is_manual:
+            back_btn = QPushButton("🔄 Change Brand")
+            back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            back_btn.clicked.connect(lambda: self.load_for_device(None))
+            bc_layout.addWidget(back_btn)
+
+        self._content_layout.insertWidget(self._content_layout.count() - 1, brand_card)
 
         # Warnings banner
         if flow.warnings:
@@ -310,8 +413,14 @@ class UnlockScreen(QWidget):
             return
 
         device = self._device_mgr.device
-        if not device:
-            QMessageBox.warning(self, "No device", "No device connected.")
+        if not device or device.mode == "not_connected" or getattr(device, "serial", "") == "MANUAL-SELECTION":
+            QMessageBox.information(
+                self,
+                "Device Required",
+                f"Automated step execution requires a connected physical phone in "
+                f"{step.requires_mode.title() if step.requires_mode else 'Fastboot'} mode.\n\n"
+                "Please connect your device with USB Debugging enabled to execute this command."
+            )
             return
 
         serial = device.serial
@@ -352,6 +461,11 @@ class UnlockScreen(QWidget):
             res = self._adb.reboot(serial=serial)
             success = res.success
             result_text = "Rebooted" if success else res.stderr
+
+        elif "unlock_critical" in cmd:
+            res = self._fb.flashing_unlock_critical(serial=serial)
+            success = res.success
+            result_text = "Unlock critical command sent" if success else res.stderr
 
         elif "flashing unlock" in cmd:
             res = self._fb.flashing_unlock(serial=serial)

@@ -18,6 +18,7 @@ from flashdock.core.device import DeviceInfo
 import flashdock.brands.google  # noqa: F401
 import flashdock.brands.xiaomi  # noqa: F401
 import flashdock.brands.samsung  # noqa: F401
+import flashdock.brands.transsion  # noqa: F401
 import flashdock.brands.others  # noqa: F401
 
 
@@ -58,6 +59,26 @@ class TestBrandRegistry:
     def test_sony_registered(self):
         h = get_brand_handler("sony")
         assert h is not None
+
+    def test_tecno_registered(self):
+        h = get_brand_handler("tecno")
+        assert h is not None
+        assert h.brand_id == "tecno"
+
+    def test_infinix_registered(self):
+        h = get_brand_handler("infinix")
+        assert h is not None
+        assert h.brand_id == "infinix"
+
+    def test_itel_registered(self):
+        h = get_brand_handler("itel")
+        assert h is not None
+        assert h.brand_id == "itel"
+
+    def test_transsion_registered(self):
+        h = get_brand_handler("transsion")
+        assert h is not None
+        assert h.brand_id == "transsion"
 
     def test_generic_registered(self):
         h = get_brand_handler("generic")
@@ -328,4 +349,25 @@ class TestFastbootUnlockCommands:
         assert res.command == ["dummy_fastboot", "-s", "TEST_SERIAL", "flashing", "lock"]
         assert res.return_code == 0
         assert res.success is True
+
+
+class TestTranssionFlows:
+    def test_tecno_unlock_flow(self):
+        h = get_brand_handler("tecno")
+        flow = h.get_unlock_flow(DeviceInfo(brand="Tecno", chipset="mediatek"))
+        assert flow.brand == "tecno"
+        assert flow.wipes_data is True
+        assert len(flow.steps) >= 5
+
+    def test_infinix_unlock_flow(self):
+        h = get_brand_handler("infinix")
+        flow = h.get_unlock_flow(DeviceInfo(brand="Infinix"))
+        assert flow.brand == "infinix"
+        assert "XOS" in flow.brand_display
+
+    def test_itel_unlock_flow(self):
+        h = get_brand_handler("itel")
+        flow = h.get_unlock_flow(DeviceInfo(brand="itel"))
+        assert flow.brand == "itel"
+        assert flow.supports_relock is True
 

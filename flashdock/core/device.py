@@ -150,6 +150,14 @@ class DeviceInfo:
             return "oneplus"
         if b in ("oppo", "realme"):
             return b
+        if "transsion" in b:
+            return "transsion"
+        if "tecno" in b:
+            return "tecno"
+        if "infinix" in b:
+            return "infinix"
+        if "itel" in b:
+            return "itel"
         brand_map = {
             "google": "google",
             "samsung": "samsung",

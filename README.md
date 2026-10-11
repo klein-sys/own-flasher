@@ -23,7 +23,7 @@ FlashDock has achieved **100% completion across all 16 engineering phases plus U
 | 1 | **Foundation & Architecture** | Core | ✅ Done | Rotating logger, thread-safe config, online/offline monitor, serial masking |
 | 2 | **ADB & Fastboot Engine** | Device | ✅ Done | Subprocess wrappers, fastboot device tracking, Phone Control Panel |
 | 3 | **Safety Checklist & Distribution** | Rescue | ✅ Done | Pre-flight safety checklist, battery/lock gates, PyInstaller build spec |
-| 4 | **Bootloader Unlock Wizard** | Flashing | ✅ Done | Brand-specific unlock guides: Google Pixel, Xiaomi (token countdown), Samsung, OnePlus, Motorola |
+| 4 | **Bootloader Unlock Wizard** | Flashing | ✅ Done | Brand-specific unlock guides: Google Pixel, Xiaomi (token countdown), Samsung, Tecno (HiOS), Infinix (XOS), itel (itelOS), OnePlus, Motorola |
 | 5 | **Partition Backup & Restore** | Rescue | ✅ Done | Slot-aware partition backups (`boot`, `init_boot`, `vbmeta`, `efs`, `persist`) with SHA-256 verification |
 | 6 | **Universal Rooting Wizard** | Root | ✅ Done | Magisk (Stable/Alpha), KernelSU Next, APatch, SukiSU; boot extraction & auto-patching |
 | 7 | **Root Modules & Kill-Switch** | Root | ✅ Done | Offline module repository, batch flashing, emergency bootloop recovery kill-switch |
@@ -31,14 +31,15 @@ FlashDock has achieved **100% completion across all 16 engineering phases plus U
 | 9 | **ROM, GSI & Recovery Flasher** | Flashing | ✅ Done | Fastboot ROM package parser, sparse chunk flasher, Treble GSI flasher, FastbootD switcher |
 | 10 | **Diagnostics, Debloater & Tweaks** | Device | ✅ Done | Package manager debloater (safe user-0 disable), battery health telemetry, wireless ADB |
 | 11 | **MediaTek & Unisoc Engine** | Flashing | ✅ Done | MTK BROM scatter parser, SLA/DAA auth bypass, Unisoc PAC extractor, FDL HDLC protocol |
-| 12 | **Downloads & OEM Driver Manager** | Device | ✅ Done | Driver installer (Google, Samsung, Qualcomm 9008, MTK, Unisoc), platform-tools downloader |
+| 12 | **Downloads & OEM Driver Manager** | Device | ✅ Done | Driver installer (Google, Samsung, Qualcomm 9008, MTK VCOM, Transsion USB, Unisoc SPD), platform-tools downloader |
 | 13 | **Emergency Unbrick & EDL Flasher** | Rescue | ✅ Done | Qualcomm Emergency Download (EDL 9008), Samsung Odin PIT/TAR, MTK SP Flash, Fastboot unbrick |
 | 14 | **Play Integrity & Fingerprint Spoofer** | Root | ✅ Done | PIF `pif.json` manager, custom `keybox.xml` injector, banking root-hiding card grid |
 | 15 | **Logs, Telemetry & Troubleshooting** | Device | ✅ Done | Rotating application log viewer, device logcat streamer, kernel dmesg, guided interactive triage |
 | 16 | **Production Hardening & Release** | Release | ✅ Done | Automated System Self-Test, non-fatal Crash Reporter, release packaging & SHA-256 checksums |
+| + | **Transsion Brands Engine** | Brands | ✅ Done | Complete handlers for Tecno (HiOS), Infinix (XOS), itel (itelOS), and Carlcare firmware portal |
+| + | **Vector Brand Badges** | UI / UX | ✅ Done | Pixel-perfect vector SVG brand logos (Google, Samsung, Xiaomi, Tecno, Infinix, itel, etc.) replacing emojis |
+| + | **Smart Connection & Keys Helper** | Controls | ✅ Done | Interactive sidebar connection troubleshooter (USB debugging/RSA key) & contextual Hardware Key Guide |
 | + | **Laptop Setup Wizard** | Workstation | ✅ Done | 4-step wizard for platform-tools, OEM drivers, laptop USB power/sleep settings & live test |
-| + | **Hardware Key Guide & Remote** | Controls | ✅ Done | Bootloader/Recovery Vol+/Vol-/Power combinations guide & sidebar virtual keypads |
-| + | **Clean & Spacious Apple HIG UX** | UI / UX | ✅ Done | Decluttered home screen, dark-mode cards in Self-Test, fixed sort clipping, scrcpy guard |
 
 ---
 

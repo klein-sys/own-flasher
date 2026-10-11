@@ -308,6 +308,15 @@ class Fastboot:
             action="fastboot_flashing_unlock",
         )
 
+    def flashing_unlock_critical(self, serial: str = "") -> CommandResult:
+        """Unlock critical partitions (Pixel / Transsion newer devices)."""
+        return self._run(
+            ["flashing", "unlock_critical"],
+            serial=serial,
+            timeout=30,
+            action="fastboot_flashing_unlock_critical",
+        )
+
     def flashing_lock(self, serial: str = "") -> CommandResult:
         """Lock the bootloader."""
         return self._run(

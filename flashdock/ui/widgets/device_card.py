@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from flashdock.core.device import DeviceInfo
 from flashdock.logger import get_logger
+from flashdock.ui.brand_assets import get_brand_pixmap
 
 log = get_logger(__name__)
 
@@ -121,10 +122,18 @@ class DeviceCard(QScrollArea):
             self._layout.addStretch()
             return
 
-        # ---- Header ----
-        header = QLabel(f"📱  {info.summary_line}")
-        header.setProperty("cssClass", "heading")
-        self._layout.addWidget(header)
+        # ---- Header with Brand Vector Logo ----
+        header_row = QHBoxLayout()
+        header_row.setSpacing(12)
+
+        logo_lbl = QLabel()
+        logo_lbl.setPixmap(get_brand_pixmap(info.brand, width=64, height=28))
+        header_row.addWidget(logo_lbl)
+
+        header_text = QLabel(info.summary_line)
+        header_text.setProperty("cssClass", "heading")
+        header_row.addWidget(header_text, 1)
+        self._layout.addLayout(header_row)
 
         # ---- Detection warnings ----
         for err in info.detection_errors:

@@ -115,5 +115,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='FlashDock',
+    name='FlashDock_App',
 )

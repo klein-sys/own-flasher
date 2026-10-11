@@ -118,3 +118,11 @@ def get_handler_for_device(device: DeviceInfo) -> Optional[BrandHandler]:
         return handler
     # Fall back to generic
     return get_brand_handler("generic")
+
+
+# Automatically register all brand handlers
+import flashdock.brands.google  # noqa: F401, E402
+import flashdock.brands.xiaomi  # noqa: F401, E402
+import flashdock.brands.samsung  # noqa: F401, E402
+import flashdock.brands.transsion  # noqa: F401, E402
+import flashdock.brands.others  # noqa: F401, E402

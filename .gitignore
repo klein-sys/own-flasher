@@ -14,21 +14,8 @@ build/
 .coverage
 htmlcov/
 
-# Local FlashDock Data & Device Logs
-data/logs/*
-!data/logs/.gitkeep
-data/cache/*
-!data/cache/.gitkeep
-data/backups/*
-!data/backups/.gitkeep
-data/firmware/*
-!data/firmware/.gitkeep
-data/config.json
-
-# Platform-tools binaries & driver downloads (downloaded on demand)
-data/tools/platform-tools/
-data/tools/scrcpy/
-data/tools/drivers/
+# Local FlashDock Data & Runtime
+data/
 
 # IDE & Editor files
 .vscode/

@@ -57,6 +57,9 @@ class TestDeviceInfo:
         assert DeviceInfo(brand="Xiaomi").brand_normalized == "xiaomi"
         assert DeviceInfo(brand="POCO").brand_normalized == "poco"
         assert DeviceInfo(brand="OnePlus").brand_normalized == "oneplus"
+        assert DeviceInfo(brand="Tecno").brand_normalized == "tecno"
+        assert DeviceInfo(brand="Infinix").brand_normalized == "infinix"
+        assert DeviceInfo(brand="itel").brand_normalized == "itel"
         assert DeviceInfo(brand="WeirdBrand").brand_normalized == "unknown"
 
     def test_to_dict(self):
