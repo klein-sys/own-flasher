@@ -43,6 +43,7 @@ from flashdock.core.troubleshooter import (
     TroubleshootingItem,
 )
 from flashdock.logger import get_log_file_path, get_logger, mask_serials
+from flashdock.ui.widgets.selftest_dialog import SelfTestDialog
 from flashdock.tools.adb import ADB
 
 log = get_logger(__name__)
@@ -336,6 +337,42 @@ class LogsHelpScreen(QWidget):
         layout = QVBoxLayout(self._tab_troubleshoot)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
+
+        # Phase 16 Self-Test Diagnostics Banner Card
+        st_card = QFrame()
+        st_card.setStyleSheet(
+            "QFrame { background-color: rgba(10, 132, 255, 0.08); border: 1px solid rgba(10, 132, 255, 0.25); "
+            "border-radius: 10px; padding: 12px; }"
+        )
+        st_lay = QHBoxLayout(st_card)
+        st_lay.setContentsMargins(8, 4, 8, 4)
+        st_lay.setSpacing(12)
+
+        st_icon = QLabel("⚡")
+        st_icon.setStyleSheet("font-size: 22px;")
+        st_lay.addWidget(st_icon)
+
+        st_text_col = QVBoxLayout()
+        st_text_col.setSpacing(2)
+        st_title = QLabel("System Environment & Toolchain Self-Test")
+        st_title.setStyleSheet("font-size: 13px; font-weight: 700; color: #0A84FF;")
+        st_desc = QLabel("Automated verification of ADB/Fastboot binaries, user data permissions, and network readiness.")
+        st_desc.setStyleSheet("font-size: 11px; color: #8E8E93;")
+        st_text_col.addWidget(st_title)
+        st_text_col.addWidget(st_desc)
+        st_lay.addLayout(st_text_col, 1)
+
+        run_st_btn = QPushButton("▶️  Run Self-Test")
+        run_st_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        run_st_btn.setStyleSheet(
+            "QPushButton { background-color: #0A84FF; color: #FFFFFF; font-weight: 600; "
+            "border-radius: 6px; padding: 6px 14px; font-size: 12px; } "
+            "QPushButton:hover { background-color: #0071E3; }"
+        )
+        run_st_btn.clicked.connect(self._open_selftest)
+        st_lay.addWidget(run_st_btn)
+
+        layout.addWidget(st_card)
 
         desc = QLabel(
             "Select a common issue below for step-by-step solutions and 1-click automated rescue actions."
@@ -708,3 +745,8 @@ class LogsHelpScreen(QWidget):
         elif item.navigation_target is not None:
             # Emit navigation signal to switch page in MainWindow
             self.navigate_to_page.emit(item.navigation_target)
+
+    def _open_selftest(self) -> None:
+        """Launch the system health and toolchain self-test modal dialog."""
+        dlg = SelfTestDialog(self)
+        dlg.exec()

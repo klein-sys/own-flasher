@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QApplication
 
 from flashdock import __app_name__
 from flashdock.config import Config
+from flashdock.core.crash_reporter import install_crash_handler, set_crash_dialog_callback
 from flashdock.core.device_manager import DeviceManager
 from flashdock.core.network import NetworkMonitor
 from flashdock.logger import get_logger, setup_logging
@@ -21,12 +22,16 @@ from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
 from flashdock.ui.main_window import MainWindow
 from flashdock.ui.styles import get_stylesheet
+from flashdock.ui.widgets.crash_dialog import CrashDialog
 
 log = get_logger(__name__)
 
 
 def run() -> int:
     """Entry point for the GUI application.  Returns the exit code."""
+
+    # ---- Phase 16 Crash Reporter ------------------------------------------
+    install_crash_handler()
 
     # ---- Logging -----------------------------------------------------------
     log_file = setup_logging()
@@ -44,6 +49,15 @@ def run() -> int:
     app.setStyle("Fusion")  # Consistent look across Windows versions
     active_theme = config.get("theme", "dark")
     app.setStyleSheet(get_stylesheet(active_theme))
+
+    def _show_crash_modal(report_text: str, log_file_path: str) -> None:
+        try:
+            dlg = CrashDialog(report_text, log_file_path)
+            dlg.exec()
+        except Exception:
+            pass
+
+    set_crash_dialog_callback(_show_crash_modal)
 
     # ---- Tools -------------------------------------------------------------
     dry_run = config.dry_run

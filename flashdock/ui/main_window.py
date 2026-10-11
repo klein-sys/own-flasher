@@ -66,6 +66,7 @@ from flashdock.ui.widgets.scrcpy_dialog import ScrcpyDialog
 from flashdock.ui.widgets.side_terminal import SideTerminalHandler, SideTerminalWidget
 from flashdock.ui.widgets.status_bar import StatusBarWidget
 from flashdock.ui.widgets.workflow_guide import WorkflowGuideDialog
+from flashdock.ui.widgets.selftest_dialog import SelfTestDialog
 
 log = get_logger(__name__)
 
@@ -423,6 +424,13 @@ class MainWindow(QMainWindow):
         guide_btn.setToolTip("View recommended safe workflows and function explanations")
         guide_btn.clicked.connect(self._show_guide)
         top_bar.addWidget(guide_btn)
+
+        # Self-Test button (Phase 16)
+        selftest_btn = QPushButton("⚡  Self-Test")
+        selftest_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        selftest_btn.setToolTip("Run automated system diagnostics & toolchain integrity checks")
+        selftest_btn.clicked.connect(self._show_selftest)
+        top_bar.addWidget(selftest_btn)
 
         # Dark/Light Theme toggle button
         current_theme = self._config.get("theme", "dark")
@@ -1392,6 +1400,12 @@ class MainWindow(QMainWindow):
     def _show_guide(self) -> None:
         """Open the interactive workflow and function guide (User Addition 7)."""
         dlg = WorkflowGuideDialog(self)
+        dlg.exec()
+
+    @Slot()
+    def _show_selftest(self) -> None:
+        """Open the system diagnostics and self-test dialog (Phase 16)."""
+        dlg = SelfTestDialog(self)
         dlg.exec()
 
     @Slot()
