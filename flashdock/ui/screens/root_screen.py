@@ -222,6 +222,7 @@ class RootScreen(QWidget):
         picker_row = QHBoxLayout()
         self._edit_stock_path = QLineEdit()
         self._edit_stock_path.setPlaceholderText("Select stock boot.img or init_boot.img from your firmware...")
+        self._edit_stock_path.setClearButtonEnabled(True)
         picker_row.addWidget(self._edit_stock_path, 1)
 
         browse_btn = QPushButton("Browse...")
@@ -314,6 +315,7 @@ class RootScreen(QWidget):
         unroot_row = QHBoxLayout()
         self._edit_unroot_path = QLineEdit()
         self._edit_unroot_path.setPlaceholderText("Select stock boot image to restore...")
+        self._edit_unroot_path.setClearButtonEnabled(True)
         unroot_row.addWidget(self._edit_unroot_path, 1)
 
         unroot_browse_btn = QPushButton("Browse...")

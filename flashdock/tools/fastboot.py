@@ -185,6 +185,9 @@ class Fastboot:
                 return line.split(":", 1)[1].strip()
         return None
 
+    def get_var(self, var: str, serial: str = "") -> Optional[str]:
+        return self.getvar(var, serial=serial)
+
     def getvar_all(self, serial: str = "") -> dict[str, str]:
         """Read all fastboot variables."""
         res = self._run(

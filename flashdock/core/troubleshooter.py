@@ -39,7 +39,7 @@ class TroubleshootingItem:
 TROUBLESHOOTING_CATALOG: list[TroubleshootingItem] = [
     TroubleshootingItem(
         id="device_not_detected",
-        icon="🔌",
+        icon="usb",
         title="Phone Not Detected (ADB)",
         symptom="FlashDock or ADB shows 'No device connected' even after plugging in USB cable.",
         causes=[
@@ -57,11 +57,11 @@ TROUBLESHOOTING_CATALOG: list[TroubleshootingItem] = [
             "5. Click 'Restart ADB Server' below to reset the connection pipe.",
         ],
         quick_action_id="restart_adb",
-        quick_action_label="🔄 Restart ADB Server",
+        quick_action_label="Restart ADB Server",
     ),
     TroubleshootingItem(
         id="fastboot_waiting",
-        icon="⚡",
+        icon="flash",
         title="Fastboot Says '<waiting for any device>'",
         symptom="Fastboot commands freeze or device is not recognized in Bootloader mode.",
         causes=[
@@ -75,12 +75,12 @@ TROUBLESHOOTING_CATALOG: list[TroubleshootingItem] = [
             "3. Try connecting via a USB 2.0 port or through an unpowered USB 2.0 hub (fixes Ryzen USB 3.0 dropouts).",
         ],
         quick_action_id="open_device_manager",
-        quick_action_label="🗂️ Open Windows Device Manager",
+        quick_action_label="Open Windows Device Manager",
         navigation_target=11,  # PAGE_DOWNLOADS
     ),
     TroubleshootingItem(
         id="bootloop_rescue",
-        icon="🚑",
+        icon="unbrick",
         title="Phone Stuck in Bootloop (Restart Loop)",
         symptom="Device continuously restarts at boot animation or reboots straight into fastboot/recovery.",
         causes=[
@@ -95,12 +95,12 @@ TROUBLESHOOTING_CATALOG: list[TroubleshootingItem] = [
             "3. If device is in Fastboot, switch active slot from A to B or flash vbmeta disable-verity.",
         ],
         quick_action_id="goto_unbrick",
-        quick_action_label="🚑 Open Bootloop Rescue",
+        quick_action_label="Open Bootloop Rescue",
         navigation_target=12,  # PAGE_UNBRICK
     ),
     TroubleshootingItem(
         id="play_integrity_fail",
-        icon="🛡️",
+        icon="integrity",
         title="Google Play Integrity / Banking App Block",
         symptom="Google Wallet, PayPal, banking apps, or Netflix fail or report rooted / modified system.",
         causes=[
@@ -115,12 +115,12 @@ TROUBLESHOOTING_CATALOG: list[TroubleshootingItem] = [
             "4. Add your banking apps to Magisk DenyList in Tab 2.",
         ],
         quick_action_id="goto_integrity",
-        quick_action_label="🛡️ Open Play Integrity Fixer",
+        quick_action_label="Open Play Integrity Fixer",
         navigation_target=13,  # PAGE_INTEGRITY
     ),
     TroubleshootingItem(
         id="xiaomi_wait_time",
-        icon="⏳",
+        icon="tools",
         title="Xiaomi / POCO 168-Hour Unlock Wait",
         symptom="Mi Flash Unlock reports error 20036: 'Please unlock 168 hours later'.",
         causes=[
@@ -135,7 +135,7 @@ TROUBLESHOOTING_CATALOG: list[TroubleshootingItem] = [
     ),
     TroubleshootingItem(
         id="samsung_knox_trip",
-        icon="🔒",
+        icon="lock",
         title="Samsung Knox Warranty Bit 0x1 (Permanent Trip)",
         symptom="Flashing custom recovery (TWRP) or Magisk on Samsung displays 'Warranty Void: 0x1'.",
         causes=[

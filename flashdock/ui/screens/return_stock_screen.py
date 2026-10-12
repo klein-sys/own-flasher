@@ -88,6 +88,7 @@ class ReturnStockWorker(QThread):
         self._is_cancelled = False
 
     def cancel(self) -> None:
+        self.requestInterruption()
         self._is_cancelled = True
 
     def run(self) -> None:
@@ -95,7 +96,7 @@ class ReturnStockWorker(QThread):
             self.progress_signal.emit(curr, tot, part, st, msg)
 
         def _cancel_check() -> bool:
-            return self._is_cancelled
+            return self._is_cancelled or self.isInterruptionRequested()
 
         res = self._engine.flash_stock(
             device=self._device,
@@ -327,6 +328,7 @@ class ReturnStockScreen(QWidget):
         path_row = QHBoxLayout()
         self._pkg_path_edit = QLineEdit()
         self._pkg_path_edit.setPlaceholderText("Select factory image directory or ZIP archive...")
+        self._pkg_path_edit.setClearButtonEnabled(True)
         path_row.addWidget(self._pkg_path_edit, 1)
 
         browse_dir_btn = QPushButton("Browse Folder")

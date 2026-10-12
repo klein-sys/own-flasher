@@ -385,7 +385,14 @@ class DeviceDetector:
 
         # Slots
         slot_count = vars_dict.get("slot-count", "")
-        if slot_count and int(slot_count) > 1:
+        is_ab = False
+        if slot_count:
+            try:
+                is_ab = int(slot_count) > 1
+            except (ValueError, TypeError):
+                is_ab = False
+
+        if is_ab:
             info.slot_scheme = "a/b"
             current = vars_dict.get("current-slot", "")
             info.active_slot = current.strip().lstrip("_")

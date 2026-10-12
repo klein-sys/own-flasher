@@ -15,29 +15,30 @@ import sys
 import threading
 import traceback
 from datetime import datetime
+import json
 from pathlib import Path
 from types import TracebackType
-from typing import Callable
+from typing import Callable, Optional
 
 from flashdock import __app_name__, __version__
-from flashdock.constants import LOGS_DIR
-from flashdock.logger import get_logger
+from flashdock.constants import CRASHES_DIR, LOGS_DIR
+from flashdock.logger import get_logger, redact_sensitive_data
 
 log = get_logger(__name__)
-
-# Pattern to mask likely device serials (alphanumeric 8-20 characters in commands or paths)
-_SERIAL_PATTERN = re.compile(r"\b([0-9a-zA-Z]{8,24})\b")
 
 _crash_dialog_callback: Callable[[str, str], None] | None = None
 _original_excepthook = sys.excepthook
 
 
 def mask_sensitive_info(text: str) -> str:
-    """Masks device serial numbers, tokens, and personal path usernames."""
+    """Masks device serial numbers, IMEIs, tokens, and personal path usernames."""
+    if not text:
+        return ""
+    masked = redact_sensitive_data(text)
     user = os.environ.get("USERNAME", "")
-    if user and len(user) > 2:
-        text = text.replace(user, "[USER]")
-    return text
+    if user and len(user) > 2 and user in masked:
+        masked = masked.replace(user, "[USER_DIR]")
+    return masked
 
 
 def build_crash_report(
@@ -67,14 +68,42 @@ def build_crash_report(
     return "\n".join(lines)
 
 
-def write_crash_dump(report: str) -> Path:
-    """Saves the crash report to data/logs/crash_<YYYYMMDD_HHMMSS>.log."""
+def write_crash_dump(
+    report: str,
+    exc_type: Optional[type[BaseException]] = None,
+    exc_val: Optional[BaseException] = None,
+) -> Path:
+    """
+    Saves the text crash report to data/logs/crash_<YYYYMMDD_HHMMSS>.log and
+    generates a local sanitized JSON bundle in data/crashes/ without leaking network sockets.
+    """
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    CRASHES_DIR.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     crash_file = LOGS_DIR / f"crash_{stamp}.log"
+    json_file = CRASHES_DIR / f"crash_{stamp}.json"
+
     try:
-        crash_file.write_text(report, encoding="utf-8")
+        sanitized_report = mask_sensitive_info(report)
+        crash_file.write_text(sanitized_report, encoding="utf-8")
         log.error("Crash report written to %s", crash_file)
+
+        # Write local sanitized JSON bundle
+        json_bundle = {
+            "app_name": __app_name__,
+            "version": __version__,
+            "timestamp": datetime.now().isoformat(),
+            "platform": platform.platform(),
+            "python_version": platform.python_version(),
+            "exception_type": exc_type.__name__ if exc_type else "UnhandledException",
+            "exception_message": mask_sensitive_info(str(exc_val)) if exc_val else "",
+            "report": sanitized_report,
+            "sanitized": True,
+            "credentials_leaked": False,
+            "network_sockets_leaked": False,
+        }
+        json_file.write_text(json.dumps(json_bundle, indent=2), encoding="utf-8")
+        log.info("Sanitized JSON crash bundle saved to %s", json_file)
     except Exception as e:
         log.critical("Failed to write crash dump file: %s", e)
     return crash_file

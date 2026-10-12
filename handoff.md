@@ -1,12 +1,32 @@
+---
+title: "FlashDock — Agent Handoff Document"
+type: handoff
+status: completed
+version: 1.1.0
+phase: Phase 20
+updated: 2026-10-12
+tags:
+  - flashdock
+  - android-workstation
+  - gsm-suite
+  - hyperos-fluidity
+  - macos-sequoia
+  - ios18-control-center
+  - app-icon-generation
+  - test-verification
+  - release-pipeline
+  - apple-hig
+---
+
 # FlashDock — Agent Handoff Document
 
 **Date:** 2026-10-12  
-**Current Phase:** **Phase 18: Vector SVG Icon Architecture & Complete UI Sticker Elimination (100% Scope Completed)**  
+**Current Phase:** **Phase 20: Next-Generation Workstation Aesthetic Overhaul (HyperOS 2.0, macOS Sequoia & iOS 18 Control Center Aesthetics — 100% Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
 **Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.1.0-windows-x64.zip`)  
-**Test Suite:** **413 Passed Unit & Integration Tests across 42 test modules (`python scripts/release_build.py`, 100% success rate)**  
+**Test Suite:** **442 Passed Unit & Integration Tests across 43 test modules (`python scripts/release_build.py`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
 ---
@@ -14,6 +34,139 @@
 ## 1. Project Overview & Architecture
 
 FlashDock is a macOS Big Sur-inspired desktop Android flashing and service workstation for Windows 10/11 (64-bit), modeled on industry-standard multi-chipset repair platforms (UnlockTool, TFT Unlocker, Chimera Tool). It features a clean, thread-safe, and asynchronous core architecture across five primary subsystems:
+
+### Subsystem Architecture Diagram
+
+```mermaid
+flowchart TD
+    subgraph UI_Layer["macOS Big Sur Workstation UI (PySide6)"]
+        TOP_BAR["Segmented Bar (OEMs: Xiaomi, Samsung, Transsion | Chipsets: MTK, Qualcomm, Unisoc)"]
+        OPS_PANEL["Left Operations Panel (15 Service Utilities & Wizards)"]
+        CONSOLE["Right Activity Terminal (Read-Only Color Telemetry: INFO, WARN, SUCCESS, ERROR)"]
+        STATUS["Bottom Status Bar (Persistent Connection Badge & QProgressBar)"]
+    end
+
+    subgraph Monitor_Engine["Subsystem 1: Hardware Polling Engine (QThread)"]
+        REG_SCAN["Windows Registry Enumeration (HKLM USB & SERIALCOMM)"]
+        VID_PID["VID/PID Matcher (MTK 0E8D:0003, EDL 05C6:9008, SPRD 1782:4D02)"]
+        DAEMON_SCAN["Daemon Enumeration (ADB Devices & Fastboot Devices)"]
+        RESOLVE["Primary Mode Resolution (Emergency Ports > Fastboot > ADB)"]
+    end
+
+    subgraph Diag_Engine["Subsystem 2: Diagnostics & Telemetry Engine"]
+        ADB_PROPS["Batch getprop (Model, Brand, SDK, Baseband, Security Patch)"]
+        KNOX_ROOT["Root Inspection (su, Magisk, KSU, APatch) & Knox Warranty Bit"]
+        FB_VARS["Fastboot getvar all (Active Slot _a/_b, Unlocked, Secure Boot, CID)"]
+    end
+
+    subgraph Flash_Engine["Subsystem 3: Flashing & Calibration Backup Engine (QThread)"]
+        PRE_BACKUP["Mandatory Calibration Backup (efs, nvram, nvdata, persist, sec_efs)"]
+        HASH_VAL["SHA-256 Checksum Validation (Pre- & Post-Flash)"]
+        CHUNK_FLASH["Chunked Sparse Image Flasher (boot, init_boot, super, system)"]
+        BL_CTRL["Bootloader Unlock / Relock Controller"]
+    end
+
+    subgraph Vector_Assets["Subsystem 4: Vector SVG Icon Engine"]
+        SVG_RENDER["Native QSvgRenderer (37+ Lucide/Feather/Apple HIG Vectors)"]
+        DYNAMIC_TINT["Dynamic Color Tinting (Accent Blue, Amber, Emerald, Coral)"]
+        LIFECYCLE["On-Demand QIcon Factory (Lifecycle-Safe C++ Destruction)"]
+    end
+
+    REG_SCAN --> VID_PID
+    DAEMON_SCAN --> RESOLVE
+    VID_PID --> RESOLVE
+    RESOLVE -->|Signals: device_connected| UI_Layer
+    UI_Layer -->|Triggers Diagnostics| Diag_Engine
+    Diag_Engine -->|Populates| OPS_PANEL
+    UI_Layer -->|Dispatches FlashTask| Flash_Engine
+    Flash_Engine -->|progress_changed / log_emitted| STATUS
+    Flash_Engine -->|log_emitted| CONSOLE
+    Vector_Assets -->|Vector Badges & Icons| UI_Layer
+```
+
+### Flashing Execution & Calibration Backup Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Operator
+    participant UI as FlashDock UI
+    participant Runner as FlashLock Runner
+    participant Worker as FlashEngineWorker (QThread)
+    participant Fastboot as Fastboot Binary
+    participant FS as Local Storage (data/backups/)
+    participant Device as Android Device
+
+    User->>UI: Select Partition & Click "Flash Image"
+    UI->>Runner: acquire_flash_lock()
+    Runner-->>UI: Lock Acquired (Blocks Concurrent Writes)
+    UI->>Worker: execute_task(FlashTask)
+    Worker->>Worker: Validate File Existence & Hash
+
+    rect rgb(240, 248, 255)
+        note over Worker,FS: Mandatory Pre-Flash Safety Backup
+        Worker->>UI: status_changed("Backing up calibration data...")
+        Worker->>Device: Read EFS / NVRAM / NVDATA / Persist
+        Device-->>Worker: Raw Partition Bytes
+        Worker->>FS: Save Calibration Dump (.img + .sha256)
+        Worker->>UI: log_emitted("SUCCESS", "Saved EFS/NVRAM backup")
+    end
+
+    rect rgb(255, 250, 240)
+        note over Worker,Device: Chunked Partition Writing
+        Worker->>UI: status_changed("Flashing partition...")
+        Worker->>Fastboot: fastboot flash <partition> <image>
+        loop Data Upload & Progress
+            Fastboot->>Device: Write Sparse Data Chunk
+            Fastboot-->>Worker: Progress Bytes Stream
+            Worker->>UI: progress_changed(bytes, total, pct)
+            Worker->>UI: log_emitted("INFO", chunk_progress)
+        end
+        Device-->>Fastboot: Flash OKAY
+        Fastboot-->>Worker: Exit Code 0 (Success)
+    end
+
+    Worker->>Runner: release_flash_lock()
+    Worker->>UI: flash_finished(True, "Flashing completed successfully.")
+    UI->>User: Display Success Badge & Enable Reboot
+```
+
+### Hardware Mode Transitions & Emergency Recovery States
+
+```mermaid
+stateDiagram-v2
+    [*] --> PowerOff: Device Powered Off
+
+    PowerOff --> EDL_9008: Test Point / EDL Cable / EDL Key Combo (Qualcomm)
+    PowerOff --> MTK_BROM: Vol+ / Vol- & USB Plug (MediaTek BROM 0E8D:0003)
+    PowerOff --> SPRD_FDL: Vol- & USB Plug (Unisoc FDL 1782:4D02)
+    PowerOff --> Fastboot: Power + Vol- (Standard Android Bootloader)
+    PowerOff --> Samsung_Download: Vol+ + Vol- & USB Plug (Samsung Odin Mode)
+    PowerOff --> System: Normal Boot
+
+    System --> ADB_Mode: USB Debugging Authorized (Port 5037)
+    System --> Recovery: Power + Vol+ or adb reboot recovery
+
+    ADB_Mode --> Fastboot: adb reboot bootloader
+    ADB_Mode --> FastbootD: adb reboot fastboot
+    ADB_Mode --> Recovery: adb reboot recovery
+    ADB_Mode --> EDL_9008: adb reboot edl (Qualcomm)
+
+    Fastboot --> FastbootD: fastboot reboot fastboot (Dynamic Partitions)
+    FastbootD --> Fastboot: fastboot reboot bootloader
+    Fastboot --> System: fastboot reboot
+    FastbootD --> System: fastboot reboot
+
+    EDL_9008 --> System: Firehose XML / Sahara Unbrick Complete
+    MTK_BROM --> System: SLA/DAA Auth Bypass & Scatter Flash Complete
+    SPRD_FDL --> System: PAC Image Flashed via HDLC FDL2
+    Samsung_Download --> System: PIT / TAR.MD5 Flashed via Odin Protocol
+
+    Recovery --> System: Reboot System Now
+    Recovery --> Sideload: Apply update from ADB (adb sideload)
+    Sideload --> System: Update Complete
+```
+
 
 ### Key Architectural Pillars
 - **Hardware Polling & VID/PID Engine (`device_monitor.py`)**: Non-blocking `QThread` polling USB/COM ports via Windows Registry enumeration (`SYSTEM\CurrentControlSet\Enum\USB` and `HARDWARE\DEVICEMAP\SERIALCOMM`). Comprehensive VID/PID mapping for ADB, Fastboot, MediaTek BROM (`0E8D:0003`), Preloader (`0E8D:2000`), Qualcomm EDL 9008 (`05C6:9008`), Qualcomm Diag (`05C6:9006`), Unisoc U2S Diag (`1782:4D00`), and FDL (`1782:4D02`).
@@ -114,6 +267,50 @@ FlashDock is a macOS Big Sur-inspired desktop Android flashing and service works
   - Migrated all dialogs and widgets: `phone_panel.py`, `device_selector.py`, `side_terminal.py`, `flash_shield.py`, `crash_dialog.py`, `key_guide_dialog.py`, `workflow_guide.py`, `selftest_dialog.py`, `scrcpy_dialog.py`, `root_library_dialog.py`, `setup_wizard_dialog.py`, and `device_card.py`.
   - Replaced all raw unicode emoji characters (⚡, 🔒, 🔓, 🛡️, 📱, 📦, 📁, 🔍, 💡, ⚙️, 🗑️, ➕, 🌐, 🏠, 🚨, 🧹, 🚀, 🎭, 🏦, 📚, 🩺, 🔋, ↻) with native vector graphics and clean typography.
 
+### Phase 19: System Hardening, Brick-Prevention, and Security Guard Overhaul
+- **Active Slot Desync Guard (`flashdock/workers/flash_engine.py`)**:
+  - Enforced Fastboot active slot (`_a`/`_b`) token validation prior to partition writes (`boot_a`, `init_boot_b`). Rejects ambiguous or null slots to eliminate opposite-slot corruption without explicit operator override.
+- **Anti-Rollback Protection (ARP / AVB 2.0) (`flashdock/workers/flash_engine.py`)**:
+  - Integrated binary parsing of Android `boot.img` headers (`boot_img_hdr` v0–v4) extracting OS version and security patch level (`YYYY-MM`).
+  - Cross-references device security patch against image headers, providing prominent lockout guards (`block_on_arp_downgrade`) preventing permanent Qualcomm QFUSE blows and Samsung Knox 0x1 trips.
+- **Pre-Flash Partition Integrity & Low Disk Space Abort**:
+  - Mandatory SHA-256 validation and calibration backup (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) before flashing.
+  - Aborts immediately if free disk space is < 2.0 GB or the backup target is read-only.
+- **USB Drop & Connection Resilience (`flashdock/workers/device_monitor.py` & `flash_engine.py`)**:
+  - Isolated mid-flash disconnection errors (`is_usb_disconnect_error`) with graceful background thread cleanup and actionable recovery guidance.
+  - Added Windows USB Selective Suspend and battery saver detection (`check_windows_usb_selective_suspend`).
+  - Protected WinReg hardware polling against `(FileNotFoundError, PermissionError, OSError)`.
+- **Privacy, Secret Masking & Telemetry Security (`flashdock/logger/__init__.py` & `flashdock/core/crash_reporter.py`)**:
+  - Strict regex redaction for IMEI (`[REDACTED_IMEI]`), MEID (`[REDACTED_MEID]`), Android ID (`[REDACTED_ANDROID_ID]`), serials (`[REDACTED_SERIAL]`), and user paths (`[USER_DIR]`).
+  - Automatic local sanitized `.json` crash bundles in `data/crashes/crash_<stamp>.json` without leaking network sockets or system credentials.
+  - Action log memory ceiling (`MAX_RECORDS = 1000`) preventing memory accumulation.
+- **Ergonomic Color Palette & Contrast Hierarchy (`flashdock/ui/styles.py` & `side_terminal.py`)**:
+  - Implemented the ergonomic color tokens defined in `.agents/skills/flashdock-workstation/SKILL.md`:
+    - **Light Mode**: Warm Slate-Mica canvas (`#F0F2F5`), Soft Frost cards (`#F8F9FA`) with 1px border (`#DCE1E8`), Slate-Blue sidebar tint (`#E9EEF5`), deep slate charcoal text (`#1C2024`), and muted secondary text (`#5A6572`).
+    - **Dark Mode**: Deep Space Obsidian canvas (`#0D1117`), Elevated Slate cards (`#181E26`) with 1px border (`#2C3644`), Layered Dark sidebar (`#141820`) with 1px border (`#252D38`), Soft Platinum primary text (`#E6EDF3`), and Muted Steel secondary text (`#8B949E`).
+    - **Console Terminal**: Deep Midnight canvas (`#0B0E14`) with syntax-highlighted stream tags (`#007AFF` / `#58A6FF` Blue `[INFO]`, `#FF9500` Amber `[WARN]`, `#34C759` Green `[SUCCESS]`, `#FF3B30` Red `[ERROR]`).
+
+### Phase 20: Next-Generation Workstation Aesthetic Overhaul
+- **High-Resolution macOS Squircle App Icon**:
+  - Generated bespoke 1024x1024 master emblem featuring continuous curvature squircle container, frosted metallic midnight titanium rim (`#161B22` to `#0B0E14`), and glowing electric cyan (`#00F2FE` to `#4FACFE`) geometric lightning bolt docked into a chipset silhouette.
+  - Multi-resolution Windows icon suite generated and saved into `flashdock/resources/icon.png` and `flashdock/resources/icon.ico` (resolutions: 16, 24, 32, 48, 64, 128, 256).
+  - Integrated into `flashdock.spec` (`icon='flashdock/resources/icon.ico'`), `flashdock/app.py`, and `MainWindow._init_window()`.
+  - Upgraded `APP_LOGO_SVG` and `app_logo` in `flashdock/ui/icon_assets.py` to match the vector silhouette across titlebar and window chrome.
+- **HyperOS 2.0 / iOS 18 Control Center Action Cards & Navigation**:
+  - Re-architected `ActionCardButton` with **30x30px circular chip gradient badge containers** (`border-radius: 15px`) housing antialiased vector icons in crisp `#FFFFFF`:
+    - Flashing / ROMs: Electric Cobalt (`linear-gradient(135deg, #0A84FF, #0056B3)`)
+    - Root & Modules: Neon Violet (`linear-gradient(135deg, #BF5AF2, #7B2CBF)`)
+    - Unbrick & Rescue: Coral Crimson (`linear-gradient(135deg, #FF453A, #C92A2A)`)
+    - Diagnostics / Device: Emerald Green (`linear-gradient(135deg, #30D158, #1E824C)`)
+    - Settings & Tools: Warm Amber (`linear-gradient(135deg, #FF9F0A, #D35400)`)
+  - Elevated 16px border-radius containers with smooth `QGraphicsDropShadowEffect` (`offset: 0, 4; blur: 16`).
+  - Elevated capsule category filter pills on Home screen (`border-radius: 14px; padding: 6px 14px;`).
+  - Interactive pill navigation in sidebar (`PhoneControlPanel`) with fluid hover transitions (`border-radius: 14px`).
+- **Recessed Obsidian Console & Form Controls**:
+  - Upgraded `SideTerminalWidget` to recessed Obsidian Console (`#080B10`) with rounded corners (`12px`), JetBrains Mono font (`font-family: 'JetBrains Mono', 'Cascadia Code', monospace`), and glowing status pills (`[INFO]`, `[SUCCESS]`, `[WARN]`, `[ERROR]`, `[CMD]`).
+  - Form controls with recessed squircle inputs (`QLineEdit`, `QTextEdit`, `QPlainTextEdit`), clear button enabled, monospace file paths, and elevated "Browse" pill buttons (`border-radius: 12px; font-weight: 500;`).
+  - Primary action triggers upgraded to gradient pill buttons (`border-radius: 20px;`) with hover glow and pressed feedback.
+
 ---
 
 ## 3. Workstation Navigation Index (All Tools & Modals)
@@ -143,13 +340,13 @@ FlashDock is a macOS Big Sur-inspired desktop Android flashing and service works
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **413 passed in 39.02s** (100% pass rate).
-- **Test Modules**: 42 individual test files in `tests/`.
-- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.77 MB, Exit code 0).
-- **Release Archive**: `dist/FlashDock-v1.1.0-windows-x64.zip` (56.30 MB).
+- **Unit & Integration Tests**: **442 passed in 80.13s** (100% pass rate).
+- **Test Modules**: 43 individual test files in `tests/`.
+- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.83 MB, Exit code 0, custom high-res squircle icon embedded).
+- **Release Archive**: `dist/FlashDock-v1.1.0-windows-x64.zip` (59.62 MB).
 - **Integrity Hashes (`dist/SHA256SUMS.txt`)**:
-  - `FlashDock.exe`: `3d6dfa3289f5fd4159656a3d00afae21ba80169b0794b99b5a0c1f1e9e0360e4`
-  - `Release ZIP`: `18ac0be4aa02cf6aa2c2e5c58e7c3d2cb9226ef5a1f11d642fce7bdef072e87b`
+  - `FlashDock.exe`: `edaaa63c4257c1a65dbcab30e91871afc2011f1feb8429b8f174e052c13c6d5d`
+  - `Release ZIP`: `9ba4ed080ba2a53e602626e79aea51b70ace57dbe27368d4af25b701abd90530`
 
 ---
 

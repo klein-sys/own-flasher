@@ -63,19 +63,54 @@ class _ColorFormatter(logging.Formatter):
 
 
 # ---------------------------------------------------------------------------
-# Serial-number mask filter (applied only when exporting)
+# Strict Data Redaction & Secret Masking
 # ---------------------------------------------------------------------------
-# Matches common ADB serial formats:  hex serials, ip:port, and "emulator-XXXX"
+_IMEI_RE = re.compile(r"\b(86\d{12,14}|35\d{12,14}|99\d{12,14}|\d{15})\b")
+_MEID_RE = re.compile(r"\b([0-9A-Fa-f]{14})\b")
+_ANDROID_ID_RE = re.compile(r"\b([0-9a-fA-F]{16})\b")
+# Matches common ADB serial formats: hex serials, ip:port, and "emulator-XXXX"
 _SERIAL_RE = re.compile(
-    r"\b([A-Z0-9]{6,}[A-Za-z0-9]*)\b"    # hex-ish serial like ZY22FV6BKR
+    r"\b([A-Z0-9]{8,}[A-Za-z0-9]*)\b"    # hex-ish serial like ZY22FV6BKR
     r"|(\d{1,3}(?:\.\d{1,3}){3}:\d+)"     # 192.168.1.2:5555
     r"|(emulator-\d+)"                      # emulator-5554
 )
+_USER_PATH_WIN_RE = re.compile(r"[A-Za-z]:\\[Uu]sers\\[^\\]+", re.IGNORECASE)
+_USER_PATH_POSIX_RE = re.compile(r"/home/[^/]+|/Users/[^/]+", re.IGNORECASE)
+
+
+def redact_sensitive_data(text: str) -> str:
+    """
+    Redact device IMEI, MEID, serial numbers, Android IDs, and personal paths.
+    Masks user paths as [USER_DIR] and identifiers as [REDACTED_SERIAL].
+    """
+    if not text:
+        return text
+
+    # Redact user directory paths
+    text = _USER_PATH_WIN_RE.sub(lambda _: "C:\\Users\\[USER_DIR]", text)
+    text = _USER_PATH_POSIX_RE.sub(lambda _: "/home/[USER_DIR]", text)
+
+    import os
+    user = os.environ.get("USERNAME") or os.environ.get("USER", "")
+    if user and len(user) > 2 and user in text:
+        text = text.replace(user, "[USER_DIR]")
+
+    # Redact hardware identifiers
+    text = _IMEI_RE.sub("[REDACTED_IMEI]", text)
+    text = _MEID_RE.sub("[REDACTED_MEID]", text)
+    text = _ANDROID_ID_RE.sub("[REDACTED_ANDROID_ID]", text)
+    text = _SERIAL_RE.sub("[REDACTED_SERIAL]", text)
+    return text
 
 
 def mask_serials(text: str) -> str:
-    """Replace anything that looks like a device serial with [SERIAL]."""
-    return _SERIAL_RE.sub("[SERIAL]", text)
+    """Replace anything that looks like a device serial with [SERIAL], preserving compatibility."""
+    if not text:
+        return text
+    # Apply full data redaction
+    redacted = redact_sensitive_data(text)
+    # Map [REDACTED_SERIAL] to [SERIAL] for compatibility with existing tests
+    return redacted.replace("[REDACTED_SERIAL]", "[SERIAL]")
 
 
 # ---------------------------------------------------------------------------
@@ -122,6 +157,8 @@ class ActionLog:
     """Thread-safe list of ActionRecords kept in memory and flushed to the
     main log file.  Also used by the Crash Recovery system (later phase)."""
 
+    MAX_RECORDS = 1000
+
     def __init__(self) -> None:
         self._records: list[ActionRecord] = []
         self._lock = threading.Lock()
@@ -130,6 +167,9 @@ class ActionLog:
     def record(self, rec: ActionRecord) -> None:
         with self._lock:
             self._records.append(rec)
+            # Cap list size to prevent unbounded memory growth over days of polling
+            if len(self._records) > self.MAX_RECORDS:
+                self._records = self._records[-self.MAX_RECORDS:]
         self._logger.info(
             "[%s] %s → %s (%d ms)",
             rec.action, rec.command, rec.result, rec.duration_ms,

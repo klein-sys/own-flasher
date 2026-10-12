@@ -2,9 +2,9 @@
 FlashDock — Root Modules & Module Library Screen (macOS Big Sur UI).
 
 Provides:
-* 📱 Tab 1: Installed Modules (Device) — Inspect, enable, disable, remove modules,
+* Tab 1: Installed Modules (Device) — Inspect, enable, disable, remove modules,
   and emergency bootloop recovery (Disable All Modules kill-switch, Safe Mode reboot).
-* 📚 Tab 2: Module Library (Offline Repository & Catalog) — Manage stored offline module ZIPs
+* Tab 2: Module Library (Offline Repository & Catalog) — Manage stored offline module ZIPs
   in data/modules/, 1-click install to connected phone, import module ZIPs, and browse
   curated essential root modules (Play Integrity Fix, Shamiko, Zygisk Next, etc.).
 

@@ -93,17 +93,53 @@ log = get_logger(__name__)
 # ---------------------------------------------------------------------------
 CAT_STYLES = {
     "dark": {
-        "Root": ("rgba(48, 209, 88, 0.18)", "#30D158"),
+        "Root": ("rgba(191, 90, 242, 0.18)", "#BF5AF2"),
         "Flashing": ("rgba(10, 132, 255, 0.18)", "#0A84FF"),
-        "Rescue": ("rgba(255, 159, 10, 0.18)", "#FF9F0A"),
-        "Device": ("rgba(191, 90, 242, 0.18)", "#BF5AF2"),
+        "Rescue": ("rgba(255, 69, 58, 0.18)", "#FF453A"),
+        "Device": ("rgba(48, 209, 88, 0.18)", "#30D158"),
+        "Tools": ("rgba(255, 159, 10, 0.18)", "#FF9F0A"),
     },
     "light": {
-        "Root": ("rgba(52, 199, 89, 0.15)", "#248A3D"),
+        "Root": ("rgba(175, 82, 222, 0.15)", "#8944AB"),
         "Flashing": ("rgba(0, 122, 255, 0.15)", "#0071E3"),
-        "Rescue": ("rgba(255, 149, 0, 0.15)", "#C96E00"),
-        "Device": ("rgba(175, 82, 222, 0.15)", "#8944AB"),
+        "Rescue": ("rgba(255, 59, 48, 0.15)", "#D70015"),
+        "Device": ("rgba(52, 199, 89, 0.15)", "#248A3D"),
+        "Tools": ("rgba(255, 149, 0, 0.15)", "#C96E00"),
     },
+}
+
+VIBRANT_BADGE_GRADIENTS = {
+    "Flashing": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0A84FF, stop:1 #0056B3)",
+    "Root": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #BF5AF2, stop:1 #7B2CBF)",
+    "Rescue": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FF453A, stop:1 #C92A2A)",
+    "Device": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #30D158, stop:1 #1E824C)",
+    "Tools": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FF9F0A, stop:1 #D35400)",
+}
+
+# Distinct, high-vibrancy gradients for each individual workstation action card
+ACTION_BADGE_GRADIENTS = {
+    # ADB & Device Inspection
+    "check_phone":  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7)",
+    "diagnostics":  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00B4D8, stop:1 #0077B6)",
+    "downloads":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #10B981, stop:1 #059669)",
+    "scrcpy":       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #6366F1, stop:1 #4338CA)",
+    "logs_help":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #8B5CF6, stop:1 #6D28D9)",
+
+    # Flashing & Bootloader
+    "flash_rom":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2563EB, stop:1 #1D4ED8)",
+    "unlock_bl":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F59E0B, stop:1 #D97706)",
+    "return_stock": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0284C7, stop:1 #0369A1)",
+    "mtk_unisoc":   "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EA580C, stop:1 #C2410C)",
+
+    # Root, Modules & Integrity
+    "root":         "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #A855F7, stop:1 #7E22CE)",
+    "modules":      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EC4899, stop:1 #BE185D)",
+    "integrity":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #3B82F6, stop:1 #1E40AF)",
+
+    # Rescue & Safety Prerequisites
+    "checklist":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #059669, stop:1 #047857)",
+    "backup":       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F97316, stop:1 #C2410C)",
+    "unbrick":      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EF4444, stop:1 #B91C1C)",
 }
 
 ACTION_ICON_MAP = {
@@ -126,7 +162,7 @@ ACTION_ICON_MAP = {
 
 
 class ActionCardButton(QPushButton):
-    """Spacious, readable action card with vector image icon, title, category badge, and subtitle."""
+    """Next-Gen HyperOS / iOS 18 Action Card with 30x30px vibrant circular badge, continuous squircle curvature and smooth drop shadow."""
 
     def __init__(
         self,
@@ -147,28 +183,40 @@ class ActionCardButton(QPushButton):
         self.setToolTip(desc)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self.setMinimumHeight(76)
+        self.setMinimumHeight(82)
 
-        # Subtle elevation drop shadow
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(12)
-        shadow.setXOffset(0)
-        shadow.setYOffset(2)
-        shadow.setColor(QColor(0, 0, 0, 20))
-        self.setGraphicsEffect(shadow)
+        # Smooth macOS Sequoia Drop Shadow (offset: 0, 4; blur: 16)
+        self._shadow = QGraphicsDropShadowEffect(self)
+        self._shadow.setBlurRadius(16)
+        self._shadow.setXOffset(0)
+        self._shadow.setYOffset(4)
+        self._shadow.setColor(QColor(0, 0, 0, 35))
+        self.setGraphicsEffect(self._shadow)
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 12, 16, 12)
-        layout.setSpacing(4)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(14, 12, 16, 12)
+        layout.setSpacing(12)
+
+        # Left Circular Badge Container (30x30px circular chip, border-radius: 15px)
+        self.chip_frame = QFrame()
+        self.chip_frame.setFixedSize(30, 30)
+        self.chip_frame.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        chip_layout = QHBoxLayout(self.chip_frame)
+        chip_layout.setContentsMargins(0, 0, 0, 0)
+        chip_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.icon_lbl = QLabel()
+        self.icon_lbl.setFixedSize(16, 16)
+        self.icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        chip_layout.addWidget(self.icon_lbl)
+        layout.addWidget(self.chip_frame, 0, Qt.AlignmentFlag.AlignVCenter)
+
+        content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(3)
 
         header_row = QHBoxLayout()
         header_row.setSpacing(8)
-
-        # Vector image icon (replaces emoji sticker)
-        self.icon_lbl = QLabel()
-        self.icon_lbl.setFixedSize(22, 22)
-        self.icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        header_row.addWidget(self.icon_lbl)
 
         self.title_lbl = QLabel(label)
         self.title_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
@@ -177,12 +225,13 @@ class ActionCardButton(QPushButton):
         self.badge_lbl = QLabel(category.upper())
         self.badge_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         header_row.addWidget(self.badge_lbl)
-        layout.addLayout(header_row)
+        content_layout.addLayout(header_row)
 
         self.desc_lbl = QLabel(desc)
         self.desc_lbl.setWordWrap(True)
         self.desc_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        layout.addWidget(self.desc_lbl)
+        content_layout.addWidget(self.desc_lbl)
+        layout.addLayout(content_layout, 1)
 
     def apply_theme(self, theme: str) -> None:
         theme = theme.lower()
@@ -191,28 +240,52 @@ class ActionCardButton(QPushButton):
         )
         bg_tint, text_color = cat_info
 
-        # Render high-resolution vector icon image matching category accent
+        # Vibrant unique accent gradient for this specific action card
+        grad = ACTION_BADGE_GRADIENTS.get(
+            self.action_id,
+            VIBRANT_BADGE_GRADIENTS.get(
+                self.category,
+                "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0A84FF, stop:1 #0056B3)",
+            ),
+        )
+        self.chip_frame.setStyleSheet(
+            f"background: {grad}; border-radius: 15px; border: none;"
+        )
+
+        # High-res vector SVG icon rendered in crisp white inside the badge
         icon_name = ACTION_ICON_MAP.get(self.action_id, self.icon_str or "flash")
-        pix = get_icon_pixmap(icon_name, width=22, height=22, color=text_color)
+        pix = get_icon_pixmap(icon_name, width=16, height=16, color="#FFFFFF")
         self.icon_lbl.setPixmap(pix)
 
         if theme == "light":
+            self.setStyleSheet(
+                "QPushButton { background-color: #ECEFF4; border: 1px solid #CBD1DC; border-radius: 16px; }"
+                "QPushButton:hover { background-color: #F4F6F9; border-color: #007AFF; }"
+                "QPushButton:pressed { background-color: #D8DCE4; }"
+            )
+            self._shadow.setColor(QColor(0, 0, 0, 15))
             self.title_lbl.setStyleSheet(
-                "font-size: 13px; font-weight: 600; color: #1D1D1F; background: transparent;"
+                "font-size: 13px; font-weight: 600; color: #1C2024; background: transparent;"
             )
             self.desc_lbl.setStyleSheet(
-                "font-size: 11px; color: #6E6E73; background: transparent;"
+                "font-size: 11px; color: #5A6572; background: transparent;"
             )
         else:
+            self.setStyleSheet(
+                "QPushButton { background-color: #1A212E; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; }"
+                "QPushButton:hover { background-color: #222C3D; border-color: #0A84FF; }"
+                "QPushButton:pressed { background-color: #161D28; }"
+            )
+            self._shadow.setColor(QColor(0, 0, 0, 80))
             self.title_lbl.setStyleSheet(
-                "font-size: 13px; font-weight: 600; color: #FFFFFF; background: transparent;"
+                "font-size: 13px; font-weight: 600; color: #E6EDF3; background: transparent;"
             )
             self.desc_lbl.setStyleSheet(
-                "font-size: 11px; color: #8E8E93; background: transparent;"
+                "font-size: 11px; color: #8B949E; background: transparent;"
             )
 
         self.badge_lbl.setStyleSheet(
-            f"font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; "
+            f"font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; "
             f"background-color: {bg_tint}; color: {text_color};"
         )
 
@@ -330,6 +403,18 @@ class MainWindow(QMainWindow):
             self.move(x, y)
 
         self.setMinimumSize(900, 600)
+
+        # Set high-resolution squircle window icon
+        from pathlib import Path
+        from PySide6.QtGui import QIcon
+        icon_candidates = [
+            Path(__file__).resolve().parent.parent / "resources" / "icon.png",
+            Path(__file__).resolve().parent.parent.parent / "resources" / "icon.png",
+        ]
+        for icp in icon_candidates:
+            if icp.is_file():
+                self.setWindowIcon(QIcon(str(icp)))
+                break
 
     # ==================================================================
     # Menu bar
@@ -1114,33 +1199,34 @@ class MainWindow(QMainWindow):
         self._filter_tools()
 
     def _update_category_buttons_style(self) -> None:
-        """Apply active/inactive styling to category buttons."""
+        """Apply HyperOS 2.0 / iOS 18 pill navigation styling to category buttons."""
         cur_theme = self._config.get("theme", "dark").lower()
         for key, btn in getattr(self, "_cat_buttons", {}).items():
             is_active = (key == getattr(self, "_active_category", "All"))
             if is_active:
                 if cur_theme == "light":
                     btn.setStyleSheet(
-                        "QPushButton { background-color: #007AFF; color: #FFFFFF; border: 1px solid #007AFF; "
-                        "border-radius: 13px; padding: 5px 12px; font-size: 12px; font-weight: 600; min-height: 22px; }"
+                        "QPushButton { background: #007AFF; color: #FFFFFF; border: 1px solid #007AFF; "
+                        "border-radius: 14px; padding: 6px 14px; font-size: 12px; font-weight: 600; min-height: 24px; }"
                     )
                 else:
                     btn.setStyleSheet(
-                        "QPushButton { background-color: #0A84FF; color: #FFFFFF; border: 1px solid #0A84FF; "
-                        "border-radius: 13px; padding: 5px 12px; font-size: 12px; font-weight: 600; min-height: 22px; }"
+                        "QPushButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0A84FF, stop:1 #0056B3); "
+                        "color: #FFFFFF; border: 1px solid #3399FF; border-radius: 14px; padding: 6px 14px; font-size: 12px; "
+                        "font-weight: 600; min-height: 24px; }"
                     )
             else:
                 if cur_theme == "light":
                     btn.setStyleSheet(
-                        "QPushButton { background-color: #E5E5EA; color: #1D1D1F; border: 1px solid #D2D2D7; "
-                        "border-radius: 13px; padding: 5px 12px; font-size: 12px; font-weight: 500; min-height: 22px; } "
-                        "QPushButton:hover { background-color: #DCDCE0; border-color: #007AFF; }"
+                        "QPushButton { background-color: #E2E6EC; color: #1C2024; border: 1px solid #CBD1DC; "
+                        "border-radius: 14px; padding: 6px 14px; font-size: 12px; font-weight: 500; min-height: 24px; } "
+                        "QPushButton:hover { background-color: #ECEFF4; border-color: #9AA4B2; color: #1C2024; }"
                     )
                 else:
                     btn.setStyleSheet(
-                        "QPushButton { background-color: #242426; color: #8E8E93; border: 1px solid #38383A; "
-                        "border-radius: 13px; padding: 5px 12px; font-size: 12px; font-weight: 500; min-height: 22px; } "
-                        "QPushButton:hover { background-color: #2C2C2E; color: #FFFFFF; border-color: #48484A; }"
+                        "QPushButton { background-color: #181E26; color: #8B949E; border: 1px solid #2C3644; "
+                        "border-radius: 14px; padding: 6px 14px; font-size: 12px; font-weight: 500; min-height: 24px; } "
+                        "QPushButton:hover { background-color: #222A36; color: #FFFFFF; border-color: #3D4B5C; }"
                     )
 
     def _update_quick_buttons_style(self) -> None:
@@ -1149,32 +1235,32 @@ class MainWindow(QMainWindow):
         for btn in getattr(self, "_quick_buttons", []):
             if cur_theme == "light":
                 btn.setStyleSheet(
-                    "QPushButton { background: rgba(0, 0, 0, 0.04); border: 1px solid rgba(0, 0, 0, 0.1); "
-                    "border-radius: 11px; padding: 3px 10px; font-size: 11px; color: #48484A; min-height: 18px; font-weight: 500; } "
+                    "QPushButton { background: rgba(0, 0, 0, 0.04); border: 1px solid rgba(0, 0, 0, 0.08); "
+                    "border-radius: 12px; padding: 4px 12px; font-size: 11px; color: #5A6572; min-height: 20px; font-weight: 500; } "
                     "QPushButton:hover { background: rgba(0, 122, 255, 0.12); border-color: #007AFF; color: #007AFF; }"
                 )
             else:
                 btn.setStyleSheet(
-                    "QPushButton { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); "
-                    "border-radius: 11px; padding: 3px 10px; font-size: 11px; color: #8E8E93; min-height: 18px; font-weight: 500; } "
+                    "QPushButton { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); "
+                    "border-radius: 12px; padding: 4px 12px; font-size: 11px; color: #8B949E; min-height: 20px; font-weight: 500; } "
                     "QPushButton:hover { background: rgba(10, 132, 255, 0.15); border-color: #0A84FF; color: #FFFFFF; }"
                 )
 
     def _update_search_style(self) -> None:
-        """Apply theme styling to search input box."""
+        """Apply recessed squircle styling to search input box."""
         cur_theme = self._config.get("theme", "dark").lower()
         if hasattr(self, "_search_input"):
             if cur_theme == "light":
                 self._search_input.setStyleSheet(
-                    "QLineEdit { background-color: #FFFFFF; border: 1px solid #D2D2D7; border-radius: 8px; "
-                    "padding: 6px 12px; font-size: 13px; color: #1D1D1F; } "
-                    "QLineEdit:focus { border-color: #007AFF; }"
+                    "QLineEdit { background-color: #DDE2EB; border: 1px solid #CBD1DC; border-radius: 12px; "
+                    "padding: 8px 14px; font-size: 13px; color: #1C2024; font-family: '-apple-system', 'Segoe UI', sans-serif; } "
+                    "QLineEdit:focus { border: 1px solid #007AFF; background-color: #ECEFF4; }"
                 )
             else:
                 self._search_input.setStyleSheet(
-                    "QLineEdit { background-color: #1C1C1E; border: 1px solid #38383A; border-radius: 8px; "
-                    "padding: 6px 12px; font-size: 13px; color: #FFFFFF; } "
-                    "QLineEdit:focus { border-color: #0A84FF; }"
+                    "QLineEdit { background-color: #0E1218; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; "
+                    "padding: 8px 14px; font-size: 13px; color: #E6EDF3; font-family: '-apple-system', 'Segoe UI', sans-serif; } "
+                    "QLineEdit:focus { border: 1px solid #0A84FF; background-color: #141820; }"
                 )
 
     def _filter_tools(self) -> None:
@@ -1335,6 +1421,8 @@ class MainWindow(QMainWindow):
         self._flash_worker.progress_changed.connect(lambda cur, tot, pct: self._status_bar.set_progress(pct))
         self._flash_worker.log_emitted.connect(lambda lvl, msg: self._side_terminal.append_colored_stream(lvl, msg))
         self._flash_worker.flash_finished.connect(self._on_flash_finished)
+        self._flash_worker.started.connect(self._monitor_worker.pause_polling)
+        self._flash_worker.finished.connect(self._monitor_worker.resume_polling)
 
         # Device selector -> device manager
         self._device_selector.serial_locked.connect(self._device_mgr.lock_serial)
@@ -1464,8 +1552,24 @@ class MainWindow(QMainWindow):
     # ==================================================================
 
     def _on_action(self, action_id: str) -> None:
-        """Handle a main-menu button click."""
+        """Handle a main-menu or sidebar navigation button click."""
         log.info("Action triggered: %s", action_id)
+
+        # Sync active state in sidebar navigation pills
+        if hasattr(self, "_phone_panel"):
+            self._phone_panel.set_active_nav(action_id, self._config.get("theme", "dark"))
+
+        if action_id == "home":
+            self._stack.setCurrentIndex(PAGE_HOME)
+            return
+
+        if action_id == "settings":
+            self._toggle_theme()
+            return
+
+        if action_id == "about":
+            self._show_about()
+            return
 
         if action_id == "check_phone":
             # Switch to the device card page and refresh
@@ -1704,6 +1808,8 @@ class MainWindow(QMainWindow):
             self._update_search_style()
         if hasattr(self, "_seg_frame"):
             self._update_gsm_segments_style()
+        if hasattr(self, "_phone_panel"):
+            self._phone_panel.apply_theme(theme_name)
 
         self._update_network_buttons(self._network.is_online)
         log.info("Theme switched to: %s", theme_name)

@@ -370,6 +370,153 @@ class TestFlashEngineWorker:
             assert success is True
             assert "unlocked" in msg.lower()
 
+    def test_calibration_backup_fastboot_restricted_mode(self, qapp, tmp_path):
+        """Worker transparently identifies when retail fastboot restricts fetch and avoids dead ADB calls."""
+        mock_adb = MagicMock()
+        mock_adb.available = True
+        mock_adb.get_state.return_value = ""
+
+        mock_fastboot = MagicMock()
+        mock_fastboot.available = True
+        mock_fastboot.devices.return_value = [{"serial": "PIXEL_RETAIL_01", "state": "fastboot"}]
+        mock_fastboot._run.return_value = MagicMock(
+            success=False,
+            stderr="FAILED (remote: 'Command not allowed in locked/user state')",
+            stdout="",
+        )
+
+        worker = FlashEngineWorker(adb=mock_adb, fastboot=mock_fastboot)
+        task = FlashTask(
+            operation=FlashOperationType.BACKUP_CALIBRATION,
+            backup_dir=str(tmp_path),
+            device_serial="PIXEL_RETAIL_01",
+        )
+
+        with patch("flashdock.workers.flash_engine.is_flash_locked", return_value=False), \
+             patch("flashdock.workers.flash_engine.acquire_flash_lock"), \
+             patch("flashdock.workers.flash_engine.release_flash_lock"):
+            
+            success, msg = worker._perform_calibration_backup(task)
+            assert success is False
+            assert "restricted" in msg.lower()
+
+            # ADB shell should NOT have been invoked because device was in Fastboot mode
+            mock_adb.shell.assert_not_called()
+
+            # Manifest reflects RESTRICTED_FASTBOOT status honestly
+            manifest = tmp_path / "manifest.txt"
+            assert manifest.exists()
+            content = manifest.read_text()
+            assert "Partitions Dumped: 0/5" in content
+            assert "RESTRICTED_FASTBOOT" in content
+
+    def test_bootloader_lock_anti_relock_blocks_unverified(self, qapp):
+        """Anti-Relock Gate strictly blocks relocking without verified stock or confirmation word."""
+        mock_fastboot = MagicMock()
+        mock_fastboot.available = True
+        mock_fastboot.get_var.side_effect = lambda var, **kw: "no" if var == "is-userspace" else "yes" if var == "unlocked" else "oriole"
+
+        worker = FlashEngineWorker(fastboot=mock_fastboot)
+        task = FlashTask(
+            operation=FlashOperationType.BOOTLOADER_LOCK,
+            device_serial="PIXEL_RELOCK_01",
+            confirmation_word="",
+            allow_relock=False,
+        )
+
+        with patch("flashdock.workers.flash_engine.is_flash_locked", return_value=False), \
+             patch("flashdock.workers.flash_engine.acquire_flash_lock"), \
+             patch("flashdock.workers.flash_engine.release_flash_lock"):
+            
+            success, msg = worker._perform_bootloader_op(task)
+            assert success is False
+            assert "ANTI-RELOCK SAFETY LOCKOUT" in msg
+            mock_fastboot.flashing_lock.assert_not_called()
+
+            with pytest.raises(RuntimeError) as exc_info:
+                worker._run_bootloader_lock(task)
+            assert "ANTI-RELOCK SAFETY LOCKOUT" in str(exc_info.value)
+
+    def test_bootloader_lock_anti_relock_permits_confirmed(self, qapp):
+        """Anti-Relock Gate permits relock when confirmation word is 'RELOCK'."""
+        mock_fastboot = MagicMock()
+        mock_fastboot.available = True
+        mock_fastboot.get_var.side_effect = lambda var, **kw: "no" if var == "is-userspace" else "yes" if var == "unlocked" else "oriole"
+        mock_fastboot.flashing_lock.return_value = MagicMock(success=True)
+
+        worker = FlashEngineWorker(fastboot=mock_fastboot)
+        task = FlashTask(
+            operation=FlashOperationType.BOOTLOADER_LOCK,
+            device_serial="PIXEL_RELOCK_01",
+            confirmation_word="RELOCK",
+            allow_relock=True,
+        )
+
+        with patch("flashdock.workers.flash_engine.is_flash_locked", return_value=False), \
+             patch("flashdock.workers.flash_engine.acquire_flash_lock"), \
+             patch("flashdock.workers.flash_engine.release_flash_lock"):
+            
+            success, msg = worker._perform_bootloader_op(task)
+            assert success is True
+            assert "locked" in msg.lower()
+            mock_fastboot.flashing_lock.assert_called_once_with(serial="PIXEL_RELOCK_01")
+
+    def test_bootloader_lock_rejects_fastbootd_and_samsung(self, qapp):
+        """Worker rejects relocking in fastbootd mode and on Samsung hardware."""
+        mock_fastboot = MagicMock()
+        mock_fastboot.available = True
+
+        # Test fastbootd rejection
+        mock_fastboot.get_var.side_effect = lambda var, **kw: "yes" if var == "is-userspace" else "yes"
+        worker = FlashEngineWorker(fastboot=mock_fastboot)
+        task_fastbootd = FlashTask(
+            operation=FlashOperationType.BOOTLOADER_LOCK,
+            device_serial="DEV_01",
+            confirmation_word="RELOCK",
+        )
+        success, msg = worker._perform_bootloader_op(task_fastbootd)
+        assert success is False
+        assert "fastbootd" in msg.lower()
+
+        with pytest.raises(RuntimeError) as exc_info:
+            worker._run_bootloader_lock(task_fastbootd)
+        assert "fastbootd" in str(exc_info.value).lower()
+
+        # Test Samsung rejection
+        mock_fastboot.get_var.side_effect = lambda var, **kw: "no" if var == "is-userspace" else "yes"
+        task_samsung = FlashTask(
+            operation=FlashOperationType.BOOTLOADER_LOCK,
+            device_serial="DEV_SAM",
+            device_brand="samsung",
+            confirmation_word="RELOCK",
+        )
+        success_sam, msg_sam = worker._perform_bootloader_op(task_samsung)
+        assert success_sam is False
+        assert "samsung" in msg_sam.lower()
+
+        with pytest.raises(RuntimeError) as exc_info_sam:
+            worker._run_bootloader_lock(task_samsung)
+        assert "samsung" in str(exc_info_sam.value).lower()
+
+    def test_flash_engine_worker_acquires_flash_lock_in_run(self, qapp):
+        """FlashEngineWorker.run() guarantees acquisition and release of global flash lock."""
+        mock_fastboot = MagicMock()
+        mock_fastboot.available = True
+        mock_fastboot.reboot.return_value = MagicMock(success=True)
+
+        worker = FlashEngineWorker(fastboot=mock_fastboot)
+        task = FlashTask(
+            operation=FlashOperationType.REBOOT,
+            device_serial="DEV_REBOOT",
+        )
+        worker._task = task
+
+        with patch("flashdock.workers.flash_engine.acquire_flash_lock", return_value=True) as mock_acquire, \
+             patch("flashdock.workers.flash_engine.release_flash_lock") as mock_release:
+            worker.run()
+            mock_acquire.assert_called_once()
+            mock_release.assert_called_once()
+
 
 # ===========================================================================
 # Subsystem 4: UI Architecture & macOS Big Sur Styling
@@ -434,3 +581,21 @@ class TestUIArchitectureAndBigSurStyles:
         assert "connection_badge" in dark_qss
         assert "#007AFF" in light_qss  # Apple Accent Blue
         assert "#0A84FF" in dark_qss   # Apple Dark Accent Blue
+
+        # Ergonomic Light Mode Tokens (SKILL.md standard)
+        assert "#F0F2F5" in light_qss  # Slate-Mica Canvas
+        assert "#F8F9FA" in light_qss  # Soft Frost Cards
+        assert "#DCE1E8" in light_qss  # Soft Card Border
+        assert "#E9EEF5" in light_qss  # Sidebar & Segmented Control Tint
+        assert "#1C2024" in light_qss  # Deep Slate Charcoal Text
+        assert "#5A6572" in light_qss  # Muted Secondary Text
+
+        # Ergonomic Dark Mode Tokens (SKILL.md standard)
+        assert "#0D1117" in dark_qss   # Deep Space Obsidian Canvas
+        assert "#181E26" in dark_qss   # Elevated Slate Cards
+        assert "#2C3644" in dark_qss   # Elevated Slate Border
+        assert "#141820" in dark_qss   # Sidebar & Segmented Control Surface
+        assert "#252D38" in dark_qss   # Sidebar Border
+        assert "#E6EDF3" in dark_qss   # Soft Platinum Text
+        assert "#8B949E" in dark_qss   # Muted Steel Text
+        assert "#0B0E14" in dark_qss   # Deep Midnight Terminal Canvas

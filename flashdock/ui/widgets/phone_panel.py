@@ -1,22 +1,28 @@
 """
 FlashDock — Phone Control Panel (sidebar widget).
 
-Always visible in the main window.  Shows the device's current mode and
-provides reboot / control buttons.  Buttons that don't apply to the
-detected brand or current mode are greyed out with a tooltip reason.
-
-Phase 1 builds the visual shell; Phase 2 connects it to real ADB/fastboot.
+Always visible in the main window. Merges Xiaomi HyperOS 2.0 fluidity,
+macOS Sequoia glassmorphism, and iOS 18 Control Center aesthetics:
+- Prominent vertical pill navigation with 32x32px vibrant circular badges.
+- Smooth active capsule selection (mirroring AFS / Apple HIG standard).
+- Collapsible device mode monitor, quick reboot triggers, and setup assistant.
 """
 
 from __future__ import annotations
 
+from typing import Optional
+
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QFrame,
+    QGraphicsDropShadowEffect,
     QGroupBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -66,11 +72,128 @@ class _ModeIndicator(QFrame):
             "min-height: 8px; max-height: 8px;"
         )
         self._text.setText(label)
-        self._text.setStyleSheet(f"color: {color}; font-size: 13px; font-weight: 600;")
+        self._text.setStyleSheet(f"color: {color}; font-size: 12px; font-weight: 600;")
+
+
+class _NavPillButton(QPushButton):
+    """Next-Gen HyperOS / iOS 18 Control Center Primary Navigation Pill.
+
+    Houses a 32x32px circular chip container with vivid gradient and antialiased
+    white vector SVG icon, bold label, and responsive active capsule highlight.
+    """
+
+    def __init__(
+        self,
+        action_id: str,
+        label: str,
+        icon_name: str,
+        gradient_css: str,
+        parent: Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self.action_id = action_id
+        self.label_str = label
+        self.icon_name = icon_name
+        self.gradient_css = gradient_css
+        self.is_active = False
+
+        self.setProperty("cssClass", "nav_pill")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedHeight(50)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(10, 8, 14, 8)
+        layout.setSpacing(12)
+
+        # Circular Chip Container (32x32px, radius 16px)
+        self.chip = QFrame()
+        self.chip.setFixedSize(32, 32)
+        self.chip.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.chip.setStyleSheet(f"background: {self.gradient_css}; border-radius: 16px; border: none;")
+
+        chip_lay = QHBoxLayout(self.chip)
+        chip_lay.setContentsMargins(0, 0, 0, 0)
+        chip_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.icon_lbl = QLabel()
+        self.icon_lbl.setFixedSize(16, 16)
+        self.icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        pix = get_icon_pixmap(self.icon_name, width=16, height=16, color="#FFFFFF")
+        self.icon_lbl.setPixmap(pix)
+        chip_lay.addWidget(self.icon_lbl)
+        layout.addWidget(self.chip, 0, Qt.AlignmentFlag.AlignVCenter)
+
+        # Title Label
+        self.title_lbl = QLabel(label)
+        self.title_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        layout.addWidget(self.title_lbl, 1)
+
+    def set_active(self, active: bool, theme: str = "dark") -> None:
+        self.is_active = active
+        self.setProperty("active", "true" if active else "false")
+        theme = theme.lower()
+
+        if active:
+            if theme == "light":
+                self.setStyleSheet("""
+                    QPushButton {
+                        background-color: #9AA2B0;
+                        border: 1px solid #828B9B;
+                        border-radius: 18px;
+                        color: #FFFFFF;
+                        font-weight: 700;
+                    }
+                """)
+                self.title_lbl.setStyleSheet("color: #FFFFFF; font-size: 13px; font-weight: 700; background: transparent;")
+            else:
+                self.setStyleSheet("""
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #253346, stop:1 #1C2736);
+                        border: 1px solid #0A84FF;
+                        border-radius: 18px;
+                        color: #FFFFFF;
+                        font-weight: 700;
+                    }
+                """)
+                self.title_lbl.setStyleSheet("color: #FFFFFF; font-size: 13px; font-weight: 700; background: transparent;")
+        else:
+            if theme == "light":
+                self.setStyleSheet("""
+                    QPushButton {
+                        background-color: #E2E6EC;
+                        border: 1px solid #CBD1DC;
+                        border-radius: 18px;
+                        color: #1C2024;
+                        font-weight: 600;
+                    }
+                    QPushButton:hover {
+                        background-color: #ECEFF4;
+                        border-color: #9AA4B2;
+                        color: #1C2024;
+                    }
+                """)
+                self.title_lbl.setStyleSheet("color: #1C2024; font-size: 13px; font-weight: 600; background: transparent;")
+            else:
+                self.setStyleSheet("""
+                    QPushButton {
+                        background-color: #161D28;
+                        border: 1px solid rgba(255, 255, 255, 0.07);
+                        border-radius: 18px;
+                        color: #E6EDF3;
+                        font-weight: 600;
+                    }
+                    QPushButton:hover {
+                        background-color: #1E2736;
+                        border-color: #3D4B5C;
+                        color: #FFFFFF;
+                    }
+                """)
+                self.title_lbl.setStyleSheet("color: #E6EDF3; font-size: 13px; font-weight: 600; background: transparent;")
 
 
 class PhoneControlPanel(QFrame):
-    """Sidebar control panel for the connected phone."""
+    """Sidebar workstation control and navigation panel."""
 
     reboot_requested = Signal(str)
     refresh_requested = Signal()
@@ -83,55 +206,164 @@ class PhoneControlPanel(QFrame):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setFixedWidth(220)
+        self.setFixedWidth(240)
         self.setProperty("cssClass", "operations_panel")
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(14, 18, 14, 18)
-        root.setSpacing(10)
+        root.setContentsMargins(10, 14, 10, 14)
+        root.setSpacing(6)
 
-        # ---- Header ----
-        header = QLabel("PHONE CONTROL")
-        header.setProperty("cssClass", "subheading")
-        header.setStyleSheet("font-size: 11px; font-weight: 700; letter-spacing: 0.6px;")
-        root.addWidget(header)
+        # ---- Top Header Brand Pill ----
+        brand_frame = QFrame()
+        brand_frame.setFixedHeight(54)
+        brand_frame.setStyleSheet("""
+            QFrame {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 18px;
+            }
+        """)
+        brand_lay = QHBoxLayout(brand_frame)
+        brand_lay.setContentsMargins(10, 8, 12, 8)
+        brand_lay.setSpacing(10)
 
-        # ---- Mode indicator ----
+        # Brand squircle icon chip
+        brand_icon_chip = QFrame()
+        brand_icon_chip.setFixedSize(34, 34)
+        brand_icon_chip.setStyleSheet("""
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00F2FE, stop:1 #4FACFE);
+            border-radius: 10px;
+            border: none;
+        """)
+        b_chip_lay = QHBoxLayout(brand_icon_chip)
+        b_chip_lay.setContentsMargins(0, 0, 0, 0)
+        b_chip_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        b_logo_lbl = QLabel()
+        b_logo_lbl.setPixmap(get_icon_pixmap("app_logo", width=20, height=20, color="#FFFFFF"))
+        b_chip_lay.addWidget(b_logo_lbl)
+        brand_lay.addWidget(brand_icon_chip)
+
+        brand_text_box = QVBoxLayout()
+        brand_text_box.setSpacing(1)
+        brand_title = QLabel("FlashDock")
+        brand_title.setStyleSheet("font-size: 14px; font-weight: 700; letter-spacing: -0.3px;")
+        brand_sub = QLabel("v1.1.0 Service Suite")
+        brand_sub.setStyleSheet("font-size: 11px; color: #8E8E93;")
+        brand_text_box.addWidget(brand_title)
+        brand_text_box.addWidget(brand_sub)
+        brand_lay.addLayout(brand_text_box, 1)
+        root.addWidget(brand_frame)
+
+        # ---- Primary Navigation Pills (HyperOS / iOS 18 Control Center style) ----
+        self._nav_pills: dict[str, _NavPillButton] = {}
+        nav_defs = [
+            ("home",         "Overview / Tools",    "flash",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7)"),
+            ("check_phone",  "ADB & Device",        "phone",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00B4D8, stop:1 #0077B6)"),
+            ("flash_rom",    "Fastboot Tools",      "flash",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2563EB, stop:1 #1D4ED8)"),
+            ("root",         "Root & Modules",      "root",        "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #A855F7, stop:1 #7E22CE)"),
+            ("unbrick",      "Unbrick & Rescue",    "unbrick",     "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EF4444, stop:1 #B91C1C)"),
+            ("diagnostics",  "Diagnostics & Tweaks","diagnostics", "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #10B981, stop:1 #059669)"),
+            ("mtk_unisoc",   "MTK & Unisoc",        "mtk_unisoc",  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F97316, stop:1 #C2410C)"),
+            ("settings",     "Display & Settings",  "tools",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EC4899, stop:1 #BE185D)"),
+            ("about",        "About Workstation",   "info",        "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EA580C, stop:1 #9A3412)"),
+        ]
+
+        for action_id, label, icon_name, grad in nav_defs:
+            pill = _NavPillButton(action_id, label, icon_name, grad)
+            pill.clicked.connect(lambda checked=False, a=action_id: self._on_nav_pill_clicked(a))
+            self._nav_pills[action_id] = pill
+            root.addWidget(pill)
+
+        # Set Home active initially
+        self._active_nav_id = "home"
+        self._nav_pills["home"].set_active(True)
+
+        root.addStretch(1)
+
+        # ---- Collapsible Bottom Device Status Capsule ----
+        dev_card = QFrame()
+        dev_card.setStyleSheet("""
+            QFrame {
+                background: rgba(0, 0, 0, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 14px;
+                padding: 6px;
+            }
+        """)
+        dev_lay = QVBoxLayout(dev_card)
+        dev_lay.setContentsMargins(8, 8, 8, 8)
+        dev_lay.setSpacing(6)
+
+        # Mode indicator row
         self._mode = _ModeIndicator()
-        root.addWidget(self._mode)
+        dev_lay.addWidget(self._mode)
 
-        # ---- Device summary (brief) ----
         self._summary = QLabel("Connect a phone via USB")
         self._summary.setWordWrap(True)
         self._summary.setProperty("cssClass", "muted")
-        root.addWidget(self._summary)
+        self._summary.setStyleSheet("font-size: 11px;")
+        dev_lay.addWidget(self._summary)
 
-        # ---- Connection Helper & Troubleshooting Card ----
+        # Quick Reboot Actions
+        reboot_row = QHBoxLayout()
+        reboot_row.setSpacing(4)
+
+        self._buttons: dict[str, QPushButton] = {}
+        button_defs = [
+            ("system",     "System",      "refresh",    "Reboot into Android"),
+            ("recovery",   "Recovery",    "tools",      "Reboot to Recovery mode"),
+            ("bootloader", "Fastboot",    "flash",      "Reboot to Bootloader / Fastboot"),
+            ("fastbootd",  "FastbootD",   "flash",      "Reboot to userspace Fastboot"),
+            ("download",   "Odin",        "downloads",  "Samsung Download mode"),
+            ("edl",        "EDL",         "usb",        "Qualcomm EDL / 9008 mode"),
+            ("poweroff",   "Power Off",   "power",      "Power off the device"),
+            ("safemode",   "Safe Mode",   "integrity",  "Reboot into Safe Mode"),
+        ]
+
+        # Primary 3 visible reboot shortcuts in pill drawer
+        for mode_id, label, icon_name, tooltip in button_defs[:3]:
+            btn = QPushButton(label)
+            btn.setIcon(get_icon(icon_name, 11))
+            btn.setToolTip(tooltip)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setStyleSheet("font-size: 10px; padding: 4px 6px; border-radius: 8px;")
+            btn.setEnabled(False)
+            btn.clicked.connect(lambda checked, m=mode_id: self.reboot_requested.emit(m))
+            self._buttons[mode_id] = btn
+            reboot_row.addWidget(btn)
+
+        dev_lay.addLayout(reboot_row)
+
+        # Store other buttons hidden for API and backward compatibility
+        for mode_id, label, icon_name, tooltip in button_defs[3:]:
+            btn = QPushButton(label)
+            btn.setVisible(False)
+            btn.setEnabled(False)
+            btn.clicked.connect(lambda checked, m=mode_id: self.reboot_requested.emit(m))
+            self._buttons[mode_id] = btn
+
+        # Connection Helper Card
         self._helper_card = QFrame()
         self._helper_card.setStyleSheet(
             "background-color: rgba(255, 149, 0, 0.08); border: 1px solid rgba(255, 149, 0, 0.25); "
-            "border-radius: 8px; padding: 8px 10px;"
+            "border-radius: 8px; padding: 6px;"
         )
         helper_lay = QVBoxLayout(self._helper_card)
         helper_lay.setContentsMargins(4, 4, 4, 4)
-        helper_lay.setSpacing(6)
+        helper_lay.setSpacing(4)
 
         helper_title_row = QHBoxLayout()
         helper_title_row.setSpacing(6)
-        self._helper_icon = create_icon_label("info", 14, color="#C96E00")
+        self._helper_icon = create_icon_label("info", 13, color="#C96E00")
         helper_title_row.addWidget(self._helper_icon)
 
-        self._helper_title = QLabel("Phone Not Detected?")
+        self._helper_title = QLabel("Device Offline")
         self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #C96E00;")
         helper_title_row.addWidget(self._helper_title, 1)
         helper_lay.addLayout(helper_title_row)
 
-        self._helper_text = QLabel(
-            "1. Settings > About Phone > Tap 'Build Number' 7x.\n"
-            "2. Developer options > Turn ON 'USB Debugging'.\n"
-            "3. Accept RSA prompt on screen."
-        )
-        self._helper_text.setStyleSheet("font-size: 10px; color: #8E8E93; line-height: 1.3;")
+        self._helper_text = QLabel("Plug USB cable & enable USB Debugging.")
+        self._helper_text.setStyleSheet("font-size: 10px; color: #8E8E93;")
         self._helper_text.setWordWrap(True)
         helper_lay.addWidget(self._helper_text)
 
@@ -139,154 +371,92 @@ class PhoneControlPanel(QFrame):
         helper_btn_row.setSpacing(4)
 
         self._btn_setup_diag = QPushButton("Setup")
-        self._btn_setup_diag.setIcon(get_icon("tools", 12))
+        self._btn_setup_diag.setIcon(get_icon("tools", 11))
         self._btn_setup_diag.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._btn_setup_diag.setStyleSheet("font-size: 10px; padding: 4px 6px; font-weight: 600;")
-        self._btn_setup_diag.setToolTip("Open Laptop Setup Wizard & USB driver installer")
+        self._btn_setup_diag.setStyleSheet("font-size: 10px; padding: 3px 6px;")
         self._btn_setup_diag.clicked.connect(self.setup_wizard_requested.emit)
         helper_btn_row.addWidget(self._btn_setup_diag)
 
         self._btn_rescan = QPushButton("Scan")
-        self._btn_rescan.setIcon(get_icon("refresh", 12))
+        self._btn_rescan.setIcon(get_icon("refresh", 11))
         self._btn_rescan.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._btn_rescan.setStyleSheet("font-size: 10px; padding: 4px 6px; font-weight: 600;")
-        self._btn_rescan.setToolTip("Re-scan USB devices and restart ADB detection")
+        self._btn_rescan.setStyleSheet("font-size: 10px; padding: 3px 6px;")
         self._btn_rescan.clicked.connect(self._on_rescan_clicked)
         helper_btn_row.addWidget(self._btn_rescan)
-
         helper_lay.addLayout(helper_btn_row)
-        root.addWidget(self._helper_card)
 
-        # ---- Section: GSM Operations Panel ----
-        ops_header = QLabel("OPERATIONS")
-        ops_header.setProperty("cssClass", "subheading")
-        ops_header.setStyleSheet("font-size: 10px; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px; color: #8E8E93;")
-        root.addWidget(ops_header)
+        dev_lay.addWidget(self._helper_card)
 
-        self._btn_op_info = QPushButton("Device Diagnostics")
-        self._btn_op_info.setIcon(get_icon("search", 14))
-        self._btn_op_info.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._btn_op_info.setToolTip("Deep device property inspection & root/Knox detection")
-        self._btn_op_info.clicked.connect(lambda: self.action_requested.emit("check_phone"))
-        root.addWidget(self._btn_op_info)
+        # Screen Mirror & Key Guide triggers
+        bottom_tools_row = QHBoxLayout()
+        bottom_tools_row.setSpacing(4)
 
-        self._btn_op_backup = QPushButton("Partition Backup")
-        self._btn_op_backup.setIcon(get_icon("backup", 14))
-        self._btn_op_backup.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._btn_op_backup.setToolTip("Back up calibration blocks (NVRAM, EFS, Persist)")
-        self._btn_op_backup.clicked.connect(lambda: self.action_requested.emit("backup"))
-        root.addWidget(self._btn_op_backup)
-
-        self._btn_op_flash = QPushButton("Flash Firmware")
-        self._btn_op_flash.setIcon(get_icon("flash", 14))
-        self._btn_op_flash.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._btn_op_flash.setToolTip("Flash images, fastboot packages, or Treble GSIs")
-        self._btn_op_flash.clicked.connect(lambda: self.action_requested.emit("flash_rom"))
-        root.addWidget(self._btn_op_flash)
-
-        self._btn_op_unlock = QPushButton("Bootloader Tools")
-        self._btn_op_unlock.setIcon(get_icon("unlock", 14))
-        self._btn_op_unlock.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._btn_op_unlock.setToolTip("Brand-aware bootloader unlock / relock wizard")
-        self._btn_op_unlock.clicked.connect(lambda: self.action_requested.emit("unlock_bl"))
-        root.addWidget(self._btn_op_unlock)
-
-        # ---- Separator ----
-        sep = QFrame()
-        sep.setProperty("cssClass", "separator")
-        root.addWidget(sep)
-
-        # ---- Section: Reboot shortcuts ----
-        reboot_header = QLabel("REBOOT SHORTCUTS")
-        reboot_header.setProperty("cssClass", "subheading")
-        reboot_header.setStyleSheet("font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: #8E8E93;")
-        root.addWidget(reboot_header)
-
-        self._buttons: dict[str, QPushButton] = {}
-        button_defs = [
-            ("system",     "Reboot",      "refresh",    "Reboot into Android"),
-            ("recovery",   "Recovery",    "tools",      "Reboot to Recovery mode"),
-            ("bootloader", "Bootloader",  "flash",      "Reboot to Bootloader / Fastboot"),
-            ("fastbootd",  "FastbootD",   "flash",      "Reboot to userspace Fastboot"),
-            ("download",   "Download",    "downloads",  "Samsung Download mode"),
-            ("edl",        "EDL",         "usb",        "Qualcomm EDL / 9008 mode"),
-            ("poweroff",   "Power off",   "power",      "Power off the device"),
-            ("safemode",   "Safe mode",   "integrity",  "Reboot into Safe Mode"),
-        ]
-
-        for mode_id, label, icon_name, tooltip in button_defs:
-            btn = QPushButton(label)
-            btn.setIcon(get_icon(icon_name, 13))
-            btn.setToolTip(tooltip)
-            btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setEnabled(False)
-            btn.clicked.connect(lambda checked, m=mode_id: self.reboot_requested.emit(m))
-            self._buttons[mode_id] = btn
-            root.addWidget(btn)
-
-        # ---- Separator ----
-        sep2 = QFrame()
-        sep2.setProperty("cssClass", "separator")
-        root.addWidget(sep2)
-
-        # ---- Screen mirror (scrcpy) ----
-        self._mirror_btn = QPushButton("Mirror Screen")
-        self._mirror_btn.setIcon(get_icon("scrcpy", 14, color="#FFFFFF"))
+        self._mirror_btn = QPushButton("Mirror")
+        self._mirror_btn.setIcon(get_icon("scrcpy", 12, color="#FFFFFF"))
         self._mirror_btn.setObjectName("mirror_btn")
-        self._mirror_btn.setToolTip("Open low-latency screen mirror & remote control (scrcpy)")
         self._mirror_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._mirror_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #007AFF, stop:1 #5856D6);
                 color: #FFFFFF;
                 font-weight: 600;
-                border-radius: 6px;
-                padding: 6px 10px;
+                font-size: 11px;
+                border-radius: 8px;
+                padding: 4px 8px;
                 border: none;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0062CC, stop:1 #4745B8);
             }
         """)
         self._mirror_btn.clicked.connect(self.scrcpy_requested.emit)
-        root.addWidget(self._mirror_btn)
+        bottom_tools_row.addWidget(self._mirror_btn)
 
-        # ---- Hardware Key Navigation Guide Launcher ----
-        sep3 = QFrame()
-        sep3.setProperty("cssClass", "separator")
-        root.addWidget(sep3)
-
-        btn_guide = QPushButton("Hardware Key Guide")
-        btn_guide.setIcon(get_icon("phone", 13))
+        btn_guide = QPushButton("Keys")
+        btn_guide.setIcon(get_icon("phone", 12))
         btn_guide.setObjectName("btn_key_guide")
-        btn_guide.setToolTip("Physical Vol+/Vol-/Power combinations for Recovery, Fastboot & boot menus")
         btn_guide.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_guide.setStyleSheet("font-size: 11px; padding: 6px 10px; font-weight: 600;")
+        btn_guide.setStyleSheet("font-size: 11px; padding: 4px 8px; font-weight: 600; border-radius: 8px;")
         btn_guide.clicked.connect(self.key_guide_requested.emit)
-        root.addWidget(btn_guide)
+        bottom_tools_row.addWidget(btn_guide)
+        dev_lay.addLayout(bottom_tools_row)
 
-        # Kept as programmatic children for backwards compatibility & unit tests
-        self._btn_vol_up = QPushButton()
+        root.addWidget(dev_card)
+
+        # Backward compatibility aliases and programmatic test buttons
+        self._btn_op_info = QPushButton(self)
+        self._btn_op_info.setVisible(False)
+        self._btn_op_info.clicked.connect(lambda: self.action_requested.emit("check_phone"))
+
+        self._btn_op_backup = QPushButton(self)
+        self._btn_op_backup.setVisible(False)
+        self._btn_op_backup.clicked.connect(lambda: self.action_requested.emit("backup"))
+
+        self._btn_op_flash = QPushButton(self)
+        self._btn_op_flash.setVisible(False)
+        self._btn_op_flash.clicked.connect(lambda: self.action_requested.emit("flash_rom"))
+
+        self._btn_op_unlock = QPushButton(self)
+        self._btn_op_unlock.setVisible(False)
+        self._btn_op_unlock.clicked.connect(lambda: self.action_requested.emit("unlock_bl"))
+
+        self._btn_vol_up = QPushButton(self)
         self._btn_vol_up.setObjectName("btn_key_volup")
         self._btn_vol_up.setVisible(False)
         self._btn_vol_up.clicked.connect(lambda: self.key_event_requested.emit(24))
-        root.addWidget(self._btn_vol_up)
 
-        self._btn_vol_down = QPushButton()
+        self._btn_vol_down = QPushButton(self)
         self._btn_vol_down.setObjectName("btn_key_voldown")
         self._btn_vol_down.setVisible(False)
         self._btn_vol_down.clicked.connect(lambda: self.key_event_requested.emit(25))
-        root.addWidget(self._btn_vol_down)
 
-        self._btn_power = QPushButton()
+        self._btn_power = QPushButton(self)
         self._btn_power.setObjectName("btn_key_power")
         self._btn_power.setVisible(False)
         self._btn_power.clicked.connect(lambda: self.key_event_requested.emit(26))
-        root.addWidget(self._btn_power)
-
-        root.addStretch()
 
     # ---- Internal Slots ---------------------------------------------------
+
+    def _on_nav_pill_clicked(self, action_id: str) -> None:
+        self.set_active_nav(action_id)
+        self.action_requested.emit(action_id)
 
     def _on_rescan_clicked(self) -> None:
         """Trigger device re-scan and restart ADB server if unauthorized."""
@@ -297,6 +467,17 @@ class PhoneControlPanel(QFrame):
 
     # ---- Public API -------------------------------------------------------
 
+    def set_active_nav(self, action_id: str, theme: str = "dark") -> None:
+        """Set the active visual navigation pill."""
+        self._active_nav_id = action_id
+        for aid, pill in self._nav_pills.items():
+            pill.set_active(aid == action_id, theme=theme)
+
+    def apply_theme(self, theme: str) -> None:
+        """Re-apply active and inactive styles for all pills on theme change."""
+        for aid, pill in self._nav_pills.items():
+            pill.set_active(aid == self._active_nav_id, theme=theme)
+
     def set_mode(self, mode: str) -> None:
         """Update the mode indicator pill and helper guidance card."""
         self._last_mode = mode
@@ -304,29 +485,15 @@ class PhoneControlPanel(QFrame):
 
         if mode == "not_connected":
             self._helper_card.setVisible(True)
-            self._helper_icon.setPixmap(get_icon_pixmap("info", 14, color="#C96E00"))
-            self._helper_title.setText("Phone Not Detected?")
-            self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #C96E00;")
-            self._helper_text.setText(
-                "1. Settings > About Phone > Tap 'Build Number' 7x.\n"
-                "2. Developer options > Turn ON 'USB Debugging'.\n"
-                "3. Use a USB data cable (not charge-only)."
-            )
-            self._btn_rescan.setText("Scan")
-            self._btn_rescan.setIcon(get_icon("refresh", 12))
+            self._helper_icon.setPixmap(get_icon_pixmap("info", 13, color="#C96E00"))
+            self._helper_title.setText("Device Offline")
+            self._helper_text.setText("Plug USB cable & enable USB Debugging.")
         elif mode == "unauthorized":
             self._helper_card.setVisible(True)
-            self._helper_icon.setPixmap(get_icon_pixmap("warning", 14, color="#FF9500"))
-            self._helper_title.setText("USB Debugging Unauthorized")
-            self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #FF9500;")
-            self._helper_text.setText(
-                "Unlock your phone screen now!\n"
-                "Tap 'Always allow from this computer' on the RSA popup."
-            )
-            self._btn_rescan.setText("Resend")
-            self._btn_rescan.setIcon(get_icon("refresh", 12))
+            self._helper_icon.setPixmap(get_icon_pixmap("warning", 13, color="#FF9500"))
+            self._helper_title.setText("Accept RSA Prompt")
+            self._helper_text.setText("Tap 'Always allow' on device screen.")
         else:
-            # Device connected in ready state
             self._helper_card.setVisible(False)
 
     def set_summary(self, text: str) -> None:

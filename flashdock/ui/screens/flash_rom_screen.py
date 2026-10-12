@@ -218,6 +218,7 @@ class FlashRomScreen(QWidget):
         row_pick = QHBoxLayout()
         self._edit_rom_path = QLineEdit()
         self._edit_rom_path.setPlaceholderText("Select extracted ROM folder or fastboot .zip package...")
+        self._edit_rom_path.setClearButtonEnabled(True)
         row_pick.addWidget(self._edit_rom_path, 1)
 
         btn_browse_folder = QPushButton("Browse Folder...")
@@ -349,6 +350,7 @@ class FlashRomScreen(QWidget):
         row_gsi = QHBoxLayout()
         self._edit_gsi_path = QLineEdit()
         self._edit_gsi_path.setPlaceholderText("Select GSI file (.img, .img.xz, .zip)...")
+        self._edit_gsi_path.setClearButtonEnabled(True)
         row_gsi.addWidget(self._edit_gsi_path, 1)
 
         btn_browse_gsi = QPushButton("Browse GSI...")
@@ -454,6 +456,7 @@ class FlashRomScreen(QWidget):
         row_rec = QHBoxLayout()
         self._edit_rec_path = QLineEdit()
         self._edit_rec_path.setPlaceholderText("Select recovery .img file (e.g. twrp.img, recovery.img)...")
+        self._edit_rec_path.setClearButtonEnabled(True)
         row_rec.addWidget(self._edit_rec_path, 1)
 
         btn_browse_rec = QPushButton("Browse Image...")

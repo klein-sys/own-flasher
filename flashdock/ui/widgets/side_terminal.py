@@ -130,10 +130,16 @@ class SideTerminalWidget(QWidget):
 
         layout.addWidget(header)
 
-        # Terminal text display (strictly read-only)
+        # Terminal text display (strictly read-only recessed Obsidian Console)
         self._text_edit = QPlainTextEdit()
         self._text_edit.setReadOnly(True)  # Cannot be edited or touched by user
         self._text_edit.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self._text_edit.setStyleSheet(
+            "QPlainTextEdit { background-color: #080B10; border: 1px solid rgba(255, 255, 255, 0.08); "
+            "border-radius: 12px; margin: 4px 8px 8px 8px; padding: 8px; color: #E6EDF3; "
+            "font-family: 'JetBrains Mono', 'Cascadia Code', 'SF Pro Display', Consolas, monospace; "
+            "font-size: 11.5px; selection-background-color: #0A84FF; }"
+        )
         layout.addWidget(self._text_edit, 1)
 
         # Initial greeting banner
@@ -150,7 +156,7 @@ class SideTerminalWidget(QWidget):
             self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#0A84FF"))
             self._poll_toggle_btn.setToolTip("Quiet mode: Hides repetitive background device polls when idle")
             self._poll_toggle_btn.setStyleSheet(
-                "padding: 2px 7px; font-size: 10px; min-height: 18px; border-radius: 4px; "
+                "padding: 3px 10px; font-size: 10px; min-height: 20px; border-radius: 10px; "
                 "background: rgba(10, 132, 255, 0.15); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3);"
             )
             self.append_line("Routine background polling filtered.", level="info")
@@ -159,7 +165,7 @@ class SideTerminalWidget(QWidget):
             self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#FF9F0A"))
             self._poll_toggle_btn.setToolTip("Verbose mode: Shows all background health checks and raw device polls")
             self._poll_toggle_btn.setStyleSheet(
-                "padding: 2px 7px; font-size: 10px; min-height: 18px; border-radius: 4px; "
+                "padding: 3px 10px; font-size: 10px; min-height: 20px; border-radius: 10px; "
                 "background: rgba(255, 159, 10, 0.15); color: #FF9F0A; border: 1px solid rgba(255, 159, 10, 0.3);"
             )
             self.append_line("Verbose mode enabled (showing all background device polls).", level="info")
@@ -197,26 +203,32 @@ class SideTerminalWidget(QWidget):
     @Slot(str, str)
     def _append_formatted(self, text: str, level: str) -> None:
         now = datetime.now().strftime("%H:%M:%S")
-        time_tag = f"<span style='color:#8E8E93;'>[{now}]</span>"
+        time_tag = f"<span style='color:#8B949E;'>[{now}]</span>"
         lvl_key = level.upper().strip()
 
-        # Prefix color mapping: Blue [INFO], Amber [WARN], Green [SUCCESS], Red [ERROR]
+        # Prefix color mapping & Glowing Status Pills:
+        # Electric Blue [INFO], Warm Amber [WARN], Emerald Green [SUCCESS], Crimson Red [ERROR]
         prefix_styles = {
-            "INFO": ("#007AFF", "[INFO]"),
-            "WARN": ("#FF9F0A", "[WARN]"),
-            "WARNING": ("#FF9F0A", "[WARN]"),
-            "SUCCESS": ("#30D158", "[SUCCESS]"),
-            "ERROR": ("#FF453A", "[ERROR]"),
-            "CRITICAL": ("#FF453A", "[CRITICAL]"),
-            "COMMAND": ("#0A84FF", "[CMD]"),
+            "INFO": ("#0a84ff", "rgba(10, 132, 255, 0.18)", "rgba(10, 132, 255, 0.35)", "[INFO]"),
+            "WARN": ("#ff9f0a", "rgba(255, 159, 10, 0.18)", "rgba(255, 159, 10, 0.35)", "[WARN]"),
+            "WARNING": ("#ff9f0a", "rgba(255, 159, 10, 0.18)", "rgba(255, 159, 10, 0.35)", "[WARN]"),
+            "SUCCESS": ("#30d158", "rgba(48, 209, 88, 0.18)", "rgba(48, 209, 88, 0.35)", "[SUCCESS]"),
+            "ERROR": ("#ff453a", "rgba(255, 69, 58, 0.18)", "rgba(255, 69, 58, 0.35)", "[ERROR]"),
+            "CRITICAL": ("#ff453a", "rgba(255, 69, 58, 0.18)", "rgba(255, 69, 58, 0.35)", "[CRITICAL]"),
+            "COMMAND": ("#bf5af2", "rgba(191, 90, 242, 0.18)", "rgba(191, 90, 242, 0.35)", "[CMD]"),
         }
 
-        color, tag_text = prefix_styles.get(lvl_key, ("#8E8E93", f"[{lvl_key}]"))
-        prefix_badge = f"<b style='color:{color};'>{tag_text}</b>"
+        fg_color, bg_pill, border_pill, tag_text = prefix_styles.get(
+            lvl_key, ("#8b949e", "rgba(139, 148, 158, 0.15)", "rgba(139, 148, 158, 0.3)", f"[{lvl_key}]")
+        )
+        prefix_badge = (
+            f"<span style='background: {bg_pill}; color: {fg_color}; border: 1px solid {border_pill}; "
+            f"border-radius: 4px; padding: 1px 4px; font-weight: 700; font-size: 10px;'>{tag_text}</span>"
+        )
 
         # HTML formatting for colored log lines
         clean_text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        html_line = f"{time_tag} {prefix_badge} <span style='color:#E5E5EA;'>{clean_text}</span>"
+        html_line = f"{time_tag} {prefix_badge} <span style='color:#E6EDF3;'>{clean_text}</span>"
         self._text_edit.appendHtml(html_line)
 
         # Auto-scroll to bottom

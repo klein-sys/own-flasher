@@ -311,12 +311,12 @@ class PlayIntegrityFixer:
             if pif_module_installed or custom_pif_active:
                 verdict_basic = "Pass"
                 verdict_device = "Pass"
-                recs.append("✅ Certified fingerprint active. MEETS_DEVICE_INTEGRITY should pass.")
+                recs.append("Certified fingerprint active. MEETS_DEVICE_INTEGRITY should pass.")
             else:
                 verdict_basic = "Fail"
                 verdict_device = "Fail"
-                recs.append("⚠️ Bootloader is unlocked and no Play Integrity Fix module or pif.json was found.")
-                recs.append("👉 Inject a certified fingerprint below to bypass Google Play Integrity.")
+                recs.append("Bootloader is unlocked and no Play Integrity Fix module or pif.json was found.")
+                recs.append("Inject a certified fingerprint below to bypass Google Play Integrity.")
         else:
             verdict_basic = "Pass"
             verdict_device = "Pass"
@@ -324,7 +324,7 @@ class PlayIntegrityFixer:
 
         if selinux_status.lower() == "permissive":
             verdict_basic = "Fail"
-            recs.append("⚠️ SELinux is Permissive. Most banking apps block permissive SELinux.")
+            recs.append("SELinux is Permissive. Most banking apps block permissive SELinux.")
 
         return IntegrityDiagnostic(
             bootloader_status=bootloader_status,

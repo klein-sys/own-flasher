@@ -44,6 +44,7 @@ MODULES_DIR = DATA_DIR / "modules"
 ROOT_APPS_DIR = DATA_DIR / "root_apps"
 BACKUPS_DIR = DATA_DIR / "backups"
 LOGS_DIR = DATA_DIR / "logs"
+CRASHES_DIR = DATA_DIR / "crashes"
 CACHE_DIR = DATA_DIR / "cache"
 PROFILES_DIR = DATA_DIR / "profiles"
 DB_PATH = DATA_DIR / "flashdock.db"
@@ -53,7 +54,7 @@ ICONS_DIR = RESOURCES_DIR / "icons"
 LICENSES_DIR = RESOURCES_DIR / "licenses"
 
 # Ensure runtime directories exist
-for _dir in (DATA_DIR, TOOLS_DIR, DRIVERS_DIR, ROMS_DIR, GSIS_DIR, MODULES_DIR, ROOT_APPS_DIR, BACKUPS_DIR, LOGS_DIR, CACHE_DIR, PROFILES_DIR):
+for _dir in (DATA_DIR, TOOLS_DIR, DRIVERS_DIR, ROMS_DIR, GSIS_DIR, MODULES_DIR, ROOT_APPS_DIR, BACKUPS_DIR, LOGS_DIR, CRASHES_DIR, CACHE_DIR, PROFILES_DIR):
     _dir.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------

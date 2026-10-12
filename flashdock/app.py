@@ -76,6 +76,21 @@ def run() -> int:
     app = QApplication.instance() or QApplication(sys.argv)
     app.setApplicationName(__app_name__)
     app.setStyle("Fusion")  # Consistent look across Windows versions
+
+    # Set application icon (taskbar / dock)
+    from pathlib import Path
+    from PySide6.QtGui import QIcon
+    icon_candidates = [
+        Path(__file__).resolve().parent / "resources" / "icon.png",
+        Path(__file__).resolve().parent.parent / "resources" / "icon.png",
+        Path(sys.executable).parent / "flashdock" / "resources" / "icon.png",
+        Path(sys.executable).parent / "resources" / "icon.png",
+    ]
+    for icp in icon_candidates:
+        if icp.is_file():
+            app.setWindowIcon(QIcon(str(icp)))
+            break
+
     active_theme = config.get("theme", "dark")
     app.setStyleSheet(get_stylesheet(active_theme))
 

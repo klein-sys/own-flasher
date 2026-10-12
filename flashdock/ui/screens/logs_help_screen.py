@@ -444,9 +444,7 @@ class LogsHelpScreen(QWidget):
 
         # Quick action button if available
         if item.quick_action_id:
-            clean_label = item.quick_action_label
-            for ch in ["🔄", "🗂️", "🚑", "🛡️"]:
-                clean_label = clean_label.replace(ch, "").strip()
+            clean_label = item.quick_action_label.strip()
             act_btn = QPushButton(clean_label)
             btn_icon_name = "refresh" if "restart" in item.quick_action_id else ("tools" if "device_manager" in item.quick_action_id else ("unbrick" if "unbrick" in item.quick_action_id else "integrity"))
             act_btn.setIcon(get_icon(btn_icon_name, 14))

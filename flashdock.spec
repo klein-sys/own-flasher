@@ -23,6 +23,7 @@ a = Analysis(
     datas=[
         # Include resources and bundled platform tools
         ('resources', 'resources'),
+        ('flashdock/resources', 'flashdock/resources'),
         ('data/tools', 'data/tools'),
     ],
     hiddenimports=[
@@ -35,6 +36,7 @@ a = Analysis(
         'flashdock.brands.xiaomi',
         'flashdock.brands.samsung',
         'flashdock.brands.others',
+        'flashdock.brands.transsion',
         'flashdock.core.safety',
         'flashdock.core.backup',
         'flashdock.ui.widgets.flash_shield',
@@ -52,6 +54,7 @@ a = Analysis(
         'flashdock.core.rom_flasher',
         'flashdock.ui.screens.flash_rom_screen',
         'flashdock.core.diagnostics',
+        'flashdock.core.diagnostics_engine',
         'flashdock.ui.screens.diagnostics_screen',
         'flashdock.core.mtk',
         'flashdock.core.unisoc',
@@ -70,6 +73,12 @@ a = Analysis(
         'flashdock.ui.widgets.crash_dialog',
         'flashdock.tools.scrcpy',
         'flashdock.ui.widgets.scrcpy_dialog',
+        'flashdock.ui.widgets.setup_wizard_dialog',
+        'flashdock.ui.widgets.key_guide_dialog',
+        'flashdock.ui.icon_assets',
+        'flashdock.ui.brand_assets',
+        'flashdock.workers.device_monitor',
+        'flashdock.workers.flash_engine',
     ],
     hookspath=[],
     hooksconfig={},
@@ -105,7 +114,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,  # TODO: Add icon in a later phase
+    icon='flashdock/resources/icon.ico',
 )
 
 coll = COLLECT(

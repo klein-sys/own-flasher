@@ -23,6 +23,7 @@ from PySide6.QtCore import QMutex, QMutexLocker, QThread, Signal, Slot
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
+from flashdock.tools.runner import is_flash_locked
 
 log = get_logger(__name__)
 
@@ -341,6 +342,7 @@ class DeviceMonitorWorker(QThread):
 
     def stop_polling(self) -> None:
         """Gracefully stop polling and wait for thread termination."""
+        self.requestInterruption()
         with QMutexLocker(self._mutex):
             self._running = False
         self.wait(3000)
@@ -375,23 +377,27 @@ class DeviceMonitorWorker(QThread):
 
     def run(self) -> None:
         """Execute the continuous background hardware polling loop."""
-        while True:
+        while not self.isInterruptionRequested():
             with QMutexLocker(self._mutex):
                 if not self._running:
                     break
                 paused = self._paused
 
-            if not paused:
+            if not paused and not is_flash_locked():
                 try:
                     self.poll_cycle()
                 except Exception as exc:
                     log.warning("Exception inside DeviceMonitorWorker poll cycle: %s", exc)
+            elif is_flash_locked():
+                log.debug("DeviceMonitorWorker: Flash operation lock active, pausing USB polling.")
 
             # Sleep in small slices so thread terminates immediately on stop()
             total_sleep = self._poll_interval
             elapsed = 0.0
             slice_sec = 0.1
             while elapsed < total_sleep:
+                if self.isInterruptionRequested():
+                    return
                 with QMutexLocker(self._mutex):
                     if not self._running:
                         return
@@ -404,6 +410,10 @@ class DeviceMonitorWorker(QThread):
 
     def poll_cycle(self) -> None:
         """Execute one complete detection pass across USB hardware and CLI tools."""
+        if is_flash_locked():
+            log.debug("Flash lock engaged; skipping USB CLI query pass to protect flash pipe.")
+            return
+
         raw_hw_list = self.scan_usb_and_com_hardware()
         self.hardware_scanned.emit(raw_hw_list)
 
@@ -467,8 +477,8 @@ class DeviceMonitorWorker(QThread):
                     "chipset": "Fastboot / Bootloader",
                     "details": fb_dev,
                 }
-        except Exception:
-            pass
+        except Exception as exc:
+            log.debug("Fastboot device detection non-fatal exception: %s", exc)
 
         # Step 3: Check ADB CLI
         try:
@@ -483,8 +493,8 @@ class DeviceMonitorWorker(QThread):
                     "chipset": "ADB Daemon",
                     "details": adb_dev,
                 }
-        except Exception:
-            pass
+        except Exception as exc:
+            log.debug("ADB device detection non-fatal exception: %s", exc)
 
         # Step 4: Check other recognized hardware profiles (Preloader, Diag, etc.)
         for hw in raw_hardware:
@@ -522,15 +532,30 @@ class DeviceMonitorWorker(QThread):
     def _scan_windows_serial_ports(self) -> List[dict]:
         """Enumerate active COM ports from HKLM\\HARDWARE\\DEVICEMAP\\SERIALCOMM."""
         com_ports: List[dict] = []
+        if sys.platform != "win32":
+            return com_ports
+
         try:
             import winreg
             key_path = r"HARDWARE\DEVICEMAP\SERIALCOMM"
-            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path) as key:
-                num_values = winreg.QueryInfoKey(key)[1]
+            try:
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path)
+            except (FileNotFoundError, PermissionError, OSError):
+                return com_ports
+
+            with key:
+                try:
+                    num_values = winreg.QueryInfoKey(key)[1]
+                except OSError:
+                    num_values = 0
+
                 for i in range(num_values):
-                    val_name, val_data, _ = winreg.EnumValue(key, i)
-                    port_name = str(val_data).strip()
-                    val_name_upper = val_name.upper()
+                    try:
+                        val_name, val_data, _ = winreg.EnumValue(key, i)
+                        port_name = str(val_data).strip()
+                        val_name_upper = str(val_name).upper()
+                    except (OSError, winreg.error):
+                        continue
 
                     # Match port driver name for chipset hints
                     mode = HardwareMode.UNKNOWN
@@ -555,28 +580,41 @@ class DeviceMonitorWorker(QThread):
                     com_ports.append({
                         "type": "com_port",
                         "port": port_name,
-                        "device_key": val_name,
+                        "device_key": str(val_name),
                         "mode": mode.value if isinstance(mode, HardwareMode) else mode,
                         "chipset": chipset,
                         "display_name": display_name,
                         "is_emergency": is_emerg,
                     })
-        except Exception:
-            pass
+        except Exception as exc:
+            log.debug("Windows COM port registry enumeration exception: %s", exc)
         return com_ports
 
     def _scan_windows_usb_devices(self) -> List[dict]:
         """Enumerate active USB devices from HKLM\\SYSTEM\\CurrentControlSet\\Enum\\USB."""
         usb_devices: List[dict] = []
+        if sys.platform != "win32":
+            return usb_devices
+
         try:
             import winreg
             base_path = r"SYSTEM\CurrentControlSet\Enum\USB"
-            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, base_path) as usb_root:
-                num_subkeys = winreg.QueryInfoKey(usb_root)[0]
+            try:
+                usb_root = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, base_path)
+            except (FileNotFoundError, PermissionError, OSError):
+                return usb_devices
+
+            with usb_root:
+                try:
+                    num_subkeys = winreg.QueryInfoKey(usb_root)[0]
+                except OSError:
+                    num_subkeys = 0
+
                 for i in range(num_subkeys):
                     try:
                         hw_id = winreg.EnumKey(usb_root, i)
-                        match = re.search(r"VID_([0-9A-Fa-f]{4})&PID_([0-9A-Fa-f]{4})", hw_id)
+                        hw_id_str = str(hw_id)
+                        match = re.search(r"VID_([0-9A-Fa-f]{4})&PID_([0-9A-Fa-f]{4})", hw_id_str)
                         if not match:
                             continue
 
@@ -588,22 +626,35 @@ class DeviceMonitorWorker(QThread):
                             continue
 
                         # Check instance subkeys to verify device is connected/active
-                        instance_path = f"{base_path}\\{hw_id}"
-                        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, instance_path) as inst_key:
-                            num_inst = winreg.QueryInfoKey(inst_key)[0]
+                        instance_path = f"{base_path}\\{hw_id_str}"
+                        try:
+                            inst_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, instance_path)
+                        except (FileNotFoundError, PermissionError, OSError):
+                            continue
+
+                        with inst_key:
+                            try:
+                                num_inst = winreg.QueryInfoKey(inst_key)[0]
+                            except OSError:
+                                num_inst = 0
+
                             for j in range(num_inst):
                                 try:
-                                    inst_id = winreg.EnumKey(inst_key, j)
+                                    inst_id = str(winreg.EnumKey(inst_key, j))
                                     detail_path = f"{instance_path}\\{inst_id}"
-                                    with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, detail_path) as detail_key:
-                                        # Try reading friendly name or device desc
+                                    try:
+                                        detail_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, detail_path)
+                                    except (FileNotFoundError, PermissionError, OSError):
+                                        continue
+
+                                    with detail_key:
                                         friendly_name = ""
                                         try:
                                             friendly_name, _ = winreg.QueryValueEx(detail_key, "FriendlyName")
-                                        except Exception:
+                                        except (OSError, winreg.error):
                                             try:
                                                 friendly_name, _ = winreg.QueryValueEx(detail_key, "DeviceDesc")
-                                            except Exception:
+                                            except (OSError, winreg.error):
                                                 friendly_name = profile.display_name
 
                                         usb_devices.append({
@@ -611,8 +662,8 @@ class DeviceMonitorWorker(QThread):
                                             "vid": vid,
                                             "pid": pid,
                                             "instance_id": inst_id,
-                                            "hardware_id": hw_id,
-                                            "friendly_name": friendly_name,
+                                            "hardware_id": hw_id_str,
+                                            "friendly_name": str(friendly_name),
                                             "mode": profile.mode.value,
                                             "display_name": profile.display_name,
                                             "chipset": profile.chipset,
@@ -623,6 +674,36 @@ class DeviceMonitorWorker(QThread):
                                     continue
                     except Exception:
                         continue
-        except Exception:
-            pass
+        except Exception as exc:
+            log.debug("Windows USB registry enumeration exception: %s", exc)
         return usb_devices
+
+
+def check_windows_usb_selective_suspend() -> tuple[bool, str]:
+    """
+    Check if Windows USB Selective Suspend power saving mode is enabled.
+    Returns (is_enabled, advice_message).
+    """
+    if sys.platform != "win32":
+        return False, "Non-Windows platform"
+
+    try:
+        res = subprocess.run(
+            ["powercfg", "/q", "SCHEME_CURRENT", "2a737441-1930-4402-8d77-b2bebba308a3", "48e6b7a6-50f5-4782-a5d4-53bb8f07e226"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, "CREATE_NO_WINDOW") else 0,
+        )
+        if res.returncode == 0:
+            out = res.stdout
+            if "0x00000001" in out or "Enabled" in out:
+                return True, (
+                    "Windows USB Selective Suspend is ENABLED. Windows may power down USB endpoints "
+                    "during multi-gigabyte firmware transfers (super.img). Disable Selective Suspend "
+                    "in Power Options or use an AC-powered hub to prevent mid-flash disconnects."
+                )
+    except Exception as exc:
+        log.debug("powercfg USB selective suspend check exception: %s", exc)
+
+    return False, "USB Selective Suspend not detected or disabled"

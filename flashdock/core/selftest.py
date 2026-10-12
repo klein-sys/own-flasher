@@ -227,7 +227,7 @@ class SystemSelfTester:
                     category="Toolchains",
                     status="WARN",
                     detail="ADB binary not installed yet.",
-                    remediation="Click '🛠️ Setup Workstation' to install platform-tools automatically.",
+                    remediation="Click 'Setup Workstation' to install platform-tools automatically.",
                 )
             )
 
@@ -268,7 +268,7 @@ class SystemSelfTester:
                     category="Toolchains",
                     status="WARN",
                     detail="Fastboot binary not installed yet.",
-                    remediation="Click '🛠️ Setup Workstation' to install platform-tools automatically.",
+                    remediation="Click 'Setup Workstation' to install platform-tools automatically.",
                 )
             )
 

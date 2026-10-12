@@ -2,9 +2,9 @@
 FlashDock — Fix Bricked Phone & Bootloop Rescue Screen (UnbrickScreen).
 
 Provides a dedicated, safety-first emergency workstation for:
-1. ⚡ Fix Bootloop (Magisk/KernelSU module kill-switch, Safe Mode, A/B slot rollback, cache wipe).
-2. 🔧 Partition & Boot Image Restorer (flash stock boot/vbmeta/init_boot to recover from bad patches).
-3. 🚑 Unbrick Guides & Low-Level Rescue (EDL 9008, MTK BROM, Samsung Download mode).
+1. Fix Bootloop (Magisk/KernelSU module kill-switch, Safe Mode, A/B slot rollback, cache wipe).
+2. Partition & Boot Image Restorer (flash stock boot/vbmeta/init_boot to recover from bad patches).
+3. Unbrick Guides & Low-Level Rescue (EDL 9008, MTK BROM, Samsung Download mode).
 """
 
 from __future__ import annotations
@@ -301,6 +301,7 @@ class UnbrickScreen(QWidget):
         pick_row = QHBoxLayout()
         self._boot_img_input = QLineEdit()
         self._boot_img_input.setPlaceholderText("Select stock boot.img or init_boot.img...")
+        self._boot_img_input.setClearButtonEnabled(True)
         pick_row.addWidget(self._boot_img_input, 1)
 
         btn_browse = QPushButton("Browse...")
