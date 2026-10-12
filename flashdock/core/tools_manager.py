@@ -681,7 +681,7 @@ class DriverManager:
                 timeout=30,
             )
             out = (res.stdout + res.stderr).strip()
-            if res.returncode == 0 or "successfully" in out.lower() or "added" in out.lower():
+            if (res.returncode == 0 or "successfully" in out.lower() or "added" in out.lower()) and "access is denied" not in out.lower():
                 return True, f"Successfully installed driver INF: {inf_file.name}\n{out}"
         except Exception as e:
             out = str(e)
@@ -690,7 +690,7 @@ class DriverManager:
         if sys.platform == "win32":
             log.info("Standard pnputil failed or requires elevation. Launching with UAC RunAs...")
             try:
-                ps_cmd = f"Start-Process pnputil -ArgumentList '/add-driver', '\"{inf_file}\"', '/install' -Verb RunAs -Wait"
+                ps_cmd = f"Start-Process pnputil.exe -ArgumentList '/add-driver \"{inf_file}\" /install' -Verb RunAs -Wait"
                 elev_res = subprocess.run(
                     ["powershell", "-NoProfile", "-Command", ps_cmd],
                     capture_output=True,
@@ -698,9 +698,15 @@ class DriverManager:
                     timeout=60,
                 )
                 if elev_res.returncode == 0:
-                    return True, f"Driver INF installation command executed for: {inf_file.name} (Administrator elevation requested)."
-                return False, f"Elevated driver installation returned code {elev_res.returncode}:\n{elev_res.stderr.strip() or out}"
+                    return True, f"Driver package '{inf_file.name}' installed successfully (Administrator elevation granted)."
+                err_text = elev_res.stderr.strip()
+                if "canceled by the user" in err_text.lower() or "cancelled" in err_text.lower() or "0x800704c7" in err_text.lower():
+                    return False, "Driver installation cancelled: Administrator (UAC) elevation was declined by operator."
+                return False, f"Elevated driver installation returned code {elev_res.returncode}:\n{err_text or out}"
             except Exception as elev_exc:
+                err_str = str(elev_exc)
+                if "canceled by the user" in err_str.lower() or "cancelled" in err_str.lower():
+                    return False, "Driver installation cancelled: Administrator (UAC) elevation was declined by operator."
                 return False, f"Administrator elevation failed: {elev_exc}"
 
         return False, f"Driver installation failed:\n{out}"

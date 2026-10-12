@@ -84,6 +84,7 @@ class SettingsDialog(QDialog):
         self._build_connection_tab()
         self._build_safety_tab()
         self._build_logs_tab()
+        self._build_about_tab()
         root.addWidget(self._tabs, 1)
 
         # Bottom Action Buttons
@@ -201,9 +202,24 @@ class SettingsDialog(QDialog):
         self._chk_auto_rescan.setChecked(self._config.get("auto_refresh_on_connect", True))
         form.addRow("", self._chk_auto_rescan)
 
+        self._combo_mode = QComboBox()
+        self._combo_mode.addItem("Simple Mode (Guided One-Click Workflows)", "simple")
+        self._combo_mode.addItem("Advanced Mode (Full Multi-Chipset Engineering)", "advanced")
+        current_mode = self._config.get("mode", "simple")
+        self._combo_mode.setCurrentIndex(1 if current_mode == "advanced" else 0)
+        form.addRow("Workstation Mode:", self._combo_mode)
+
+        self._chk_dry_run = QCheckBox("Dry-Run Simulation Mode (Simulate commands without physical writes)")
+        self._chk_dry_run.setChecked(self._config.get("dry_run", False))
+        form.addRow("", self._chk_dry_run)
+
+        self._chk_force_offline = QCheckBox("Force Offline Mode (Block external network downloads)")
+        self._chk_force_offline.setChecked(self._config.get("offline_forced", False))
+        form.addRow("", self._chk_force_offline)
+
         lay.addLayout(form)
         lay.addStretch(1)
-        self._tabs.addTab(tab, "Connection")
+        self._tabs.addTab(tab, "Connection & Modes")
 
     def _build_safety_tab(self) -> None:
         tab = QWidget()
@@ -257,6 +273,36 @@ class SettingsDialog(QDialog):
         lay.addStretch(1)
         self._tabs.addTab(tab, "Privacy & Logs")
 
+    def _build_about_tab(self) -> None:
+        tab = QWidget()
+        lay = QVBoxLayout(tab)
+        lay.setContentsMargins(16, 16, 16, 16)
+        lay.setSpacing(10)
+
+        title = QLabel("FlashDock — Personal Android Service Workstation")
+        title.setStyleSheet("font-size: 14px; font-weight: 700; color: #E6EDF3;")
+        lay.addWidget(title)
+
+        ver = QLabel("Version 1.2.1 • GSM Suite Architecture • Built for Windows 10/11 x64")
+        ver.setStyleSheet("font-size: 11px; color: #0A84FF; font-weight: 600;")
+        lay.addWidget(ver)
+
+        desc = QLabel(
+            "Universal flashing, unbricking, partition backup, Play Integrity spoofing, "
+            "and bootloader maintenance workstation for Xiaomi, Samsung, Transsion, "
+            "Google Pixel, OnePlus, MediaTek BROM, Qualcomm EDL, and Unisoc SPRD devices."
+        )
+        desc.setWordWrap(True)
+        desc.setStyleSheet("font-size: 11px; color: #8B949E; line-height: 1.4;")
+        lay.addWidget(desc)
+
+        license_lbl = QLabel("Distributed under the MIT License • © 2024-2026 Klein Systems")
+        license_lbl.setStyleSheet("font-size: 10px; color: #8E8E93;")
+        lay.addWidget(license_lbl)
+
+        lay.addStretch(1)
+        self._tabs.addTab(tab, "About")
+
     def _browse_dir(self, target_line_edit: QLineEdit) -> None:
         path = QFileDialog.getExistingDirectory(self, "Select Directory", target_line_edit.text())
         if path:
@@ -271,6 +317,9 @@ class SettingsDialog(QDialog):
         self._config.set("backup_dir", self._txt_backup.text())
         self._config.set("poll_interval_ms", self._spin_poll.value())
         self._config.set("auto_refresh_on_connect", self._chk_auto_rescan.isChecked())
+        self._config.set("mode", self._combo_mode.currentData())
+        self._config.set("dry_run", self._chk_dry_run.isChecked())
+        self._config.set("offline_forced", self._chk_force_offline.isChecked())
         self._config.set("min_battery_pct", self._spin_battery.value())
         self._config.set("strict_anti_relock", self._chk_anti_relock.isChecked())
         self._config.set("slot_desync_guard", self._chk_slot_guard.isChecked())

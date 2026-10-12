@@ -164,24 +164,30 @@ class IntegrityScreen(QWidget):
 
     def _create_verdict_card(self, title: str, subtitle: str, initial_val: str, desc: str) -> dict:
         frame = QFrame()
+        frame.setFixedHeight(70)
         frame.setStyleSheet(
             "QFrame { background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); "
-            "border-radius: 10px; padding: 12px; }"
+            "border-radius: 10px; padding: 6px 12px; }"
         )
         vbox = QVBoxLayout(frame)
-        vbox.setContentsMargins(10, 8, 10, 8)
-        vbox.setSpacing(4)
+        vbox.setContentsMargins(10, 6, 10, 6)
+        vbox.setSpacing(2)
+
+        top_row = QHBoxLayout()
+        top_row.setSpacing(6)
 
         t_lbl = QLabel(title)
-        t_lbl.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93; text-transform: uppercase;")
-        vbox.addWidget(t_lbl)
+        t_lbl.setStyleSheet("font-size: 10px; font-weight: 700; color: #8E8E93; text-transform: uppercase;")
+        top_row.addWidget(t_lbl, 1)
 
         val_lbl = QLabel(initial_val)
-        val_lbl.setStyleSheet("font-size: 15px; font-weight: 700; color: #FFFFFF;")
-        vbox.addWidget(val_lbl)
+        val_lbl.setStyleSheet("font-size: 13px; font-weight: 800; color: #FFFFFF;")
+        val_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        top_row.addWidget(val_lbl)
+        vbox.addLayout(top_row)
 
         desc_lbl = QLabel(desc)
-        desc_lbl.setStyleSheet("font-size: 11px; color: #8E8E93;")
+        desc_lbl.setStyleSheet("font-size: 10.5px; color: #8E8E93;")
         desc_lbl.setWordWrap(True)
         vbox.addWidget(desc_lbl)
 
@@ -203,7 +209,7 @@ class IntegrityScreen(QWidget):
             icon = f"{verdict}"
 
         card["value"].setText(icon)
-        card["value"].setStyleSheet(f"font-size: 15px; font-weight: 700; color: {color};")
+        card["value"].setStyleSheet(f"font-size: 13px; font-weight: 800; color: {color};")
         if note:
             card["desc"].setText(note)
 
@@ -212,29 +218,20 @@ class IntegrityScreen(QWidget):
     # -----------------------------------------------------------------
 
     def _setup_injector_tab(self) -> None:
-        layout = QVBoxLayout(self._tab_injector)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(12)
-
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("background: transparent;")
-
-        container = QWidget()
-        c_layout = QHBoxLayout(container)
-        c_layout.setContentsMargins(0, 0, 0, 0)
+        c_layout = QHBoxLayout(self._tab_injector)
+        c_layout.setContentsMargins(12, 12, 12, 12)
         c_layout.setSpacing(14)
 
         # Left Column: Profile Selector & Table
         left_col = QVBoxLayout()
-        left_col.setSpacing(12)
+        left_col.setSpacing(10)
 
         # Profile Selector Box
         profile_box = QGroupBox("1. Select Verified Certified Fingerprint")
         profile_box.setStyleSheet("font-weight: 600; font-size: 13px;")
         pb_layout = QVBoxLayout(profile_box)
-        pb_layout.setSpacing(10)
+        pb_layout.setContentsMargins(12, 14, 12, 12)
+        pb_layout.setSpacing(8)
 
         sel_row = QHBoxLayout()
         sel_row.setSpacing(8)
@@ -245,7 +242,7 @@ class IntegrityScreen(QWidget):
 
         self._profile_combo = QComboBox()
         self._profile_combo.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._profile_combo.setMinimumHeight(32)
+        self._profile_combo.setMinimumHeight(30)
         for p in BUILTIN_PROFILES:
             self._profile_combo.addItem(f"{p.name} (API {p.first_api_level})", p.id)
         self._profile_combo.currentIndexChanged.connect(self._on_profile_selected)
@@ -274,7 +271,7 @@ class IntegrityScreen(QWidget):
         self._props_table.horizontalHeader().setStretchLastSection(True)
         self._props_table.verticalHeader().setVisible(False)
         self._props_table.setAlternatingRowColors(True)
-        self._props_table.setMinimumHeight(240)
+        self._props_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         pb_layout.addWidget(self._props_table, 1)
 
         left_col.addWidget(profile_box, 1)
@@ -282,18 +279,18 @@ class IntegrityScreen(QWidget):
 
         # Right Column: Raw Preview & Injection Actions
         right_col = QVBoxLayout()
-        right_col.setSpacing(12)
+        right_col.setSpacing(10)
 
         # Raw JSON Editor Toggle & Area
         json_box = QGroupBox("2. pif.json Preview & Editor")
         json_box.setStyleSheet("font-weight: 600; font-size: 13px;")
         jb_layout = QVBoxLayout(json_box)
-        jb_layout.setSpacing(8)
+        jb_layout.setContentsMargins(12, 14, 12, 12)
+        jb_layout.setSpacing(6)
 
         self._json_edit = QPlainTextEdit()
-        self._json_edit.setMinimumHeight(140)
         self._json_edit.setStyleSheet(
-            "font-family: Consolas, 'Courier New', monospace; font-size: 12px; "
+            "font-family: Consolas, 'Courier New', monospace; font-size: 11.5px; "
             "background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 6px;"
         )
         jb_layout.addWidget(self._json_edit, 1)
@@ -303,7 +300,8 @@ class IntegrityScreen(QWidget):
         action_box = QGroupBox("3. Device Injection & Cache Reset")
         action_box.setStyleSheet("font-weight: 600; font-size: 13px;")
         ab_layout = QVBoxLayout(action_box)
-        ab_layout.setSpacing(10)
+        ab_layout.setContentsMargins(12, 14, 12, 12)
+        ab_layout.setSpacing(8)
 
         self._clear_cache_cb = QCheckBox("Automatically kill GMS background processes and flush Play Services cache")
         self._clear_cache_cb.setChecked(True)
@@ -316,10 +314,10 @@ class IntegrityScreen(QWidget):
         self._inject_btn = QPushButton("Apply & Inject pif.json")
         self._inject_btn.setIcon(get_icon("rocket", 14))
         self._inject_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._inject_btn.setMinimumHeight(38)
+        self._inject_btn.setMinimumHeight(36)
         self._inject_btn.setStyleSheet(
-            "QPushButton { background-color: #30D158; color: #FFFFFF; font-weight: 700; font-size: 13px; "
-            "border-radius: 8px; padding: 8px 18px; } "
+            "QPushButton { background-color: #30D158; color: #FFFFFF; font-weight: 700; font-size: 12.5px; "
+            "border-radius: 8px; padding: 6px 16px; } "
             "QPushButton:hover { background-color: #28B94E; } "
             "QPushButton:disabled { background-color: #2C2C2E; color: #555558; }"
         )
@@ -329,10 +327,10 @@ class IntegrityScreen(QWidget):
         self._flush_cache_btn = QPushButton("Flush GMS Cache")
         self._flush_cache_btn.setIcon(get_icon("trash", 14))
         self._flush_cache_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._flush_cache_btn.setMinimumHeight(38)
+        self._flush_cache_btn.setMinimumHeight(36)
         self._flush_cache_btn.setStyleSheet(
             "QPushButton { background-color: rgba(255, 159, 10, 0.15); color: #FF9F0A; font-weight: 600; "
-            "border: 1px solid rgba(255, 159, 10, 0.3); border-radius: 8px; padding: 8px 14px; } "
+            "border: 1px solid rgba(255, 159, 10, 0.3); border-radius: 8px; padding: 6px 12px; } "
             "QPushButton:hover { background-color: rgba(255, 159, 10, 0.25); }"
         )
         self._flush_cache_btn.clicked.connect(self._clear_gms_cache)
@@ -341,10 +339,10 @@ class IntegrityScreen(QWidget):
         self._read_pif_btn = QPushButton("Read Active")
         self._read_pif_btn.setIcon(get_icon("refresh", 14))
         self._read_pif_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._read_pif_btn.setMinimumHeight(38)
+        self._read_pif_btn.setMinimumHeight(36)
         self._read_pif_btn.setStyleSheet(
             "QPushButton { background-color: rgba(255, 255, 255, 0.08); color: #FFFFFF; font-weight: 600; "
-            "border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 8px 14px; } "
+            "border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 6px 12px; } "
             "QPushButton:hover { background-color: rgba(255, 255, 255, 0.15); }"
         )
         self._read_pif_btn.clicked.connect(self._read_active_pif)
@@ -360,9 +358,6 @@ class IntegrityScreen(QWidget):
         right_col.addWidget(action_box)
         c_layout.addLayout(right_col, 1)
 
-        scroll.setWidget(container)
-        layout.addWidget(scroll)
-
         # Initial populate
         self._populate_profile_table(self._selected_profile)
 
@@ -377,6 +372,7 @@ class IntegrityScreen(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setStyleSheet("background: transparent;")
 
         container = QWidget()
@@ -488,6 +484,7 @@ class IntegrityScreen(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setStyleSheet("background: transparent;")
 
         container = QWidget()

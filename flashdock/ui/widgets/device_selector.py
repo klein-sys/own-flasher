@@ -57,14 +57,30 @@ class DeviceSelector(QFrame):
 
         self._combo = QComboBox()
         self._combo.setMinimumWidth(260)
+        self._combo.setMaximumWidth(480)
         self._combo.currentIndexChanged.connect(self._on_combo_changed)
-        layout.addWidget(self._combo, 1)
+        layout.addWidget(self._combo)
 
         # Dedicated 1-click Refresh Devices button
         self._refresh_btn = QPushButton("Refresh")
         self._refresh_btn.setIcon(get_icon("refresh", 13))
         self._refresh_btn.setToolTip("Scan USB buses and query connected ADB/Fastboot devices")
         self._refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._refresh_btn.setFixedHeight(32)
+        self._refresh_btn.setStyleSheet("""
+            QPushButton {
+                background: rgba(10, 132, 255, 0.12);
+                color: #0A84FF;
+                border: 1px solid rgba(10, 132, 255, 0.3);
+                border-radius: 8px;
+                padding: 4px 12px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: rgba(10, 132, 255, 0.22);
+            }
+        """)
         self._refresh_btn.clicked.connect(self.refresh_requested.emit)
         layout.addWidget(self._refresh_btn)
 
@@ -73,9 +89,25 @@ class DeviceSelector(QFrame):
         self._lock_btn.setIcon(get_icon("lock", 13))
         self._lock_btn.setToolTip("Pin onto this device's serial number so commands are never accidentally sent to another connected device.")
         self._lock_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._lock_btn.setMinimumWidth(100)
+        self._lock_btn.setFixedHeight(32)
+        self._lock_btn.setMinimumWidth(95)
+        self._lock_btn.setStyleSheet("""
+            QPushButton {
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 8px;
+                padding: 4px 12px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: rgba(255, 255, 255, 0.12);
+            }
+        """)
         self._lock_btn.clicked.connect(self._toggle_lock)
         layout.addWidget(self._lock_btn)
+
+        layout.addStretch(1)
 
         self._locked_serial: Optional[str] = None
         self._devices: list[DeviceInfo] = []
@@ -137,17 +169,39 @@ class DeviceSelector(QFrame):
     def _update_lock_button(self) -> None:
         if self._locked_serial:
             self._lock_btn.setText("Unpin Serial")
-            self._lock_btn.setIcon(get_icon("unlock", 13, color="#FF9500"))
+            self._lock_btn.setIcon(get_icon("unlock", 13, color="#FF9F0A"))
             self._lock_btn.setToolTip("Unpin from this serial number")
-            self._lock_btn.setStyleSheet(
-                "color: #FF9500; font-weight: 700; border: 1px solid #FF9500; "
-                "background-color: rgba(255, 149, 0, 0.12); border-radius: 6px;"
-            )
+            self._lock_btn.setStyleSheet("""
+                QPushButton {
+                    background: rgba(255, 149, 0, 0.16);
+                    color: #FF9F0A;
+                    border: 1px solid #FF9F0A;
+                    border-radius: 8px;
+                    padding: 4px 12px;
+                    font-size: 11px;
+                    font-weight: 700;
+                }
+                QPushButton:hover {
+                    background: rgba(255, 149, 0, 0.26);
+                }
+            """)
         else:
             self._lock_btn.setText("Pin Serial")
             self._lock_btn.setIcon(get_icon("lock", 13))
             self._lock_btn.setToolTip("Pin onto this device's serial number so commands are never accidentally sent to another connected device.")
-            self._lock_btn.setStyleSheet("")
+            self._lock_btn.setStyleSheet("""
+                QPushButton {
+                    background: rgba(255, 255, 255, 0.06);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
+                    border-radius: 8px;
+                    padding: 4px 12px;
+                    font-size: 11px;
+                    font-weight: 600;
+                }
+                QPushButton:hover {
+                    background: rgba(255, 255, 255, 0.12);
+                }
+            """)
 
     # ---- Combo change -------------------------------------------------------
 

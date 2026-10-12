@@ -94,6 +94,26 @@ BRAND_SVGS: dict[str, str] = {
         <text x="55" y="31" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="17" letter-spacing="2" text-anchor="middle">UNISOC</text>
     </svg>""",
 
+    "huawei": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 48">
+        <rect width="110" height="48" rx="8" fill="#CE1126"/>
+        <text x="55" y="31" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-weight="900" font-size="16" letter-spacing="2" text-anchor="middle">HUAWEI</text>
+    </svg>""",
+
+    "oppo": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 48">
+        <rect width="100" height="48" rx="8" fill="#046A38"/>
+        <text x="50" y="32" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-weight="900" font-size="19" letter-spacing="1.5" text-anchor="middle">OPPO</text>
+    </svg>""",
+
+    "vivo": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 48">
+        <rect width="90" height="48" rx="8" fill="#415FFF"/>
+        <text x="45" y="32" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-weight="900" font-size="20" letter-spacing="1.5" text-anchor="middle">vivo</text>
+    </svg>""",
+
+    "realme": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 48">
+        <rect width="100" height="48" rx="8" fill="#FFC915"/>
+        <text x="50" y="32" fill="#1D1D1F" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-weight="900" font-size="18" letter-spacing="1" text-anchor="middle">realme</text>
+    </svg>""",
+
     "android": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
         <path fill="#3DDC84" d="M10 24h28v14c0 3.3-2.7 6-6 6H16c-3.3 0-6-2.7-6-6V24z"/>
         <path fill="#3DDC84" d="M12 21c0-6.6 5.4-12 12-12s12 5.4 12 12H12z"/>
@@ -135,6 +155,14 @@ def get_brand_pixmap(brand_name: str, width: int = 40, height: int = 24) -> QPix
         raw_key = "xiaomi"
     elif "samsung" in key:
         raw_key = "samsung"
+    elif "huawei" in key or "honor" in key:
+        raw_key = "huawei"
+    elif "oppo" in key:
+        raw_key = "oppo"
+    elif "vivo" in key or "iqoo" in key:
+        raw_key = "vivo"
+    elif "realme" in key:
+        raw_key = "realme"
     elif "google" in key or "pixel" in key:
         raw_key = "google"
     elif "oneplus" in key:

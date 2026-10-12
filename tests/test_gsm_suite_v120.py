@@ -68,6 +68,8 @@ def test_live_device_hud_telemetry_updates(qapp):
     assert "_a" in hud._gauge_slot.text()
     assert "Clean" in hud._gauge_knox.text()
     assert "2026-08-01" in hud._gauge_patch.text()
+    assert "ROOT: NO" in hud._gauge_root.text()
+    assert "ROM:" in hud._gauge_rom.text()
 
 
 def test_live_device_hud_stepped_pipeline(qapp):
@@ -145,7 +147,7 @@ def test_settings_dialog_tabs_and_toggles(qapp, tmp_path: Path):
     cfg = Config(path=tmp_path / "config.json")
     dlg = SettingsDialog(config=cfg)
     assert "Settings" in dlg.windowTitle()
-    assert dlg._tabs.count() == 5
+    assert dlg._tabs.count() == 6
 
     theme_signals = []
     dlg.theme_changed.connect(theme_signals.append)

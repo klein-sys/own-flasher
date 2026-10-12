@@ -128,6 +128,16 @@ class LiveDeviceHud(QFrame):
         self._gauge_patch.setStyleSheet("font-size: 11px; font-weight: 500;")
         self._gauge_container.addWidget(self._gauge_patch)
 
+        # Root State Pill
+        self._gauge_root = QLabel("ROOT: —")
+        self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93;")
+        self._gauge_container.addWidget(self._gauge_root)
+
+        # ROM State Pill
+        self._gauge_rom = QLabel("ROM: —")
+        self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93;")
+        self._gauge_container.addWidget(self._gauge_rom)
+
         self._top_row.addLayout(self._gauge_container)
         self._top_row.addStretch(1)
 
@@ -214,6 +224,10 @@ class LiveDeviceHud(QFrame):
             self._gauge_slot.setText("Slot: —")
             self._gauge_knox.setText("Knox: —")
             self._gauge_patch.setText("Patch: —")
+            self._gauge_root.setText("ROOT: —")
+            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93;")
+            self._gauge_rom.setText("ROM: —")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93;")
             self._btn_rescue.setVisible(False)
             return
 
@@ -281,7 +295,40 @@ class LiveDeviceHud(QFrame):
         patch = info.security_patch or "—"
         self._gauge_patch.setText(f"Patch: {patch}")
 
-        # 8. Check if emergency pre-flash backup exists for this device
+        # 8. Root State Pill
+        if info.is_rooted:
+            method_str = f" ({info.root_method.title()})" if info.root_method else ""
+            self._gauge_root.setText(f"ROOT: YES{method_str}")
+            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 700; color: #34C759; background: rgba(52, 199, 89, 0.15); border: 1px solid rgba(52, 199, 89, 0.3); border-radius: 4px; padding: 1px 6px;")
+        elif info.mode in ("system", "recovery"):
+            self._gauge_root.setText("ROOT: NO")
+            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 4px; padding: 1px 6px;")
+        else:
+            self._gauge_root.setText("ROOT: —")
+            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+
+        # 9. ROM / Firmware Type Indicator Pill
+        is_gsi = info.os_type == "gsi" or "treble" in info.build_display.lower() or "gsi" in info.build_fingerprint.lower()
+        is_custom = info.os_type == "custom_rom" or "test-keys" in info.build_fingerprint.lower() or "lineage" in info.build_display.lower() or "pixelos" in info.build_display.lower()
+        is_stock = info.os_type == "stock" or (info.build_fingerprint and "release-keys" in info.build_fingerprint.lower() and not is_gsi and not is_custom)
+
+        if is_gsi:
+            self._gauge_rom.setText("ROM: CUSTOM GSI")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #AF52DE; background: rgba(175, 82, 222, 0.15); border: 1px solid rgba(175, 82, 222, 0.3); border-radius: 4px; padding: 1px 6px;")
+        elif is_custom:
+            self._gauge_rom.setText("ROM: CUSTOM ROM")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #FF9F0A; background: rgba(255, 159, 10, 0.15); border: 1px solid rgba(255, 159, 10, 0.3); border-radius: 4px; padding: 1px 6px;")
+        elif is_stock:
+            self._gauge_rom.setText("ROM: OFFICIAL STOCK")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #007AFF; background: rgba(0, 122, 255, 0.15); border: 1px solid rgba(0, 122, 255, 0.3); border-radius: 4px; padding: 1px 6px;")
+        elif info.mode in ("system", "recovery"):
+            self._gauge_rom.setText(f"ROM: {info.os_display.upper()}")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 600; color: #007AFF; background: rgba(0, 122, 255, 0.1); border-radius: 4px; padding: 1px 6px;")
+        else:
+            self._gauge_rom.setText("ROM: —")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+
+        # 10. Check if emergency pre-flash backup exists for this device
         self._check_emergency_backup_available(info.serial)
 
     def set_stepped_stage(self, stage_idx: int, stage_desc: str, pct: int = 0) -> None:

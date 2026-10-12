@@ -60,6 +60,7 @@ from flashdock.ui.screens.downloads_screen import DownloadsScreen
 from flashdock.ui.screens.unbrick_screen import UnbrickScreen
 from flashdock.ui.screens.integrity_screen import IntegrityScreen
 from flashdock.ui.screens.logs_help_screen import LogsHelpScreen
+from flashdock.ui.brand_assets import get_brand_icon, get_brand_pixmap
 from flashdock.ui.styles import get_stylesheet
 from flashdock.ui.widgets.device_card import DeviceCard
 from flashdock.ui.widgets.device_hud import LiveDeviceHud
@@ -429,6 +430,7 @@ class MainWindow(QMainWindow):
 
     def _build_menu_bar(self) -> None:
         menu = self.menuBar()
+        menu.setVisible(False)
 
         # ---- File ----
         file_menu = menu.addMenu("&File")
@@ -538,13 +540,17 @@ class MainWindow(QMainWindow):
 
         # 2. Resizable Horizontal Splitter (Section 4.4)
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
-        self._main_splitter.setHandleWidth(5)
+        self._main_splitter.setHandleWidth(6)
         self._main_splitter.setStyleSheet("""
-            QSplitter::handle {
-                background: rgba(142, 142, 147, 0.15);
+            QSplitter::handle:horizontal {
+                background: #1C2331;
+                border-left: 1px solid rgba(255, 255, 255, 0.08);
+                border-right: 1px solid rgba(0, 0, 0, 0.4);
             }
-            QSplitter::handle:hover {
+            QSplitter::handle:horizontal:hover {
                 background: #0A84FF;
+                border-left: 1px solid #0A84FF;
+                border-right: 1px solid #0A84FF;
             }
         """)
 
@@ -571,7 +577,8 @@ class MainWindow(QMainWindow):
         self._side_terminal = SideTerminalWidget(self)
         self._main_splitter.addWidget(self._side_terminal)
 
-        # Stretch factor: 70% workspace, 30% side terminal
+        # Explicit default sizing: 850px workspace, 320px telemetry
+        self._main_splitter.setSizes([850, 320])
         self._main_splitter.setStretchFactor(0, 7)
         self._main_splitter.setStretchFactor(1, 3)
 
@@ -585,39 +592,57 @@ class MainWindow(QMainWindow):
         root_layout.addWidget(self._status_bar)
 
     def _build_top_segmented_bar(self) -> QWidget:
-        """Build the GSM Suite segmented control bar for high-volume OEMs and Universal Chipsets."""
+        """Build the Brand Logo Showcase Header displaying vector badges across supported OEMs."""
         self._seg_frame = QFrame()
-        self._seg_frame.setFixedHeight(38)
+        self._seg_frame.setFixedHeight(42)
         self._seg_frame.setProperty("cssClass", "segmented_control")
         seg_layout = QHBoxLayout(self._seg_frame)
-        seg_layout.setContentsMargins(0, 0, 0, 0)
+        seg_layout.setContentsMargins(12, 4, 12, 4)
         seg_layout.setSpacing(6)
 
-        label = QLabel("GSM SUITE:")
-        label.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93; letter-spacing: 0.5px;")
-        seg_layout.addWidget(label)
-
         self._gsm_segments = [
-            ("Xiaomi", "xiaomi", "Xiaomi / POCO / Redmi (MIUI & HyperOS)"),
+            ("Tecno", "tecno", "Tecno Mobile (HiOS)"),
+            ("Infinix", "infinix", "Infinix (XOS)"),
+            ("itel", "itel", "itel Mobile (itelOS)"),
             ("Samsung", "samsung", "Samsung Galaxy (One UI, Knox, Odin)"),
-            ("Transsion", "transsion", "Tecno (HiOS), Infinix (XOS), itel (itelOS)"),
-            ("Universal Android", "universal", "AOSP, Pixel, OnePlus, Motorola, Treble GSIs"),
-            ("MediaTek BROM", "mtk_brom", "MTK Helio/Dimensity BootROM & Preloader (BROM/DA)"),
-            ("Qualcomm EDL", "qualcomm_edl", "Snapdragon Emergency Download 9008 (EDL/Firehose)"),
-            ("Unisoc SPRD", "unisoc_sprd", "Spreadtrum / Unisoc Diag & FDL Download Mode"),
+            ("Xiaomi", "xiaomi", "Xiaomi / POCO / Redmi (HyperOS & MIUI)"),
+            ("Huawei", "huawei", "Huawei / Honor (EMUI / HarmonyOS)"),
+            ("OPPO", "oppo", "OPPO (ColorOS)"),
+            ("Vivo", "vivo", "Vivo / iQOO (FuntouchOS / OriginOS)"),
+            ("Realme", "realme", "Realme (Realme UI)"),
+            ("Pixel", "google", "Google Pixel (AOSP / Factory Images)"),
+            ("OnePlus", "oneplus", "OnePlus (OxygenOS)"),
+            ("Motorola", "motorola", "Motorola (MyUX)"),
         ]
+
+        # Wrap brand badges in a scrollable container for responsiveness on laptop displays
+        brand_scroll = QScrollArea()
+        brand_scroll.setWidgetResizable(True)
+        brand_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        brand_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        brand_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        brand_scroll.setStyleSheet("background: transparent; border: none;")
+
+        brand_container = QWidget()
+        brand_container.setStyleSheet("background: transparent;")
+        badges_layout = QHBoxLayout(brand_container)
+        badges_layout.setContentsMargins(0, 0, 0, 0)
+        badges_layout.setSpacing(6)
 
         self._gsm_btn_group: dict[str, QPushButton] = {}
         for title, key, desc in self._gsm_segments:
             btn = QPushButton(title)
+            btn.setIcon(get_brand_icon(key, 16))
             btn.setCheckable(True)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setToolTip(desc)
+            btn.setToolTip(f"{title}: {desc} — Click to filter tools catalog")
             btn.clicked.connect(lambda checked, k=key, t=title: self._on_gsm_segment_selected(k, t))
-            seg_layout.addWidget(btn)
+            badges_layout.addWidget(btn)
             self._gsm_btn_group[key] = btn
 
-        seg_layout.addStretch()
+        badges_layout.addStretch(1)
+        brand_scroll.setWidget(brand_container)
+        seg_layout.addWidget(brand_scroll, 1)
 
         self._btn_driver_fix = QPushButton("Fix OEM Driver / COM Port")
         self._btn_driver_fix.setIcon(get_icon("tools", 12))
@@ -628,8 +653,8 @@ class MainWindow(QMainWindow):
                 background: rgba(255, 159, 10, 0.15);
                 color: #FF9F0A;
                 border: 1px solid rgba(255, 159, 10, 0.4);
-                border-radius: 6px;
-                padding: 3px 10px;
+                border-radius: 8px;
+                padding: 4px 12px;
                 font-size: 11px;
                 font-weight: 600;
             }
@@ -644,57 +669,60 @@ class MainWindow(QMainWindow):
         return self._seg_frame
 
     def _update_gsm_segments_style(self) -> None:
-        """Update top GSM segmented bar colors according to current theme."""
+        """Update Brand Showcase header bar colors according to current theme."""
         if not hasattr(self, "_seg_frame") or not hasattr(self, "_gsm_btn_group"):
             return
         theme = self._config.get("theme", "dark").lower()
         if theme == "light":
             self._seg_frame.setStyleSheet(
-                "background-color: #EBEBEF; border-bottom: 1px solid #D2D2D7; padding: 2px 14px;"
+                "background-color: #ECEFF4; border-bottom: 1px solid #DCE1E8; padding: 2px 10px;"
             )
             btn_style = (
-                "QPushButton { background: transparent; border: 1px solid rgba(0, 0, 0, 0.12); "
-                "border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 500; color: #1D1D1F; } "
-                "QPushButton:checked { background: #007AFF; color: #FFFFFF; font-weight: 600; border-color: #007AFF; } "
-                "QPushButton:hover:!checked { background: rgba(0, 122, 255, 0.08); color: #007AFF; }"
+                "QPushButton { background: rgba(0, 0, 0, 0.04); border: 1px solid rgba(0, 0, 0, 0.10); "
+                "border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: #1C2024; } "
+                "QPushButton:checked { background: #007AFF; color: #FFFFFF; font-weight: 700; border-color: #007AFF; } "
+                "QPushButton:hover:!checked { background: rgba(0, 122, 255, 0.12); color: #007AFF; }"
             )
         else:
             self._seg_frame.setStyleSheet(
-                "background-color: #1E1E20; border-bottom: 1px solid #2C2C2E; padding: 2px 14px;"
+                "background-color: #141820; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 2px 10px;"
             )
             btn_style = (
-                "QPushButton { background: transparent; border: 1px solid rgba(255, 255, 255, 0.12); "
-                "border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 500; color: #E5E5EA; } "
-                "QPushButton:checked { background: #0A84FF; color: #FFFFFF; font-weight: 600; border-color: #0A84FF; } "
-                "QPushButton:hover:!checked { background: rgba(10, 132, 255, 0.15); color: #0A84FF; }"
+                "QPushButton { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.10); "
+                "border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: #E6EDF3; } "
+                "QPushButton:checked { background: #0A84FF; color: #FFFFFF; font-weight: 700; border-color: #0A84FF; } "
+                "QPushButton:hover:!checked { background: rgba(10, 132, 255, 0.18); color: #0A84FF; border-color: rgba(10, 132, 255, 0.4); }"
             )
         for btn in self._gsm_btn_group.values():
             btn.setStyleSheet(btn_style)
 
     @Slot(str, str)
     def _on_gsm_segment_selected(self, key: str, title: str) -> None:
-        """Handle switching between GSM Suite chipset and OEM profiles."""
+        """Filter tool catalog on the Home screen to that brand's relevant wizards."""
+        target_btn = self._gsm_btn_group.get(key)
+        is_already_active = target_btn and not target_btn.isChecked()
+
         for k, btn in self._gsm_btn_group.items():
-            btn.setChecked(k == key)
+            btn.setChecked(k == key and not is_already_active)
 
-        self._side_terminal.append_colored_stream("INFO", f"Active GSM Suite Profile: {title}")
+        if is_already_active:
+            self._side_terminal.append_colored_stream("INFO", f"Cleared brand filter: {title}")
+            if hasattr(self, "_search_input"):
+                self._search_input.clear()
+            return
 
-        if key == "xiaomi":
-            self._stack.setCurrentIndex(PAGE_UNLOCK)
-            self._unlock_screen._load_manual_brand("xiaomi")
-        elif key == "samsung":
-            self._stack.setCurrentIndex(PAGE_RETURN_STOCK)
-        elif key == "transsion":
-            self._stack.setCurrentIndex(PAGE_UNLOCK)
-            self._unlock_screen._load_manual_brand("tecno")
-        elif key == "universal":
-            self._stack.setCurrentIndex(PAGE_FLASH_ROM)
-        elif key == "mtk_brom":
-            self._stack.setCurrentIndex(PAGE_MTK_UNISOC)
-        elif key == "qualcomm_edl":
-            self._stack.setCurrentIndex(PAGE_UNBRICK)
-        elif key == "unisoc_sprd":
-            self._stack.setCurrentIndex(PAGE_MTK_UNISOC)
+        self._side_terminal.append_colored_stream("INFO", f"Brand Selected: {title} (Filtering catalog)")
+
+        # Switch to Home page so user sees the filtered catalog
+        if self._stack.currentIndex() != PAGE_HOME:
+            self._stack.setCurrentIndex(PAGE_HOME)
+            if hasattr(self, "_phone_panel"):
+                self._phone_panel.set_active_nav("home", self._config.get("theme", "dark"))
+
+        # Filter the search input to the brand name
+        brand_search_term = "pixel" if key == "google" else key
+        if hasattr(self, "_search_input"):
+            self._search_input.setText(brand_search_term)
 
     def _build_home_page(self) -> None:
         """Build the home screen with search, category filtering, quick access presets and 14 action cards."""
@@ -1614,22 +1642,34 @@ class MainWindow(QMainWindow):
             chip_norm = (info.chipset_family or "").lower()
             mode_norm = (info.mode or "").lower()
 
-            target_key = "universal"
+            target_key = ""
             if "xiaomi" in brand_norm or "poco" in brand_norm or "redmi" in brand_norm:
                 target_key = "xiaomi"
             elif "samsung" in brand_norm:
                 target_key = "samsung"
-            elif any(t in brand_norm for t in ("tecno", "infinix", "itel", "transsion")):
-                target_key = "transsion"
-            elif mode_norm == "brom" or "mediatek" in chip_norm or "mtk" in chip_norm:
-                target_key = "mtk_brom"
-            elif mode_norm == "edl" or "qualcomm" in chip_norm or "snapdragon" in chip_norm:
-                target_key = "qualcomm_edl"
-            elif "unisoc" in chip_norm or "spreadtrum" in chip_norm or "sprd" in chip_norm:
-                target_key = "unisoc_sprd"
+            elif "tecno" in brand_norm:
+                target_key = "tecno"
+            elif "infinix" in brand_norm:
+                target_key = "infinix"
+            elif "itel" in brand_norm:
+                target_key = "itel"
+            elif "huawei" in brand_norm or "honor" in brand_norm:
+                target_key = "huawei"
+            elif "oppo" in brand_norm:
+                target_key = "oppo"
+            elif "vivo" in brand_norm or "iqoo" in brand_norm:
+                target_key = "vivo"
+            elif "realme" in brand_norm:
+                target_key = "realme"
+            elif "google" in brand_norm or "pixel" in brand_norm:
+                target_key = "google"
+            elif "oneplus" in brand_norm:
+                target_key = "oneplus"
+            elif "motorola" in brand_norm or "moto" in brand_norm:
+                target_key = "motorola"
 
             for k, btn in self._gsm_btn_group.items():
-                btn.setChecked(k == target_key)
+                btn.setChecked(bool(target_key and k == target_key))
 
             # If on the device card page, refresh it
             if self._stack.currentIndex() == PAGE_DEVICE_CARD:

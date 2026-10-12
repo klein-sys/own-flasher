@@ -41,6 +41,7 @@ class HardwareKeyGuideDialog(QDialog):
         self.setWindowIcon(get_icon("phone", 16))
         self.resize(740, 600)
         self.setMinimumSize(620, 480)
+        self.setStyleSheet("background-color: #0F141C; color: #E6EDF3;")
         self._adb = adb
 
         self._setup_ui()
@@ -58,7 +59,7 @@ class HardwareKeyGuideDialog(QDialog):
         phone_icon = create_icon_label("phone", 22)
         title_box.addWidget(phone_icon)
         title = QLabel("Phone Hardware Keys & Menu Control Guide")
-        title.setStyleSheet("font-size: 20px; font-weight: 700; color: #1D1D1F;")
+        title.setStyleSheet("font-size: 20px; font-weight: 700; color: #FFFFFF;")
         title_box.addWidget(title)
         title_box.addStretch()
         header.addLayout(title_box)
@@ -67,7 +68,7 @@ class HardwareKeyGuideDialog(QDialog):
             "How to use Volume Up, Volume Down, and Power buttons to navigate device boot menus, "
             "trigger rescue modes, and confirm flashing operations."
         )
-        subtitle.setStyleSheet("font-size: 13px; color: #8E8E93;")
+        subtitle.setStyleSheet("font-size: 13px; color: #8B949E;")
         subtitle.setWordWrap(True)
         header.addWidget(subtitle)
         layout.addLayout(header)
@@ -75,9 +76,10 @@ class HardwareKeyGuideDialog(QDialog):
         # Tabs: 1. Menu Navigation, 2. Brand Key Combos, 3. Virtual Remote Keypad
         tabs = QTabWidget()
         tabs.setStyleSheet(
-            "QTabWidget::pane { border: 1px solid #E5E5EA; border-radius: 10px; background: #FFFFFF; padding: 12px; } "
-            "QTabBar::tab { padding: 8px 18px; font-weight: 600; font-size: 13px; } "
-            "QTabBar::tab:selected { color: #007AFF; border-bottom: 2px solid #007AFF; }"
+            "QTabWidget::pane { border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; background: #131822; padding: 12px; } "
+            "QTabBar::tab { padding: 8px 18px; font-weight: 600; font-size: 13px; color: #8B949E; background: transparent; } "
+            "QTabBar::tab:selected { color: #0A84FF; border-bottom: 2px solid #0A84FF; } "
+            "QTabBar::tab:hover { color: #E6EDF3; }"
         )
 
         tab_nav = QWidget()
@@ -102,8 +104,8 @@ class HardwareKeyGuideDialog(QDialog):
         footer.addStretch()
         btn_close = QPushButton("Done")
         btn_close.setStyleSheet(
-            "QPushButton { background: #007AFF; color: #FFFFFF; border-radius: 8px; padding: 8px 24px; font-weight: 600; } "
-            "QPushButton:hover { background: #0062CC; }"
+            "QPushButton { background: #0A84FF; color: #FFFFFF; border: none; border-radius: 8px; padding: 8px 24px; font-weight: 600; } "
+            "QPushButton:hover { background: #0070E0; }"
         )
         btn_close.clicked.connect(self.accept)
         footer.addWidget(btn_close)
@@ -113,6 +115,7 @@ class HardwareKeyGuideDialog(QDialog):
         scroll = QScrollArea(parent)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         container = QWidget()
         lay = QVBoxLayout(container)
         lay.setSpacing(12)
@@ -120,17 +123,17 @@ class HardwareKeyGuideDialog(QDialog):
         # Core Rule Banner Card
         rule_card = QFrame()
         rule_card.setStyleSheet(
-            "background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 14px;"
+            "background: rgba(10, 132, 255, 0.12); border: 1px solid rgba(10, 132, 255, 0.3); border-radius: 10px; padding: 14px;"
         )
         r_lay = QVBoxLayout(rule_card)
         r_lay.setSpacing(6)
         r_title = QLabel("Universal Android Boot Menu Rule")
-        r_title.setStyleSheet("font-size: 15px; font-weight: 700; color: #1E40AF;")
+        r_title.setStyleSheet("font-size: 15px; font-weight: 700; color: #0A84FF;")
         r_desc = QLabel(
             "When your phone is in Fastboot, Bootloader, or Recovery mode, the touch screen is usually disabled. "
             "You MUST use the physical hardware buttons on the side of your phone to control the menu:"
         )
-        r_desc.setStyleSheet("font-size: 13px; color: #1E3A8A;")
+        r_desc.setStyleSheet("font-size: 13px; color: #E6EDF3;")
         r_desc.setWordWrap(True)
         r_lay.addWidget(r_title)
         r_lay.addWidget(r_desc)
@@ -146,7 +149,7 @@ class HardwareKeyGuideDialog(QDialog):
         for k_name, k_color, k_action, k_desc in keys:
             card = QFrame()
             card.setStyleSheet(
-                f"background: #F9FAFB; border-left: 4px solid {k_color}; border: 1px solid #E5E7EB; "
+                f"background: #181E26; border: 1px solid rgba(255, 255, 255, 0.08); "
                 f"border-left-width: 5px; border-left-color: {k_color}; border-radius: 8px; padding: 12px;"
             )
             c_lay = QVBoxLayout(card)
@@ -155,14 +158,14 @@ class HardwareKeyGuideDialog(QDialog):
             lbl_name = QLabel(k_name)
             lbl_name.setStyleSheet(f"font-size: 15px; font-weight: 700; color: {k_color};")
             lbl_action = QLabel(f"➔  <b>{k_action}</b>")
-            lbl_action.setStyleSheet("font-size: 13px; color: #1F2937;")
+            lbl_action.setStyleSheet("font-size: 13px; color: #E6EDF3;")
             h.addWidget(lbl_name)
             h.addWidget(lbl_action)
             h.addStretch()
             c_lay.addLayout(h)
 
             lbl_desc = QLabel(k_desc)
-            lbl_desc.setStyleSheet("font-size: 12px; color: #4B5563;")
+            lbl_desc.setStyleSheet("font-size: 12px; color: #8B949E;")
             lbl_desc.setWordWrap(True)
             c_lay.addWidget(lbl_desc)
             lay.addWidget(card)
@@ -177,6 +180,7 @@ class HardwareKeyGuideDialog(QDialog):
         scroll = QScrollArea(parent)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         container = QWidget()
         lay = QVBoxLayout(container)
         lay.setSpacing(10)
@@ -196,27 +200,27 @@ class HardwareKeyGuideDialog(QDialog):
         for brand, keys, target, notes in combos:
             card = QFrame()
             card.setStyleSheet(
-                "background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px;"
+                "background: #181E26; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px;"
             )
             c_lay = QVBoxLayout(card)
             c_lay.setSpacing(4)
 
             top = QHBoxLayout()
             b_lbl = QLabel(f"<b>{brand}</b>")
-            b_lbl.setStyleSheet("font-size: 13px; color: #111827;")
-            t_lbl = QLabel(f"→  <span style='color:#059669; font-weight:700;'>{target}</span>")
+            b_lbl.setStyleSheet("font-size: 13px; color: #E6EDF3;")
+            t_lbl = QLabel(f"→  <span style='color:#30D158; font-weight:700;'>{target}</span>")
             t_lbl.setStyleSheet("font-size: 13px;")
             top.addWidget(b_lbl)
             top.addWidget(t_lbl)
             top.addStretch()
             c_lay.addLayout(top)
 
-            k_lbl = QLabel(f"<b>Keys:</b> <code style='background:#E5E7EB; padding:2px 6px; border-radius:4px;'>{keys}</code>")
-            k_lbl.setStyleSheet("font-size: 12px; color: #374151;")
+            k_lbl = QLabel(f"<b>Keys:</b> <code style='background:rgba(255, 255, 255, 0.08); color:#0A84FF; padding:2px 6px; border-radius:4px;'>{keys}</code>")
+            k_lbl.setStyleSheet("font-size: 12px; color: #E6EDF3;")
             c_lay.addWidget(k_lbl)
 
             n_lbl = QLabel(notes)
-            n_lbl.setStyleSheet("font-size: 11px; color: #6B7280;")
+            n_lbl.setStyleSheet("font-size: 11px; color: #8B949E;")
             n_lbl.setWordWrap(True)
             c_lay.addWidget(n_lbl)
 
@@ -237,13 +241,13 @@ class HardwareKeyGuideDialog(QDialog):
             "Send virtual hardware keypresses directly to your connected Android phone via ADB "
             "(<code>adb shell input keyevent</code>). Works when the phone is booted with USB debugging."
         )
-        desc.setStyleSheet("font-size: 13px; color: #4B5563;")
+        desc.setStyleSheet("font-size: 13px; color: #8B949E;")
         desc.setWordWrap(True)
         lay.addWidget(desc)
 
         keypad_frame = QFrame()
         keypad_frame.setStyleSheet(
-            "background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px;"
+            "background: #181E26; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px;"
         )
         grid = QGridLayout(keypad_frame)
         grid.setSpacing(10)
@@ -266,10 +270,10 @@ class HardwareKeyGuideDialog(QDialog):
             btn.setCursor(Qt.PointingHandCursor)
             btn.setMinimumHeight(44)
             btn.setStyleSheet(
-                "QPushButton { background: #FFFFFF; border: 1px solid #D1D5DB; border-radius: 8px; "
-                "font-weight: 600; font-size: 13px; color: #1F2937; } "
-                "QPushButton:hover { background: #E5E7EB; border-color: #007AFF; color: #007AFF; } "
-                "QPushButton:pressed { background: #D1D5DB; }"
+                "QPushButton { background: #212836; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; "
+                "font-weight: 600; font-size: 13px; color: #E6EDF3; } "
+                "QPushButton:hover { background: #2D3748; border-color: #0A84FF; color: #0A84FF; } "
+                "QPushButton:pressed { background: #1A202C; }"
             )
             btn.clicked.connect(lambda _, code=keycode: self._send_keyevent(code))
             grid.addWidget(btn, r, c)
@@ -277,7 +281,7 @@ class HardwareKeyGuideDialog(QDialog):
         lay.addWidget(keypad_frame)
 
         self._status_lbl = QLabel("Ready. Click any button above to send keyevent.")
-        self._status_lbl.setStyleSheet("font-size: 12px; color: #6B7280; font-style: italic;")
+        self._status_lbl.setStyleSheet("font-size: 12px; color: #8B949E; font-style: italic;")
         lay.addWidget(self._status_lbl)
         lay.addStretch()
 

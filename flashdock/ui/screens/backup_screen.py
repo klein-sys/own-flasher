@@ -19,6 +19,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
     QFrame,
+    QGridLayout,
     QHBoxLayout,
     QInputDialog,
     QLabel,
@@ -136,20 +137,47 @@ class BackupScreen(QWidget):
         ef_layout.addWidget(efs_warn, 1)
         layout.addWidget(efs_frame)
 
-        # Checkboxes for partitions
+        # Checkboxes for partitions (2 clean columns: Standard vs Radio/Critical)
         part_group = QFrame()
         part_group.setProperty("cssClass", "card")
-        part_layout = QVBoxLayout(part_group)
+        part_group.setStyleSheet(
+            "QFrame[cssClass='card'] { background-color: rgba(255, 255, 255, 0.04); "
+            "border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px; }"
+        )
+        part_grid = QGridLayout(part_group)
+        part_grid.setContentsMargins(14, 12, 14, 12)
+        part_grid.setHorizontalSpacing(24)
+        part_grid.setVerticalSpacing(8)
+
+        # Header labels for columns
+        lbl_col1 = QLabel("STANDARD FIRMWARE PARTITIONS")
+        lbl_col1.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93; letter-spacing: 0.5px;")
+        part_grid.addWidget(lbl_col1, 0, 0)
+
+        lbl_col2 = QLabel("RADIO & CALIBRATION (NV/EFS)")
+        lbl_col2.setStyleSheet("font-size: 11px; font-weight: 700; color: #FF9F0A; letter-spacing: 0.5px;")
+        part_grid.addWidget(lbl_col2, 0, 1)
 
         self._part_checkboxes: dict[str, QCheckBox] = {}
-        all_parts = RECOMMENDED_PARTITIONS + CRITICAL_RADIO_PARTITIONS
+        cb_style = (
+            "QCheckBox { min-height: 28px; padding: 4px 8px; margin: 2px; font-size: 12px; font-weight: 600; color: #E6EDF3; } "
+            "QCheckBox::indicator { width: 16px; height: 16px; border-radius: 4px; } "
+            "QCheckBox:hover { background-color: rgba(255, 255, 255, 0.04); border-radius: 6px; }"
+        )
 
-        for p in all_parts:
+        for row_idx, p in enumerate(RECOMMENDED_PARTITIONS, start=1):
             cb = QCheckBox(f"{p} partition")
+            cb.setStyleSheet(cb_style)
             if p in ("boot", "recovery", "vbmeta"):
                 cb.setChecked(True)
             self._part_checkboxes[p] = cb
-            part_layout.addWidget(cb)
+            part_grid.addWidget(cb, row_idx, 0)
+
+        for row_idx, p in enumerate(CRITICAL_RADIO_PARTITIONS, start=1):
+            cb = QCheckBox(f"{p} partition")
+            cb.setStyleSheet(cb_style)
+            self._part_checkboxes[p] = cb
+            part_grid.addWidget(cb, row_idx, 1)
 
         layout.addWidget(part_group)
 
@@ -256,6 +284,7 @@ class BackupScreen(QWidget):
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self._table.setAlternatingRowColors(True)
+        self._table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         layout.addWidget(self._table, 1)
 
         # Action row

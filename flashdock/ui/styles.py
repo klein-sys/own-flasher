@@ -691,6 +691,38 @@ QLabel#connection_badge {
     font-size: 11px;
     font-weight: 600;
 }
+
+/* Global ScrollBar Ergonomics */
+QScrollBar:horizontal {
+    height: 0px;
+    background: transparent;
+}
+QScrollBar::handle:horizontal {
+    background: transparent;
+}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+    height: 0px;
+}
+QScrollBar:vertical {
+    width: 6px;
+    background: transparent;
+    margin: 0px;
+}
+QScrollBar::handle:vertical {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+    min-height: 24px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #0A84FF;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+}
 """
 
 
@@ -1360,6 +1392,38 @@ QLabel#connection_badge {
     padding: 3px 8px;
     font-size: 11px;
     font-weight: 600;
+}
+
+/* Global ScrollBar Ergonomics */
+QScrollBar:horizontal {
+    height: 0px;
+    background: transparent;
+}
+QScrollBar::handle:horizontal {
+    background: transparent;
+}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+    height: 0px;
+}
+QScrollBar:vertical {
+    width: 6px;
+    background: transparent;
+    margin: 0px;
+}
+QScrollBar::handle:vertical {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    min-height: 24px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #007AFF;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
 }
 """
 

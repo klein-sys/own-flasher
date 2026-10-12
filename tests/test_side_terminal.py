@@ -19,7 +19,8 @@ def qapp():
 class TestSideTerminalWidget:
     def test_init_and_properties(self, qapp):
         term = SideTerminalWidget()
-        assert term.width() == 320
+        assert term.minimumWidth() == 260
+        assert term.maximumWidth() == 600
         assert term._text_edit.isReadOnly() is True  # Non-editable requirement
 
     def test_append_line_and_clear(self, qapp):
@@ -40,10 +41,11 @@ class TestSideTerminalWidget:
 
         term._toggle_collapse()
         assert term._is_collapsed is True
-        assert term.width() == 40
+        assert term.maximumWidth() == 40
         assert term._text_edit.isVisible() is False
 
         term._toggle_collapse()
         assert term._is_collapsed is False
-        assert term.width() == 320
+        assert term.minimumWidth() == 260
+        assert term.maximumWidth() == 600
         assert term._text_edit.isHidden() is False

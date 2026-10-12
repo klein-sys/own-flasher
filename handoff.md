@@ -2,9 +2,9 @@
 title: "FlashDock — Agent Handoff Document"
 type: handoff
 status: completed
-version: 1.2.0
-phase: Phase 21
-updated: 2026-10-12
+version: 1.2.1
+phase: Phase 22
+updated: 2026-10-13
 tags:
   - flashdock
   - android-workstation
@@ -20,12 +20,12 @@ tags:
 
 # FlashDock — Agent Handoff Document
 
-**Date:** 2026-10-12  
-**Current Phase:** **Phase 21: Comprehensive GSM Repair Suite Overhaul, Live Device HUD, Brand Showcase, Auto-Rescue Fallback & Safety Hardening (v1.2.0 — 100% Completed)**  
+**Date:** 2026-10-13  
+**Current Phase:** **Phase 22: Targeted Visual Defect Remediation, UI Polish & Ergonomics Sprint (v1.2.1 — 100% Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
-**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.2.0-windows-x64.zip`)  
+**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.2.1-windows-x64.zip`)  
 **Test Suite:** **448 Passed Unit & Integration Tests across 44 test modules (`python scripts/release_build.py`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
@@ -359,6 +359,41 @@ stateDiagram-v2
   - Fixed `NameError: name 'Path' is not defined` crash in `_launch_scrcpy`.
   - Graceful worker termination on USB disconnect with recovery guidance.
 
+### Phase 22: Targeted Visual Defect Remediation, UI Polish & Ergonomics Sprint (v1.2.1)
+- **1. Phone Panel Bottom Controls & Header Frame (`fix 1.png` & `fix 11.png`)**:
+  - Replaced squashed reboot button row (`Sy:`, `Re:`, `Fa:`, `Mo:`) with clean 2-row action pills (`System`, `Recovery`, `Bootloader`, `More Reboot Options...`) with full labels and clear margins.
+  - Fixed brand header frame line-height clipping (`setFixedHeight(60)`), bumping subtitle to `v1.2.1 Service Suite`.
+  - Expanded bottom status card padding and height to give mode capsule and device model adequate breathing room.
+- **2. Top Menubar Relocated to Settings (`fix 2.png`)**:
+  - Hidden native menubar (`self.menuBar().setVisible(False)`) to declutter the window titlebar.
+  - Consolidated Mode switching (Simple/Advanced), Dry-Run toggle, Force Offline, Network connectivity test, and Workstation About metadata into `SettingsDialog`.
+- **3. Redesigned Top GSM Suite Bar to Brand Showcase (`fix 3.png`)**:
+  - Replaced text-heavy `GSM SUITE:` frame with sleek Brand Logo Showcase Header displaying vector badges across 12 supported OEMs: Tecno, Infinix, itel, Samsung, Xiaomi, Huawei, OPPO, Vivo, Realme, Google Pixel, OnePlus, and Motorola.
+  - Clicking an OEM brand filters the Home catalog directly via search input rather than jumping to unrelated screens.
+  - Preserved inline 1-click **"Fix OEM Driver / COM Port"** button.
+- **4. Streamlined Device Selector & Header Actions (`fix 4.png`)**:
+  - Constrained device selector combobox to `max-width: 480px` with layout stretch.
+  - Styled `Refresh` and `Pin Serial` / `Unpin Serial` as elevated pill buttons (`height: 32px`).
+- **5. Live Telemetry Terminal Sizing & Resize Grip (`fix 5.png`)**:
+  - Replaced `setFixedWidth(320)` with dynamic min/max sizing (`min-width: 260px; max-width: 600px; default-width: 320px`).
+  - Styled `QSplitter` handle with visible 4px grip line and hover highlight.
+- **6. Dark Mode Palette in Hardware Keys Guide (`fix 6.png` & `fix 13.png`)**:
+  - In `HardwareKeyGuideDialog`, removed hardcoded `#FFFFFF`/`#F9FAFB` white cards.
+  - Standardized all tabs (Navigation, Brand Combos, Virtual Keypad) to dark tokens (`#181E26`, 1px border `rgba(255, 255, 255, 0.08)`, `#E6EDF3`).
+- **7. Global Elimination of Unnecessary Horizontal Scrollbars (`fix 7.png`)**:
+  - Applied global QScrollBar rule (`QScrollBar:horizontal { height: 0px; }`) and set `ScrollBarAlwaysOff` across scroll areas.
+- **8. Play Integrity Screen Layout Rebalance (`fix 8.png`)**:
+  - Rebalanced the 4 metric verdict cards into a compact horizontal status strip (`height: 70px`), dedicating central space to the Fingerprint Vault and JSON editor.
+- **9. Partition Checkbox Layout in Backup & Restore (`fix 9.png`)**:
+  - Replaced squashed 1-column list with clean 2-column `QGridLayout` (Standard vs Radio/Critical) with `min-height: 28px; padding: 4px 8px; margin: 2px;`.
+- **10. Standardized scrcpy Button Proportions (`fix 10.png`)**:
+  - Standardized `Mirror Screen` and `Get scrcpy` buttons (`height: 32px; padding: 4px 12px; font-size: 11px`) to prevent bleeding and overlap.
+- **11. Root & ROM Indicators in Live HUD (`fix 12.png`)**:
+  - Added Root State Pill (`ROOT: YES (Magisk)` vs `ROOT: NO`) and ROM State Pill (`ROM: OFFICIAL STOCK` vs `ROM: CUSTOM GSI`) to `LiveDeviceHud`.
+- **12. Elevated Driver Installation & UAC Handling (`fix 14.png`)**:
+  - Executed driver package installation via elevated PowerShell `Start-Process pnputil.exe -ArgumentList '/add-driver "<inf_path>" /install' -Verb RunAs -Wait`.
+  - Caught UAC cancellation cleanly, notifying operator gracefully.
+
 ---
 
 ## 3. Workstation Navigation Index (All Tools & Modals)
@@ -391,13 +426,13 @@ stateDiagram-v2
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **448 passed in 75.91s** across 44 test modules (`python scripts/release_build.py`, 100% pass rate).
+- **Unit & Integration Tests**: **448 passed in 56.63s** across 44 test modules (`python scripts/release_build.py`, 100% pass rate).
 - **Test Modules**: 44 individual test files in `tests/`, including `tests/test_gsm_suite_v120.py`.
-- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.87 MB, Exit code 0, custom high-res squircle icon, PE version resource, Authenticode signed).
-- **Release Archive**: `dist/FlashDock-v1.2.0-windows-x64.zip` (59.66 MB, bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
+- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.88 MB, Exit code 0, custom high-res squircle icon, PE version resource 1.2.1.0, Authenticode signed).
+- **Release Archive**: `dist/FlashDock-v1.2.1-windows-x64.zip` (59.67 MB, bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
 - **Integrity Hashes (`dist/SHA256SUMS.txt`)**:
-  - `FlashDock.exe`: `98d049eb6eea7d930864dbcf23d0e516db80ee0ca235af478c0658e625b4a6d8`
-  - `Release ZIP`: `1dddce28bec57a1dc19f999c1a122907eade122169f655c0c58cc82e3a506c2c`
+  - `FlashDock.exe`: `dd90a188459768be700a53ddde57fa18ea34fe6bc9fa0b24a013be7bab0fc340`
+  - `Release ZIP`: `1c37424a9099b660192f52a55327658785e935c1e38856d8bc8ee2af906497e1`
 
 ---
 

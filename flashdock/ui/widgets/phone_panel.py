@@ -216,21 +216,21 @@ class PhoneControlPanel(QFrame):
 
         # ---- Top Header Brand Pill ----
         brand_frame = QFrame()
-        brand_frame.setFixedHeight(54)
+        brand_frame.setFixedHeight(60)
         brand_frame.setStyleSheet("""
             QFrame {
                 background: rgba(255, 255, 255, 0.05);
                 border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 18px;
+                border-radius: 16px;
             }
         """)
         brand_lay = QHBoxLayout(brand_frame)
-        brand_lay.setContentsMargins(10, 8, 12, 8)
+        brand_lay.setContentsMargins(10, 6, 12, 6)
         brand_lay.setSpacing(10)
 
         # Brand squircle icon chip
         brand_icon_chip = QFrame()
-        brand_icon_chip.setFixedSize(34, 34)
+        brand_icon_chip.setFixedSize(36, 36)
         brand_icon_chip.setStyleSheet("""
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00F2FE, stop:1 #4FACFE);
             border-radius: 10px;
@@ -240,16 +240,17 @@ class PhoneControlPanel(QFrame):
         b_chip_lay.setContentsMargins(0, 0, 0, 0)
         b_chip_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
         b_logo_lbl = QLabel()
-        b_logo_lbl.setPixmap(get_icon_pixmap("app_logo", width=20, height=20, color="#FFFFFF"))
+        b_logo_lbl.setPixmap(get_icon_pixmap("app_logo", width=22, height=22, color="#FFFFFF"))
         b_chip_lay.addWidget(b_logo_lbl)
         brand_lay.addWidget(brand_icon_chip)
 
         brand_text_box = QVBoxLayout()
-        brand_text_box.setSpacing(1)
+        brand_text_box.setContentsMargins(0, 0, 0, 0)
+        brand_text_box.setSpacing(2)
         brand_title = QLabel("FlashDock")
-        brand_title.setStyleSheet("font-size: 14px; font-weight: 700; letter-spacing: -0.3px;")
-        brand_sub = QLabel("v1.2.0 Service Suite")
-        brand_sub.setStyleSheet("font-size: 11px; color: #8E8E93;")
+        brand_title.setStyleSheet("font-size: 14px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.1; margin: 0; padding: 0;")
+        brand_sub = QLabel("v1.2.1 Service Suite")
+        brand_sub.setStyleSheet("font-size: 11px; color: #8E8E93; line-height: 1.1; margin: 0; padding: 0;")
         brand_text_box.addWidget(brand_title)
         brand_text_box.addWidget(brand_sub)
         brand_lay.addLayout(brand_text_box, 1)
@@ -314,15 +315,15 @@ class PhoneControlPanel(QFrame):
         dev_card = QFrame()
         dev_card.setStyleSheet("""
             QFrame {
-                background: rgba(0, 0, 0, 0.08);
+                background: rgba(0, 0, 0, 0.12);
                 border: 1px solid rgba(255, 255, 255, 0.08);
                 border-radius: 14px;
-                padding: 6px;
+                padding: 4px;
             }
         """)
         dev_lay = QVBoxLayout(dev_card)
-        dev_lay.setContentsMargins(8, 8, 8, 8)
-        dev_lay.setSpacing(6)
+        dev_lay.setContentsMargins(10, 10, 10, 10)
+        dev_lay.setSpacing(8)
 
         # Mode indicator row
         self._mode = _ModeIndicator()
@@ -331,18 +332,20 @@ class PhoneControlPanel(QFrame):
         self._summary = QLabel("Connect a phone via USB")
         self._summary.setWordWrap(True)
         self._summary.setProperty("cssClass", "muted")
-        self._summary.setStyleSheet("font-size: 11px;")
+        self._summary.setStyleSheet("font-size: 11px; line-height: 1.3;")
         dev_lay.addWidget(self._summary)
 
-        # Quick Reboot Actions
-        reboot_row = QHBoxLayout()
-        reboot_row.setSpacing(4)
+        # Quick Reboot Actions: 2 clean rows instead of squished 1-row
+        reboot_row1 = QHBoxLayout()
+        reboot_row1.setSpacing(6)
+        reboot_row2 = QHBoxLayout()
+        reboot_row2.setSpacing(6)
 
         self._buttons: dict[str, QPushButton] = {}
         button_defs = [
             ("system",     "System",      "refresh",    "Reboot into Android"),
             ("recovery",   "Recovery",    "tools",      "Reboot to Recovery mode"),
-            ("bootloader", "Fastboot",    "flash",      "Reboot to Bootloader / Fastboot"),
+            ("bootloader", "Bootloader",  "flash",      "Reboot to Bootloader / Fastboot"),
             ("fastbootd",  "FastbootD",   "flash",      "Reboot to userspace Fastboot"),
             ("download",   "Odin",        "downloads",  "Samsung Download mode"),
             ("edl",        "EDL",         "usb",        "Qualcomm EDL / 9008 mode"),
@@ -350,28 +353,78 @@ class PhoneControlPanel(QFrame):
             ("safemode",   "Safe Mode",   "integrity",  "Reboot into Safe Mode"),
         ]
 
-        # Primary 3 visible reboot shortcuts in pill drawer
-        for mode_id, label, icon_name, tooltip in button_defs[:3]:
-            btn = QPushButton(label)
-            btn.setIcon(get_icon(icon_name, 11))
-            btn.setToolTip(tooltip)
-            btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setStyleSheet("font-size: 10px; padding: 4px 6px; border-radius: 8px;")
-            btn.setEnabled(False)
-            btn.clicked.connect(lambda checked, m=mode_id: self.reboot_requested.emit(m))
-            self._buttons[mode_id] = btn
-            reboot_row.addWidget(btn)
+        btn_style_pill = """
+            QPushButton {
+                font-size: 11px;
+                font-weight: 600;
+                padding: 5px 8px;
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.06);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            QPushButton:hover:enabled {
+                background: rgba(255, 255, 255, 0.12);
+                border-color: rgba(255, 255, 255, 0.2);
+            }
+            QPushButton:disabled {
+                opacity: 0.4;
+            }
+        """
 
-        # Dedicated "More / Switchboard" button
+        # System & Recovery on row 1
+        for mode_id in ("system", "recovery"):
+            for m_id, label, icon_name, tooltip in button_defs:
+                if m_id == mode_id:
+                    btn = QPushButton(label)
+                    btn.setIcon(get_icon(icon_name, 12))
+                    btn.setToolTip(tooltip)
+                    btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                    btn.setStyleSheet(btn_style_pill)
+                    btn.setEnabled(False)
+                    btn.clicked.connect(lambda checked, m=mode_id: self.reboot_requested.emit(m))
+                    self._buttons[mode_id] = btn
+                    reboot_row1.addWidget(btn, 1)
+                    break
+
+        dev_lay.addLayout(reboot_row1)
+
+        # Bootloader on row 2
+        for m_id, label, icon_name, tooltip in button_defs:
+            if m_id == "bootloader":
+                btn = QPushButton(label)
+                btn.setIcon(get_icon(icon_name, 12))
+                btn.setToolTip(tooltip)
+                btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                btn.setStyleSheet(btn_style_pill)
+                btn.setEnabled(False)
+                btn.clicked.connect(lambda checked, m="bootloader": self.reboot_requested.emit(m))
+                self._buttons["bootloader"] = btn
+                reboot_row2.addWidget(btn, 1)
+                break
+
+        # More Reboot Options button on row 2
         self._btn_more_reboot = QPushButton("More...")
-        self._btn_more_reboot.setIcon(get_icon("tools", 11))
+        self._btn_more_reboot.setIcon(get_icon("tools", 12))
         self._btn_more_reboot.setToolTip("Open Multi-Mode Power & Reboot Switchboard (EDL, Odin, FastbootD, Power Off)")
         self._btn_more_reboot.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._btn_more_reboot.setStyleSheet("font-size: 10px; padding: 4px 6px; border-radius: 8px; color: #007AFF; font-weight: 600;")
+        self._btn_more_reboot.setStyleSheet("""
+            QPushButton {
+                font-size: 11px;
+                font-weight: 600;
+                padding: 5px 8px;
+                border-radius: 8px;
+                background: rgba(10, 132, 255, 0.12);
+                border: 1px solid rgba(10, 132, 255, 0.3);
+                color: #0A84FF;
+            }
+            QPushButton:hover {
+                background: rgba(10, 132, 255, 0.22);
+            }
+        """)
         self._btn_more_reboot.clicked.connect(self.switchboard_requested.emit)
-        reboot_row.addWidget(self._btn_more_reboot)
+        reboot_row2.addWidget(self._btn_more_reboot, 1)
 
-        dev_lay.addLayout(reboot_row)
+        dev_lay.addLayout(reboot_row2)
 
         # Store other buttons hidden for API and backward compatibility
         for mode_id, label, icon_name, tooltip in button_defs[3:]:

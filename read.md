@@ -2,9 +2,9 @@
 title: "FlashDock — Personal Android Service Workstation"
 type: documentation
 status: completed
-version: 1.2.0
-phase: Phase 21
-updated: 2026-10-12
+version: 1.2.1
+phase: Phase 22
+updated: 2026-10-13
 tags:
   - flashdock
   - android-workstation
@@ -23,7 +23,7 @@ tags:
 
 # FlashDock — Personal Android Service Workstation
 
-[![Version](https://img.shields.io/badge/version-1.2.0-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
+[![Version](https://img.shields.io/badge/version-1.2.1-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-1D1D1F.svg)](https://github.com/klein-sys/own-flasher)
 [![License](https://img.shields.io/badge/license-MIT-30D158.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-448%20%2F%20448%20passing-30D158.svg)](tests/)
@@ -39,7 +39,7 @@ FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing,
 
 ---
 
-## Current Status — Comprehensive GSM Repair Suite Overhaul & Safety Hardening (v1.2.0)
+## Current Status — Targeted Visual Defect Remediation & UI Polish Sprint (v1.2.1)
 
 FlashDock features a fully modular, thread-safe, and asynchronous **GSM Suite Core Architecture** elevated with **Xiaomi HyperOS 2.0 fluidity**, **macOS Sequoia glassmorphism**, and **iOS 18 Control Center aesthetics**:
 
@@ -277,11 +277,11 @@ FlashDock Workstation
 
 ### Option A: Standalone Windows Binary (Recommended)
 Download the standalone precompiled release from `dist/`:
-1. Extract `FlashDock-v1.2.0-windows-x64.zip`.
+1. Extract `FlashDock-v1.2.1-windows-x64.zip`.
 2. Launch `FlashDock.exe` (or double-click `Run-FlashDock.bat`). No Python installation required!
 3. Verify integrity against `dist/SHA256SUMS.txt`:
-   - `FlashDock.exe`: `98d049eb6eea7d930864dbcf23d0e516db80ee0ca235af478c0658e625b4a6d8`
-   - `FlashDock-v1.2.0-windows-x64.zip`: `1dddce28bec57a1dc19f999c1a122907eade122169f655c0c58cc82e3a506c2c`
+   - `FlashDock.exe`: `dd90a188459768be700a53ddde57fa18ea34fe6bc9fa0b24a013be7bab0fc340`
+   - `FlashDock-v1.2.1-windows-x64.zip`: `1c37424a9099b660192f52a55327658785e935c1e38856d8bc8ee2af906497e1`
 
 ---
 

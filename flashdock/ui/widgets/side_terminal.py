@@ -70,7 +70,8 @@ class SideTerminalWidget(QWidget):
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.setFixedWidth(320)
+        self.setMinimumWidth(260)
+        self.setMaximumWidth(600)
         self._is_collapsed = False
         self._filter_polls = True
         self._handler_ref: Optional[SideTerminalHandler] = None
@@ -176,15 +177,19 @@ class SideTerminalWidget(QWidget):
     def _toggle_collapse(self) -> None:
         self._is_collapsed = not self._is_collapsed
         if self._is_collapsed:
-            self.setFixedWidth(40)
+            self.setMinimumWidth(40)
+            self.setMaximumWidth(40)
             self._text_edit.setVisible(False)
             self._clear_btn.setVisible(False)
+            self._poll_toggle_btn.setVisible(False)
             self._title_label.setText("LOG")
             self._toggle_btn.setText("«")
         else:
-            self.setFixedWidth(320)
+            self.setMinimumWidth(260)
+            self.setMaximumWidth(600)
             self._text_edit.setVisible(True)
             self._clear_btn.setVisible(True)
+            self._poll_toggle_btn.setVisible(True)
             self._title_label.setText("LIVE TELEMETRY")
             self._toggle_btn.setText("»")
 

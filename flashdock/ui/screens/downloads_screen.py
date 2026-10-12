@@ -224,19 +224,32 @@ class DownloadsScreen(QWidget):
 
         scrcpy_btn_row = QHBoxLayout()
         scrcpy_btn_row.setSpacing(6)
+        scrcpy_btn_row.setContentsMargins(0, 4, 0, 0)
 
         self._btn_launch_scrcpy = QPushButton("Mirror Screen")
-        self._btn_launch_scrcpy.setIcon(get_icon("scrcpy", 16))
+        self._btn_launch_scrcpy.setIcon(get_icon("scrcpy", 14))
         self._btn_launch_scrcpy.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._btn_launch_scrcpy.setProperty("cssClass", "primary")
+        self._btn_launch_scrcpy.setFixedHeight(32)
+        self._btn_launch_scrcpy.setStyleSheet(
+            "QPushButton { background: #0A84FF; color: #FFFFFF; font-weight: 600; font-size: 11px; "
+            "border-radius: 6px; padding: 4px 12px; border: none; } "
+            "QPushButton:hover { background: #0070E0; } "
+            "QPushButton:disabled { background: rgba(255, 255, 255, 0.08); color: #6E7681; }"
+        )
         self._btn_launch_scrcpy.clicked.connect(self._on_launch_scrcpy)
-        scrcpy_btn_row.addWidget(self._btn_launch_scrcpy)
+        scrcpy_btn_row.addWidget(self._btn_launch_scrcpy, 1)
 
         self._btn_download_scrcpy = QPushButton("Get scrcpy")
-        self._btn_download_scrcpy.setIcon(get_icon("downloads", 16))
+        self._btn_download_scrcpy.setIcon(get_icon("downloads", 14))
         self._btn_download_scrcpy.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_download_scrcpy.setFixedHeight(32)
+        self._btn_download_scrcpy.setStyleSheet(
+            "QPushButton { background: rgba(255, 255, 255, 0.08); color: #E6EDF3; font-weight: 600; font-size: 11px; "
+            "border-radius: 6px; padding: 4px 12px; border: 1px solid rgba(255, 255, 255, 0.12); } "
+            "QPushButton:hover { background: rgba(255, 255, 255, 0.15); }"
+        )
         self._btn_download_scrcpy.clicked.connect(self._on_download_scrcpy)
-        scrcpy_btn_row.addWidget(self._btn_download_scrcpy)
+        scrcpy_btn_row.addWidget(self._btn_download_scrcpy, 1)
 
         scrcpy_box.addLayout(scrcpy_btn_row)
         cards_layout.addWidget(self._scrcpy_card, 1)
@@ -349,6 +362,7 @@ class DownloadsScreen(QWidget):
         self._drivers_scroll = QScrollArea()
         self._drivers_scroll.setWidgetResizable(True)
         self._drivers_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._drivers_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self._drivers_container = QWidget()
         self._drivers_layout = QVBoxLayout(self._drivers_container)
@@ -408,6 +422,7 @@ class DownloadsScreen(QWidget):
         self._fw_scroll = QScrollArea()
         self._fw_scroll.setWidgetResizable(True)
         self._fw_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._fw_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self._fw_cards_container = QWidget()
         self._fw_cards_layout = QVBoxLayout(self._fw_cards_container)
