@@ -60,6 +60,7 @@ from flashdock.ui.screens.downloads_screen import DownloadsScreen
 from flashdock.ui.screens.unbrick_screen import UnbrickScreen
 from flashdock.ui.screens.integrity_screen import IntegrityScreen
 from flashdock.ui.screens.logs_help_screen import LogsHelpScreen
+from flashdock.ui.screens.sideload_screen import SideloadScreen
 from flashdock.ui.brand_assets import get_brand_icon, get_brand_pixmap
 from flashdock.ui.styles import get_stylesheet
 from flashdock.ui.widgets.device_card import DeviceCard
@@ -128,6 +129,7 @@ ACTION_BADGE_GRADIENTS = {
     # ADB & Device Inspection
     "check_phone":  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7)",
     "diagnostics":  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00B4D8, stop:1 #0077B6)",
+    "sideload":     "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00C6FF, stop:1 #0072FF)",
     "downloads":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #10B981, stop:1 #059669)",
     "scrcpy":       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #6366F1, stop:1 #4338CA)",
     "logs_help":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #8B5CF6, stop:1 #6D28D9)",
@@ -165,6 +167,7 @@ ACTION_ICON_MAP = {
     "scrcpy": "scrcpy",
     "downloads": "downloads",
     "logs_help": "logs_help",
+    "sideload": "box",
 }
 
 
@@ -331,6 +334,7 @@ MAIN_ACTIONS = [
     ("flash_rom",     "flash",        "Flash ROM / GSI",       "Flash custom ROMs, GSIs, or TWRP/OrangeFox", "Flashing", ["flash", "rom", "gsi", "custom", "lineage", "twrp", "recovery", "fastboot", "payload", "zip"]),
     ("modules",       "modules",      "Manage Modules",        "Install, manage, and toggle root modules", "Root", ["module", "modules", "magisk", "lsposed", "zygisk", "zip", "install", "active"]),
     ("diagnostics",   "diagnostics",  "Diagnostics & Tweaks",  "Debloat apps, battery health, system tweaks", "Device", ["diagnostics", "debloat", "battery", "tweaks", "apps", "performance", "system", "speed"]),
+    ("sideload",      "box",          "Sideload & App Manager", "Install APKs, split XAPKs, bypass Android 14 restrictions, & recovery sideload", "Device", ["sideload", "apk", "xapk", "apks", "install", "bundle", "apps", "debloat", "ota", "package", "permissions"]),
     ("integrity",     "integrity",    "Fix Play Integrity",     "Play Integrity diagnosis & fingerprint fixer", "Root", ["integrity", "play integrity", "safetynet", "cts", "banking", "fingerprint", "fix"]),
     ("backup",        "backup",       "Backup / Restore",       "Partition dumps, ADB backups & restore manager", "Rescue", ["backup", "restore", "dump", "partitions", "adb backup", "twrp", "images", "extract"]),
     ("unbrick",       "unbrick",      "Fix bricked phone",      "Emergency rescue: bootloop killer, slot rollback", "Rescue", ["unbrick", "bootloop", "brick", "rescue", "edl", "fix bootloop", "safe mode", "slot", "vbmeta", "stuck"]),
@@ -357,6 +361,7 @@ PAGE_DOWNLOADS = 11
 PAGE_UNBRICK = 12
 PAGE_INTEGRITY = 13
 PAGE_LOGS_HELP = 14
+PAGE_SIDELOAD = 15
 
 
 class MainWindow(QMainWindow):
@@ -571,6 +576,7 @@ class MainWindow(QMainWindow):
         self._build_unbrick_page()       # PAGE_UNBRICK = 12
         self._build_integrity_page()     # PAGE_INTEGRITY = 13
         self._build_logs_help_page()     # PAGE_LOGS_HELP = 14
+        self._build_sideload_page()      # PAGE_SIDELOAD = 15
         self._main_splitter.addWidget(self._stack)
 
         # Persistent Side Activity Terminal (User Addition 4)
@@ -1267,6 +1273,26 @@ class MainWindow(QMainWindow):
 
         self._stack.addWidget(page)
 
+    def _build_sideload_page(self) -> None:
+        """Build the Phase 23 Universal Sideloading & App Manager page."""
+        page = QWidget()
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(24, 16, 24, 12)
+        page_layout.setSpacing(10)
+
+        page_layout.addWidget(self._make_back_button())
+
+        # Sideload & App Manager screen
+        self._sideload_screen = SideloadScreen(
+            device_mgr=self._device_mgr,
+            adb=self._adb,
+            parent=page,
+        )
+        self._sideload_screen.navigate_to_page.connect(self._stack.setCurrentIndex)
+        page_layout.addWidget(self._sideload_screen, 1)
+
+        self._stack.addWidget(page)
+
     def _make_action_button(
         self, action_id: str, icon: str, label: str, desc: str, category: str = "Device"
     ) -> ActionCardButton:
@@ -1686,6 +1712,8 @@ class MainWindow(QMainWindow):
                 self._integrity_screen.load_for_device(info)
             elif self._stack.currentIndex() == PAGE_LOGS_HELP:
                 self._logs_help_screen.load_for_device(info)
+            elif self._stack.currentIndex() == PAGE_SIDELOAD:
+                self._sideload_screen.load_for_device(info)
         else:
             self._status_bar.update_device("not_connected", "")
             self._phone_panel.set_mode("not_connected")
@@ -1854,6 +1882,12 @@ class MainWindow(QMainWindow):
             self._stack.setCurrentIndex(PAGE_LOGS_HELP)
             return
 
+        if action_id == "sideload":
+            # Switch to Phase 23 Universal Sideloading & App Manager
+            self._sideload_screen.load_for_device(self._device_mgr.device)
+            self._stack.setCurrentIndex(PAGE_SIDELOAD)
+            return
+
         # All other screens are placeholders until their phase
         screen_name = action_id.replace("_", " ").title()
         msg = (
@@ -2011,6 +2045,8 @@ class MainWindow(QMainWindow):
             self._phone_panel.apply_theme(theme_name)
         if hasattr(self, "_live_hud"):
             self._live_hud.apply_theme(theme_name)
+        if hasattr(self, "_sideload_screen"):
+            self._sideload_screen.apply_theme(theme_name)
 
         self._update_network_buttons(self._network.is_online)
         log.info("Theme switched to: %s", theme_name)

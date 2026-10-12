@@ -2,14 +2,19 @@
 title: "FlashDock — Personal Android Service Workstation"
 type: documentation
 status: completed
-version: 1.2.1
-phase: Phase 22
+version: 1.3.0
+phase: Phase 23
 updated: 2026-10-13
 tags:
   - flashdock
   - android-workstation
   - firmware-flasher
   - gsm-suite
+  - universal-sideloading
+  - xapk-installer
+  - android-14-bypass
+  - recovery-sideload
+  - debloater
   - hyperos-fluidity
   - macos-sequoia
   - ios18-control-center
@@ -23,23 +28,23 @@ tags:
 
 # FlashDock — Personal Android Service Workstation
 
-[![Version](https://img.shields.io/badge/version-1.2.1-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
+[![Version](https://img.shields.io/badge/version-1.3.0-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-1D1D1F.svg)](https://github.com/klein-sys/own-flasher)
 [![License](https://img.shields.io/badge/license-MIT-30D158.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-448%20%2F%20448%20passing-30D158.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-464%20%2F%20464%20passing-30D158.svg)](tests/)
 [![Architecture](https://img.shields.io/badge/architecture-HyperOS%202.0%20%2B%20macOS%20Sequoia-BF5AF2.svg)](flashdock/ui/styles.py)
 [![App Icon](https://img.shields.io/badge/icon-macOS%20Squircle%20(1024x1024)-00F2FE.svg)](flashdock/resources/icon.png)
 [![UI Assets](https://img.shields.io/badge/vector%20graphics-100%25%20SVG%20%7C%20Apple%20HIG-FF9500.svg)](flashdock/ui/icon_assets.py)
 
 **Personal, one-click Android service workstation for Windows.**
 
-FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing, Samsung Odin tar extraction, Qualcomm EDL 9008 Sahara/Firehose rescue, MediaTek BROM scatter flashing, Unisoc PAC recovery, bootloop unbricking, Play Integrity spoofing, offline partition backup & restore, live screen mirroring (scrcpy), hardware button navigation, laptop setup assistance, and interactive troubleshooting — all through a clean, guided macOS Big Sur-inspired interface with multi-chipset repair tool architecture (UnlockTool, TFT, Chimera).
+FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing, Samsung Odin tar extraction, Qualcomm EDL 9008 Sahara/Firehose rescue, MediaTek BROM scatter flashing, Unisoc PAC recovery, bootloop unbricking, Play Integrity spoofing, offline partition backup & restore, live screen mirroring (scrcpy), universal APK/XAPK/split bundle sideloading, Android 14+ low-SDK restriction bypass, recovery OTA sideloading, app debloating, hardware button navigation, laptop setup assistance, and interactive troubleshooting — all through a clean, guided macOS Big Sur-inspired interface with multi-chipset repair tool architecture (UnlockTool, TFT, Chimera).
 
 > **Safety Warning:** This tool modifies device firmware. Always back up your critical partitions before flashing. FlashDock is designed strictly for servicing your own devices and does not support carrier bypass, FRP bypass, or IMEI modifications.
 
 ---
 
-## Current Status — Targeted Visual Defect Remediation & UI Polish Sprint (v1.2.1)
+## Current Status — Universal Sideloading & App Manager Subsystem (v1.3.0 — Phase 23)
 
 FlashDock features a fully modular, thread-safe, and asynchronous **GSM Suite Core Architecture** elevated with **Xiaomi HyperOS 2.0 fluidity**, **macOS Sequoia glassmorphism**, and **iOS 18 Control Center aesthetics**:
 
@@ -277,11 +282,11 @@ FlashDock Workstation
 
 ### Option A: Standalone Windows Binary (Recommended)
 Download the standalone precompiled release from `dist/`:
-1. Extract `FlashDock-v1.2.1-windows-x64.zip`.
+1. Extract `FlashDock-v1.3.0-windows-x64.zip`.
 2. Launch `FlashDock.exe` (or double-click `Run-FlashDock.bat`). No Python installation required!
 3. Verify integrity against `dist/SHA256SUMS.txt`:
-   - `FlashDock.exe`: `dd90a188459768be700a53ddde57fa18ea34fe6bc9fa0b24a013be7bab0fc340`
-   - `FlashDock-v1.2.1-windows-x64.zip`: `1c37424a9099b660192f52a55327658785e935c1e38856d8bc8ee2af906497e1`
+   - `FlashDock.exe`: `8653b378a6163bfe97245f155e06b148ec275d39ce49e35fef5a58e72303cdd8`
+   - `FlashDock-v1.3.0-windows-x64.zip`: `ce026b917a2b7e7b8f61c73cbbe3677c0e8d6d2327f787e2c0683ef6afb50a73`
 
 ---
 
@@ -319,7 +324,7 @@ python main.py
 ### Running Tests
 ```powershell
 python scripts/release_build.py
-# 448 passed in 63.01s (100% success rate)
+# 464 passed in 70.91s (100% success rate)
 ```
 
 ---

@@ -79,6 +79,8 @@ a = Analysis(
         'flashdock.ui.brand_assets',
         'flashdock.workers.device_monitor',
         'flashdock.workers.flash_engine',
+        'flashdock.tools.sideload',
+        'flashdock.ui.screens.sideload_screen',
     ],
     hookspath=[],
     hooksconfig={},

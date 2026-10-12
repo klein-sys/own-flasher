@@ -249,7 +249,7 @@ class PhoneControlPanel(QFrame):
         brand_text_box.setSpacing(2)
         brand_title = QLabel("FlashDock")
         brand_title.setStyleSheet("font-size: 14px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.1; margin: 0; padding: 0;")
-        brand_sub = QLabel("v1.2.1 Service Suite")
+        brand_sub = QLabel("v1.3.0 Service Suite")
         brand_sub.setStyleSheet("font-size: 11px; color: #8E8E93; line-height: 1.1; margin: 0; padding: 0;")
         brand_text_box.addWidget(brand_title)
         brand_text_box.addWidget(brand_sub)
@@ -288,6 +288,7 @@ class PhoneControlPanel(QFrame):
         nav_defs = [
             ("home",         "Overview / Tools",    "flash",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7)"),
             ("check_phone",  "ADB & Device",        "phone",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00B4D8, stop:1 #0077B6)"),
+            ("sideload",     "Sideload & Apps",     "box",         "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00C6FF, stop:1 #0072FF)"),
             ("flash_rom",    "Fastboot Tools",      "flash",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2563EB, stop:1 #1D4ED8)"),
             ("root",         "Root & Modules",      "root",        "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #A855F7, stop:1 #7E22CE)"),
             ("unbrick",      "Unbrick & Rescue",    "unbrick",     "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EF4444, stop:1 #B91C1C)"),

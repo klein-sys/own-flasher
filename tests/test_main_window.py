@@ -21,7 +21,9 @@ from flashdock.ui.main_window import (
     PAGE_UNBRICK,
     PAGE_INTEGRITY,
     PAGE_LOGS_HELP,
+    PAGE_SIDELOAD,
 )
+
 
 
 @pytest.fixture(scope="session")
@@ -138,11 +140,23 @@ class TestMainWindow:
         win._stack.setCurrentIndex(PAGE_HOME)
         assert win._stack.currentIndex() == PAGE_HOME
 
+    def test_navigation_to_sideload(self, qapp, mock_main_window):
+        win = mock_main_window
+        assert win._stack.currentIndex() == PAGE_HOME
+
+        # Trigger sideload action
+        win._on_action("sideload")
+        assert win._stack.currentIndex() == PAGE_SIDELOAD
+
+        # Back to home
+        win._stack.setCurrentIndex(PAGE_HOME)
+        assert win._stack.currentIndex() == PAGE_HOME
+
     def test_tool_filter_by_category(self, qapp, mock_main_window):
         win = mock_main_window
-        # Initial: All 15 tools visible
+        # Initial: All tools visible
         visible_initial = [aid for aid, b in win._action_buttons.items() if not b.isHidden()]
-        assert len(visible_initial) == 15
+        assert len(visible_initial) == 16
 
         # Filter by Rescue
         win._on_category_clicked("Rescue")
@@ -161,11 +175,12 @@ class TestMainWindow:
         assert "integrity" in visible_root
         assert len(visible_root) == 3
 
-        # Filter by Device (includes scrcpy)
+        # Filter by Device (includes scrcpy and sideload)
         win._on_category_clicked("Device")
         visible_dev = [aid for aid, b in win._action_buttons.items() if not b.isHidden()]
         assert "scrcpy" in visible_dev
-        assert len(visible_dev) == 5
+        assert "sideload" in visible_dev
+        assert len(visible_dev) == 6
 
     def test_tool_filter_by_search_query(self, qapp, mock_main_window):
         win = mock_main_window
@@ -187,6 +202,12 @@ class TestMainWindow:
         assert "downloads" in visible
         assert "root" not in visible
 
+        # Search for sideload
+        win._search_input.setText("sideload")
+        visible = [aid for aid, b in win._action_buttons.items() if not b.isHidden()]
+        assert "sideload" in visible
+        assert "root" not in visible
+
         # Search for non-existent keyword shows empty state
         win._search_input.setText("nonexistent_unknown_tool_xyz")
         visible = [aid for aid, b in win._action_buttons.items() if not b.isHidden()]
@@ -198,7 +219,7 @@ class TestMainWindow:
         assert win._search_input.text() == ""
         assert win._active_category == "All"
         visible_reset = [aid for aid, b in win._action_buttons.items() if not b.isHidden()]
-        assert len(visible_reset) == 15
+        assert len(visible_reset) == 16
         assert win._empty_state_widget.isHidden()
 
         # Test tool sorting

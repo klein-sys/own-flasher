@@ -2,13 +2,18 @@
 title: "FlashDock — Agent Handoff Document"
 type: handoff
 status: completed
-version: 1.2.1
-phase: Phase 22
+version: 1.3.0
+phase: Phase 23
 updated: 2026-10-13
 tags:
   - flashdock
   - android-workstation
   - gsm-suite
+  - universal-sideloading
+  - xapk-installer
+  - android-14-bypass
+  - recovery-sideload
+  - debloater
   - hyperos-fluidity
   - macos-sequoia
   - ios18-control-center
@@ -21,12 +26,12 @@ tags:
 # FlashDock — Agent Handoff Document
 
 **Date:** 2026-10-13  
-**Current Phase:** **Phase 22: Targeted Visual Defect Remediation, UI Polish & Ergonomics Sprint (v1.2.1 — 100% Completed)**  
+**Current Phase:** **Phase 23: Universal Sideloading Engine, Split App Bundle (XAPK) Installer & Android 14+ Restriction Bypass (v1.3.0 — 100% Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
-**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.2.1-windows-x64.zip`)  
-**Test Suite:** **448 Passed Unit & Integration Tests across 44 test modules (`python scripts/release_build.py`, 100% success rate)**  
+**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.3.0-windows-x64.zip`)  
+**Test Suite:** **464 Passed Unit & Integration Tests across 45 test modules (`python scripts/release_build.py`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
 ---
@@ -409,6 +414,7 @@ stateDiagram-v2
 | `return_stock` | Return to Stock | Flashing | `ReturnStockScreen` | `PAGE_RETURN_STOCK = 7` |
 | `flash_rom` | Flash ROM / GSI | Flashing | `FlashRomScreen` | `PAGE_FLASH_ROM = 8` |
 | `diagnostics` | Diagnostics & Tweaks | Device | `DiagnosticsScreen` | `PAGE_DIAGNOSTICS = 9` |
+| `sideload` | Sideload & App Manager | Device | `SideloadScreen` | `PAGE_SIDELOAD = 15` |
 | `mtk_unisoc` | MTK / Unisoc mode | Flashing | `MtkUnisocScreen` | `PAGE_MTK_UNISOC = 10` |
 | `downloads` | Downloads & Tools | Device | `DownloadsScreen` | `PAGE_DOWNLOADS = 11` |
 | `unbrick` | Fix bricked phone | Rescue | `UnbrickScreen` | `PAGE_UNBRICK = 12` |
@@ -426,17 +432,40 @@ stateDiagram-v2
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **448 passed in 56.63s** across 44 test modules (`python scripts/release_build.py`, 100% pass rate).
-- **Test Modules**: 44 individual test files in `tests/`, including `tests/test_gsm_suite_v120.py`.
-- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.88 MB, Exit code 0, custom high-res squircle icon, PE version resource 1.2.1.0, Authenticode signed).
-- **Release Archive**: `dist/FlashDock-v1.2.1-windows-x64.zip` (59.67 MB, bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
+- **Unit & Integration Tests**: **464 passed in 70.91s** across 45 test modules (`python scripts/release_build.py`, 100% pass rate).
+- **Test Modules**: 45 individual test files in `tests/`, including `tests/test_sideload.py`.
+- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.92 MB, Exit code 0, custom high-res squircle icon, PE version resource 1.3.0.0, Authenticode signed).
+- **Release Archive**: `dist/FlashDock-v1.3.0-windows-x64.zip` (59.71 MB, bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
 - **Integrity Hashes (`dist/SHA256SUMS.txt`)**:
-  - `FlashDock.exe`: `dd90a188459768be700a53ddde57fa18ea34fe6bc9fa0b24a013be7bab0fc340`
-  - `Release ZIP`: `1c37424a9099b660192f52a55327658785e935c1e38856d8bc8ee2af906497e1`
+  - `FlashDock.exe`: `8653b378a6163bfe97245f155e06b148ec275d39ce49e35fef5a58e72303cdd8`
+  - `Release ZIP`: `ce026b917a2b7e7b8f61c73cbbe3677c0e8d6d2327f787e2c0683ef6afb50a73`
 
 ---
 
-## 5. Next Steps for Continuing Work
+## 5. Phase 23 Deliverables Summary
+
+1. **Universal Sideloading Engine (`flashdock/tools/sideload.py`)**:
+   - Single & batch APK installation with permissions (`-g`), downgrade (`-d`), and reinstall (`-r`).
+   - Android 14+ (SDK 34+) legacy target SDK block bypass (`--bypass-low-target-sdk-block`).
+   - Split App Bundle extractor for `.xapk`, `.apks`, `.apkm` archives via atomic `adb install-multiple`.
+   - Automatic expansion OBB file placement into `/sdcard/Android/obb/<package_name>/`.
+   - Recovery mode OTA update ZIP sideload (`adb sideload <update.zip>`) with byte-accurate progress parsing.
+   - Pure-Python binary AXML manifest inspector & metadata extractor.
+   - Installed package management (pull APK to PC, clear cache/data, force stop, freeze/disable, uninstall).
+2. **Dedicated UI (`flashdock/ui/screens/sideload_screen.py`)**:
+   - Interactive elevated squircle drag-and-drop dropzone card.
+   - Real-time metadata preview (app name, package ID, version, min SDK, icon).
+   - Advanced options checklist.
+   - Tabbed view: Install Packages, Recovery OTA Sideload, and Installed Apps & Debloater.
+   - Live percentage progress bar and streaming activity terminal log.
+3. **Navigation & Home Integration**:
+   - `PAGE_SIDELOAD = 15` in `main_window.py`.
+   - Sidebar "Sideload & Apps" pill with vector icon in `phone_panel.py`.
+   - Home Action Card under "Device" category: "Sideload & App Manager".
+4. **Automated Verification**:
+   - 15 new tests in `tests/test_sideload.py`.
+   - Total test suite expanded to 464 passing tests.
+   - Release binary compiled and SHA-256 verified.
 
 1. **Physical Hardware Field Testing**: Connect real MediaTek Dimensity, Qualcomm Snapdragon, and Unisoc T616 devices to test live BROM and EDL handshake speeds.
 2. **Community Partition Profiles**: Expand partition inspector signatures to support custom OEM sparse images (e.g. Realme OZIP, OnePlus OPS).
