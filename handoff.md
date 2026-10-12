@@ -2,8 +2,8 @@
 title: "FlashDock — Agent Handoff Document"
 type: handoff
 status: completed
-version: 1.1.0
-phase: Phase 20
+version: 1.2.0
+phase: Phase 21
 updated: 2026-10-12
 tags:
   - flashdock
@@ -21,12 +21,12 @@ tags:
 # FlashDock — Agent Handoff Document
 
 **Date:** 2026-10-12  
-**Current Phase:** **Phase 20: Next-Generation Workstation Aesthetic Overhaul (HyperOS 2.0, macOS Sequoia & iOS 18 Control Center Aesthetics — 100% Completed)**  
+**Current Phase:** **Phase 21: Comprehensive GSM Repair Suite Overhaul, Live Device HUD, Brand Showcase, Auto-Rescue Fallback & Safety Hardening (v1.2.0 — 100% Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
-**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.1.0-windows-x64.zip`)  
-**Test Suite:** **442 Passed Unit & Integration Tests across 43 test modules (`python scripts/release_build.py`, 100% success rate)**  
+**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.2.0-windows-x64.zip`)  
+**Test Suite:** **448 Passed Unit & Integration Tests across 44 test modules (`python scripts/release_build.py`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
 ---
@@ -311,19 +311,53 @@ stateDiagram-v2
   - Form controls with recessed squircle inputs (`QLineEdit`, `QTextEdit`, `QPlainTextEdit`), clear button enabled, monospace file paths, and elevated "Browse" pill buttons (`border-radius: 12px; font-weight: 500;`).
   - Primary action triggers upgraded to gradient pill buttons (`border-radius: 20px;`) with hover glow and pressed feedback.
 
-### Phase 21: Windows Smart App Control (SAC) & Authenticode Code-Signing Pipeline
-- **UPX Compression Deactivation (`flashdock.spec`)**:
-  - Disabled UPX (`upx=False`) across PyInstaller `EXE` and `COLLECT` configurations. Eliminates the #1 trigger for Windows Defender SmartScreen and Smart App Control heuristic false-positives.
-- **Embedded Windows PE Version Information Resource (`scripts/version_info.txt`)**:
-  - Added full `VS_VERSION_INFO` resource metadata into `FlashDock.exe`: CompanyName (*Klein Systems*), FileDescription (*FlashDock - Android Flashing & GSM Suite Workstation*), FileVersion (*1.1.0.0*), LegalCopyright (*Copyright (C) 2024-2026 Klein Systems*), and OriginalFilename.
-- **Automated Authenticode Digital Signing (`scripts/sign_app.ps1`)**:
-  - Generates dedicated local Code-Signing Certificate (`CN=FlashDock Workstation Authority, O=Klein Systems, C=US`) with SHA-256 hash algorithm and official DigiCert timestamp responder (`http://timestamp.digicert.com`).
-  - Automatically exports public `.cer` certificate (`dist/FlashDock_Dist/FlashDock-Security-Certificate.cer`).
-- **1-Click Distribution Launchers & Unblockers (`scripts/dist_helpers/`)**:
-  - `Run-FlashDock.bat`: Automatically strips NTFS Mark-of-the-Web (`Zone.Identifier`) and launches `FlashDock.exe`.
-  - `Install-Certificate.bat`: 1-click installer adding `FlashDock-Security-Certificate.cer` to the user's *Trusted Publishers* store via `certutil` and PowerShell so Windows 11 Smart App Control validates the digital signature.
-  - `Unblock-FlashDock.bat`: Strips download blocks from all files in the directory.
-  - `Run-Via-Python.bat`: Direct Python runner from source bypassing Windows PE checks entirely.
+### Phase 21: Comprehensive GSM Repair Suite Overhaul, Live Device HUD, Brand Showcase, Auto-Rescue Fallback & Safety Hardening (v1.2.0)
+- **Live Device Diagnostics HUD & Pipeline Tracker (`flashdock/ui/widgets/device_hud.py` & `flashdock/core/device.py`)**:
+  - Integrated high-contrast elevated banner directly above the central workspace canvas.
+  - **Live Connection Mode Pill**: Dynamic color-coded badge indicating `ADB Authorized` (Emerald `#30D158`), `Fastboot` (Electric Cobalt `#0A84FF`), `FastbootD` (Cyan `#64D2FF`), `Recovery` (Purple `#BF5AF2`), `MTK BROM` (Warm Amber `#FF9F0A`), `Qualcomm EDL 9008` (Coral Crimson `#FF453A`), `Samsung Download / Odin` (Cyan `#64D2FF`), or `Offline` (Muted Steel `#8B949E`).
+  - **Real-Time Telemetry Gauges**: Real-time monitoring of Battery % (`[30%+ Safe]` vs `[<30% Danger]`), battery temperature (°C) & voltage (mV), SoC / Chipset model (e.g. Snapdragon 8 Gen 2 / Dimensity / Unisoc), Bootloader Lock status (`LOCKED` Red / `UNLOCKED` Green), Active Slot (`_a` or `_b`), Knox Warranty Bit (`0x0` Clean / `0x1` Tripped), and Security Patch Level.
+  - **Stepped Pipeline HUD**: Stepped 4-stage operation tracker (`[1/4] Handshake OK` → `[2/4] Verifying Partition Table` → `[3/4] Flashing (size)` → `[4/4] SHA-256 Checksum Verified`).
+  - **Auto-Rescue Safety Fallback**: Automatic dumping of critical pre-flash blocks (`boot`, `init_boot`, `vbmeta`, `persist`, `efs`, `nvdata`) to `data/backups/emergency_preflash/<serial>/`. If an operation fails or USB drops, provides a prominent 1-click **"Restore Pre-Flash State"** button on the Live HUD that instantly restores the device with SHA-256 verification.
+- **Universal Multi-Mode Reboot Switchboard (`flashdock/ui/widgets/reboot_switchboard.py`)**:
+  - Dedicated modal switchboard with 7 reboot modes + Power Off:
+    - `Reboot System` (Normal boot)
+    - `Reboot Bootloader / Fastboot` (Low-level bootloader)
+    - `Reboot FastbootD` (Userspace fastboot for dynamic partitions)
+    - `Reboot Recovery` (Stock or custom recovery)
+    - `Reboot EDL 9008` (Qualcomm Sahara handshake)
+    - `Reboot Download Mode` (Samsung Odin mode)
+    - `Power Off` (Safe shutdown)
+  - Accessible via the "Reboot Options" trigger in the left sidebar and top controls.
+- **Dynamic Brand Showcase & Automated Port/Driver Detection (`flashdock/ui/main_window.py`)**:
+  - Segmented GSM suite header displays rich visual badges for OEMs (Xiaomi, Samsung, Transsion, Google Pixel, OnePlus, Motorola) and Universal Chipsets (MediaTek BROM, Qualcomm EDL, Unisoc SPRD).
+  - Automatically highlights the matching brand/chipset tab when a device is plugged in based on VID/PID, chipset string, or device manufacturer.
+  - Shows an inline 1-click **"Fix OEM Driver / COM Port"** button when emergency ports or unrecognized drivers are detected.
+- **Partition Image & Header Inspector Modal (`flashdock/ui/widgets/header_inspector_dialog.py`)**:
+  - Binary header parser for `.img`, `.bin`, and `.sparse` images.
+  - Extracts Android boot image header version (`boot_img_hdr` v0–v4), kernel commandline, OS version, OS security patch level, AVB 2.0 footer, and sparse chunk format.
+  - Displays green/red safety verification badge confirming compatibility before flashing to avoid Anti-Rollback Protection (ARP) trips.
+- **Comprehensive Settings & Preferences Center (`flashdock/ui/widgets/settings_dialog.py`)**:
+  - Consolidates workstation preferences into a clean 5-tab dialog:
+    - *Appearance*: Dark, Light, and OLED Black theme toggles.
+    - *Paths*: Platform-tools directory, backup directory, and driver download paths.
+    - *Connection*: Polling intervals and port auto-refresh toggles.
+    - *Safety Gates*: Battery cutoff percentage ($\ge 30\%$), Strict Anti-Relock toggle, and slot verification gates.
+    - *Privacy & Logs*: Sanitize diagnostic bundles and serial number masking toggles.
+  - Dedicated 1-click **"Refresh Devices"** button with vector refresh icon.
+  - Relabeled device lock to **"Pin Serial" / "Safety Pin"** with amber indicator badge and safety tooltip.
+- **Layout Decluttering, Navigation & Contrast Bug Fixes**:
+  - Fixed sticky active card highlights by disabling default persistent focus highlights on action cards and routing back navigation to clean deselect states.
+  - Compacted left sidebar navigation button padding (`padding: 7px 11px; font-size: 12px;`) and wrapped navigation pills in a smooth, slim `QScrollArea`.
+  - Added horizontal `QSplitter` wrapping central workspace and Live Activity Terminal for draggable resizing.
+  - Fixed dark mode SVG icon tinting in `flashdock/ui/icon_assets.py` so icons dynamically render in `#FFFFFF` or vivid accents rather than disappearing into black.
+  - Streamlined category filter pills and search bar layout to prevent badge overlap and text collisions.
+  - Harmonized modal dialog cards (`SetupWizardDialog`, `IntegrityScreen`) removing hardcoded light backgrounds in dark mode.
+- **Flashing Safety Hardening (`flashdock/workers/flash_engine.py`)**:
+  - Battery pre-flight gate ($\ge 30\%$) enforced prior to flashing or relocking.
+  - Active Fastboot slot validation preventing ambiguous flashing to unpartitioned slots.
+  - Emergency pre-flash partition dumps and 1-click rollback restoration.
+  - Fixed `NameError: name 'Path' is not defined` crash in `_launch_scrcpy`.
+  - Graceful worker termination on USB disconnect with recovery guidance.
 
 ---
 
@@ -349,23 +383,27 @@ stateDiagram-v2
 | `selftest` | System Self-Test | Device | `SelfTestDialog` | Modal Dialog |
 | `setup_wizard` | Laptop Setup Wizard | Workstation | `SetupWizardDialog` | Modal Dialog |
 | `key_guide` | Hardware Key Guide | Controls | `HardwareKeyGuideDialog` | Modal Dialog |
+| `settings` | Settings & Preferences | Workstation | `SettingsDialog` | Modal Dialog |
+| `reboot_switchboard` | Reboot Switchboard | Controls | `RebootSwitchboardDialog` | Modal Dialog |
+| `header_inspector` | Partition Header Inspector | Flashing | `PartitionHeaderInspectorDialog` | Modal Dialog |
 
 ---
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **442 passed in 31.21s** (100% pass rate).
-- **Test Modules**: 43 individual test files in `tests/`.
-- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.84 MB, Exit code 0, custom high-res squircle icon, PE version resource, Authenticode signed).
-- **Release Archive**: `dist/FlashDock-v1.1.0-windows-x64.zip` (59.63 MB, bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
+- **Unit & Integration Tests**: **448 passed in 75.91s** across 44 test modules (`python scripts/release_build.py`, 100% pass rate).
+- **Test Modules**: 44 individual test files in `tests/`, including `tests/test_gsm_suite_v120.py`.
+- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.87 MB, Exit code 0, custom high-res squircle icon, PE version resource, Authenticode signed).
+- **Release Archive**: `dist/FlashDock-v1.2.0-windows-x64.zip` (59.66 MB, bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
 - **Integrity Hashes (`dist/SHA256SUMS.txt`)**:
-  - `FlashDock.exe`: `d205bbf204e968cde08daf40c0eff62f55a6a7b6021e608de8d948b7875a1de9`
-  - `Release ZIP`: `e947cf2bd96cc7135764bcc5fe8c4cea2c143d8f85876cf44bb395a6bf4cec2c`
+  - `FlashDock.exe`: `98d049eb6eea7d930864dbcf23d0e516db80ee0ca235af478c0658e625b4a6d8`
+  - `Release ZIP`: `1dddce28bec57a1dc19f999c1a122907eade122169f655c0c58cc82e3a506c2c`
 
 ---
 
 ## 5. Next Steps for Continuing Work
 
-1. **Physical Hardware Field Validation**: Test device flashing and BROM handshake over physical USB ports across MediaTek, Qualcomm, and Unisoc hardware.
-2. **Payload Dumper Performance**: Profile memory usage during 4GB+ Android 15 OTA payload decompression.
-3. **Optional Custom Theme Editor**: Allow user-defined color accents alongside standard Apple System Blue and Dark Mode.
+1. **Physical Hardware Field Testing**: Connect real MediaTek Dimensity, Qualcomm Snapdragon, and Unisoc T616 devices to test live BROM and EDL handshake speeds.
+2. **Community Partition Profiles**: Expand partition inspector signatures to support custom OEM sparse images (e.g. Realme OZIP, OnePlus OPS).
+3. **Firmware Cloud Indexer**: Optional fast hash matching against known stock boot images for 1-click root patch verification.
+

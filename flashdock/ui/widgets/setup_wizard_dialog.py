@@ -77,13 +77,39 @@ class SetupWizardDialog(QDialog):
         self._tools_mgr = PlatformToolsManager(adb=adb, fastboot=fastboot)
         self._driver_mgr = DriverManager()
 
+        self._theme = "dark"
+        if parent and hasattr(parent, "_config"):
+            self._theme = parent._config.get("theme", "dark").lower()
+
         self._current_step = 0
         self._worker: Optional[_DownloadWorker] = None
 
         self._setup_ui()
         self._update_step_view()
 
+    @property
+    def is_dark(self) -> bool:
+        return self._theme != "light"
+
+    def card_style(self) -> str:
+        if self.is_dark:
+            return "background: #181E26; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px;"
+        return "background: #FFFFFF; border: 1px solid #DCE1E8; border-radius: 10px; padding: 14px;"
+
+    def primary_text_style(self, size: int = 14, weight: int = 600) -> str:
+        color = "#E6EDF3" if self.is_dark else "#1C2024"
+        return f"font-size: {size}px; font-weight: {weight}; color: {color};"
+
+    def secondary_text_style(self, size: int = 12) -> str:
+        color = "#8B949E" if self.is_dark else "#5A6572"
+        return f"font-size: {size}px; color: {color};"
+
     def _setup_ui(self) -> None:
+        if self.is_dark:
+            self.setStyleSheet("QDialog { background-color: #0D1117; color: #E6EDF3; }")
+        else:
+            self.setStyleSheet("QDialog { background-color: #ECEFF4; color: #1C2024; }")
+
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(24, 20, 24, 20)
         main_layout.setSpacing(16)
@@ -95,13 +121,13 @@ class SetupWizardDialog(QDialog):
         t_row.setSpacing(8)
         t_row.addWidget(create_icon_label("tools", 22))
         title = QLabel("Laptop & Workstation Setup Wizard")
-        title.setStyleSheet("font-size: 20px; font-weight: 700; color: #1D1D1F;")
+        title.setStyleSheet(self.primary_text_style(20, 700))
         t_row.addWidget(title)
         t_row.addStretch()
         header.addLayout(t_row)
 
         self._subtitle = QLabel("Prepare your Windows laptop for safe, reliable Android flashing.")
-        self._subtitle.setStyleSheet("font-size: 13px; color: #8E8E93;")
+        self._subtitle.setStyleSheet(self.secondary_text_style(13))
         header.addWidget(self._subtitle)
         main_layout.addLayout(header)
 
@@ -117,10 +143,6 @@ class SetupWizardDialog(QDialog):
         self._step_widgets = []
         for idx, text in enumerate(self._step_labels):
             lbl = QLabel(text)
-            lbl.setStyleSheet(
-                "padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; "
-                "background: #E5E7EB; color: #6B7280;"
-            )
             self._steps_bar.addWidget(lbl)
             self._step_widgets.append(lbl)
         self._steps_bar.addStretch()
@@ -137,10 +159,16 @@ class SetupWizardDialog(QDialog):
         # Navigation Footer
         footer = QHBoxLayout()
         self._btn_prev = QPushButton("Back")
-        self._btn_prev.setStyleSheet(
-            "QPushButton { background: #E5E7EB; color: #374151; border-radius: 8px; padding: 8px 18px; font-weight: 600; } "
-            "QPushButton:hover { background: #D1D5DB; }"
-        )
+        if self.is_dark:
+            self._btn_prev.setStyleSheet(
+                "QPushButton { background: #181E26; color: #E6EDF3; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 18px; font-weight: 600; } "
+                "QPushButton:hover { background: #222C3D; }"
+            )
+        else:
+            self._btn_prev.setStyleSheet(
+                "QPushButton { background: #E5E7EB; color: #374151; border-radius: 8px; padding: 8px 18px; font-weight: 600; } "
+                "QPushButton:hover { background: #D1D5DB; }"
+            )
         self._btn_prev.clicked.connect(self._go_prev)
         footer.addWidget(self._btn_prev)
 
@@ -164,6 +192,9 @@ class SetupWizardDialog(QDialog):
         else:
             self._btn_next.setText("Next")
 
+        inactive_bg = "rgba(255,255,255,0.06)" if self.is_dark else "#F3F4F6"
+        inactive_fg = "#8B949E" if self.is_dark else "#9CA3AF"
+
         for idx, lbl in enumerate(self._step_widgets):
             if idx == self._current_step:
                 lbl.setStyleSheet(
@@ -173,12 +204,12 @@ class SetupWizardDialog(QDialog):
             elif idx < self._current_step:
                 lbl.setStyleSheet(
                     "padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; "
-                    "background: #D1FAE5; color: #065F46;"
+                    "background: rgba(48, 209, 88, 0.2); color: #30D158;"
                 )
             else:
                 lbl.setStyleSheet(
-                    "padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; "
-                    "background: #F3F4F6; color: #9CA3AF;"
+                    f"padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; "
+                    f"background: {inactive_bg}; color: {inactive_fg};"
                 )
 
     def _go_prev(self) -> None:
@@ -200,7 +231,7 @@ class SetupWizardDialog(QDialog):
         lay.setSpacing(14)
 
         card = QFrame()
-        card.setStyleSheet("background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px; padding: 16px;")
+        card.setStyleSheet(self.card_style())
         c_lay = QVBoxLayout(card)
         c_lay.setSpacing(10)
 
@@ -208,7 +239,7 @@ class SetupWizardDialog(QDialog):
         t_row.setSpacing(8)
         t_row.addWidget(create_icon_label("tools", 18))
         t_lbl = QLabel("Android Platform-Tools (ADB & Fastboot)")
-        t_lbl.setStyleSheet("font-size: 16px; font-weight: 700; color: #111827;")
+        t_lbl.setStyleSheet(self.primary_text_style(16, 700))
         t_row.addWidget(t_lbl)
         t_row.addStretch()
         c_lay.addLayout(t_row)
@@ -217,12 +248,12 @@ class SetupWizardDialog(QDialog):
             "ADB and Fastboot are the primary communication tools between your laptop and your phone. "
             "FlashDock uses them to detect devices, unlock bootloaders, send commands, and flash ROMs."
         )
-        d_lbl.setStyleSheet("font-size: 13px; color: #4B5563;")
+        d_lbl.setStyleSheet(self.secondary_text_style(13))
         d_lbl.setWordWrap(True)
         c_lay.addWidget(d_lbl)
 
         self._tools_status_lbl = QLabel("Checking platform-tools status...")
-        self._tools_status_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #1F2937;")
+        self._tools_status_lbl.setStyleSheet(self.primary_text_style(13, 600))
         c_lay.addWidget(self._tools_status_lbl)
 
         self._tools_prog = QProgressBar()
@@ -293,7 +324,7 @@ class SetupWizardDialog(QDialog):
             "Windows requires specific USB drivers to recognize your phone in different modes "
             "(ADB, Bootloader, Fastboot, Samsung Odin, Qualcomm 9008, and MediaTek BROM)."
         )
-        desc.setStyleSheet("font-size: 13px; color: #4B5563;")
+        desc.setStyleSheet(self.secondary_text_style(13))
         desc.setWordWrap(True)
         lay.addWidget(desc)
 
@@ -307,13 +338,13 @@ class SetupWizardDialog(QDialog):
         drivers = self._driver_mgr.get_all_drivers()
         for d in drivers:
             card = QFrame()
-            card.setStyleSheet("background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px;")
+            card.setStyleSheet(self.card_style())
             h = QHBoxLayout(card)
             info = QVBoxLayout()
-            lbl = QLabel(f"<b>{d.name}</b> <span style='color:#6B7280;'>({d.brand})</span>")
-            lbl.setStyleSheet("font-size: 13px; color: #111827;")
+            lbl = QLabel(f"<b>{d.name}</b> <span style='color:#8E8E93;'>({d.brand})</span>")
+            lbl.setStyleSheet(self.primary_text_style(13))
             sub = QLabel(d.description)
-            sub.setStyleSheet("font-size: 11px; color: #6B7280;")
+            sub.setStyleSheet(self.secondary_text_style(11))
             sub.setWordWrap(True)
             info.addWidget(lbl)
             info.addWidget(sub)
@@ -354,19 +385,19 @@ class SetupWizardDialog(QDialog):
 
         for icon_name, title, body in items:
             card = QFrame()
-            card.setStyleSheet("background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px;")
+            card.setStyleSheet(self.card_style())
             c_lay = QVBoxLayout(card)
             c_lay.setSpacing(4)
             t_row = QHBoxLayout()
             t_row.setSpacing(8)
             t_row.addWidget(create_icon_label(icon_name, 16))
             t = QLabel(f"<b>{title}</b>")
-            t.setStyleSheet("font-size: 14px; color: #1F2937;")
+            t.setStyleSheet(self.primary_text_style(14, 600))
             t_row.addWidget(t)
             t_row.addStretch()
             c_lay.addLayout(t_row)
             b = QLabel(body)
-            b.setStyleSheet("font-size: 12px; color: #4B5563;")
+            b.setStyleSheet(self.secondary_text_style(12))
             b.setWordWrap(True)
             c_lay.addWidget(b)
             lay.addWidget(card)
@@ -381,15 +412,17 @@ class SetupWizardDialog(QDialog):
         lay.setSpacing(14)
 
         card = QFrame()
-        card.setStyleSheet("background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 10px; padding: 16px;")
+        card_bg = "rgba(48, 209, 88, 0.12)" if self.is_dark else "#F0FDF4"
+        card_border = "rgba(48, 209, 88, 0.3)" if self.is_dark else "#BBF7D0"
+        card.setStyleSheet(f"background: {card_bg}; border: 1px solid {card_border}; border-radius: 10px; padding: 16px;")
         c_lay = QVBoxLayout(card)
         c_lay.setSpacing(8)
 
         t_row = QHBoxLayout()
         t_row.setSpacing(8)
-        t_row.addWidget(create_icon_label("check", 20))
+        t_row.addWidget(create_icon_label("check", 20, color="#30D158"))
         t = QLabel("Workstation Setup Complete!")
-        t.setStyleSheet("font-size: 16px; font-weight: 700; color: #166534;")
+        t.setStyleSheet("font-size: 16px; font-weight: 700; color: #30D158;")
         t_row.addWidget(t)
         t_row.addStretch()
         c_lay.addLayout(t_row)
@@ -398,14 +431,15 @@ class SetupWizardDialog(QDialog):
             "Your laptop is now configured with the proper tools and guidelines. "
             "Connect your Android phone with a quality USB cable to begin servicing."
         )
-        d.setStyleSheet("font-size: 13px; color: #15803D;")
+        d_color = "#30D158" if self.is_dark else "#15803D"
+        d.setStyleSheet(f"font-size: 13px; color: {d_color};")
         d.setWordWrap(True)
         c_lay.addWidget(d)
 
         lay.addWidget(card)
 
         test_card = QFrame()
-        test_card.setStyleSheet("background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 10px; padding: 16px;")
+        test_card.setStyleSheet(self.card_style())
         t_lay = QVBoxLayout(test_card)
         t_lay.setSpacing(10)
 
@@ -413,13 +447,13 @@ class SetupWizardDialog(QDialog):
         test_title_row.setSpacing(8)
         test_title_row.addWidget(create_icon_label("search", 16))
         test_title = QLabel("Test Phone Connection Now:")
-        test_title.setStyleSheet("font-size: 14px; font-weight: 600; color: #111827;")
+        test_title.setStyleSheet(self.primary_text_style(14, 600))
         test_title_row.addWidget(test_title)
         test_title_row.addStretch()
         t_lay.addLayout(test_title_row)
 
         self._test_status_lbl = QLabel("Plug your phone in via USB and click 'Test Connection'.")
-        self._test_status_lbl.setStyleSheet("font-size: 12px; color: #4B5563;")
+        self._test_status_lbl.setStyleSheet(self.secondary_text_style(12))
         t_lay.addWidget(self._test_status_lbl)
 
         btn_test = QPushButton("Test Connection (ADB & Fastboot)")

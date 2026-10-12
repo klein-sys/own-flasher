@@ -99,27 +99,27 @@ class _NavPillButton(QPushButton):
 
         self.setProperty("cssClass", "nav_pill")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setFixedHeight(50)
+        self.setFixedHeight(40)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 8, 14, 8)
-        layout.setSpacing(12)
+        layout.setContentsMargins(8, 4, 10, 4)
+        layout.setSpacing(10)
 
-        # Circular Chip Container (32x32px, radius 16px)
+        # Circular Chip Container (28x28px, radius 14px)
         self.chip = QFrame()
-        self.chip.setFixedSize(32, 32)
+        self.chip.setFixedSize(28, 28)
         self.chip.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.chip.setStyleSheet(f"background: {self.gradient_css}; border-radius: 16px; border: none;")
+        self.chip.setStyleSheet(f"background: {self.gradient_css}; border-radius: 14px; border: none;")
 
         chip_lay = QHBoxLayout(self.chip)
         chip_lay.setContentsMargins(0, 0, 0, 0)
         chip_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.icon_lbl = QLabel()
-        self.icon_lbl.setFixedSize(16, 16)
+        self.icon_lbl.setFixedSize(14, 14)
         self.icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        pix = get_icon_pixmap(self.icon_name, width=16, height=16, color="#FFFFFF")
+        pix = get_icon_pixmap(self.icon_name, width=14, height=14, color="#FFFFFF")
         self.icon_lbl.setPixmap(pix)
         chip_lay.addWidget(self.icon_lbl)
         layout.addWidget(self.chip, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -140,30 +140,30 @@ class _NavPillButton(QPushButton):
                     QPushButton {
                         background-color: #9AA2B0;
                         border: 1px solid #828B9B;
-                        border-radius: 18px;
+                        border-radius: 12px;
                         color: #FFFFFF;
                         font-weight: 700;
                     }
                 """)
-                self.title_lbl.setStyleSheet("color: #FFFFFF; font-size: 13px; font-weight: 700; background: transparent;")
+                self.title_lbl.setStyleSheet("color: #FFFFFF; font-size: 12px; font-weight: 700; background: transparent;")
             else:
                 self.setStyleSheet("""
                     QPushButton {
                         background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #253346, stop:1 #1C2736);
                         border: 1px solid #0A84FF;
-                        border-radius: 18px;
+                        border-radius: 12px;
                         color: #FFFFFF;
                         font-weight: 700;
                     }
                 """)
-                self.title_lbl.setStyleSheet("color: #FFFFFF; font-size: 13px; font-weight: 700; background: transparent;")
+                self.title_lbl.setStyleSheet("color: #FFFFFF; font-size: 12px; font-weight: 700; background: transparent;")
         else:
             if theme == "light":
                 self.setStyleSheet("""
                     QPushButton {
                         background-color: #E2E6EC;
                         border: 1px solid #CBD1DC;
-                        border-radius: 18px;
+                        border-radius: 12px;
                         color: #1C2024;
                         font-weight: 600;
                     }
@@ -173,13 +173,13 @@ class _NavPillButton(QPushButton):
                         color: #1C2024;
                     }
                 """)
-                self.title_lbl.setStyleSheet("color: #1C2024; font-size: 13px; font-weight: 600; background: transparent;")
+                self.title_lbl.setStyleSheet("color: #1C2024; font-size: 12px; font-weight: 600; background: transparent;")
             else:
                 self.setStyleSheet("""
                     QPushButton {
                         background-color: #161D28;
                         border: 1px solid rgba(255, 255, 255, 0.07);
-                        border-radius: 18px;
+                        border-radius: 12px;
                         color: #E6EDF3;
                         font-weight: 600;
                     }
@@ -189,7 +189,7 @@ class _NavPillButton(QPushButton):
                         color: #FFFFFF;
                     }
                 """)
-                self.title_lbl.setStyleSheet("color: #E6EDF3; font-size: 13px; font-weight: 600; background: transparent;")
+                self.title_lbl.setStyleSheet("color: #E6EDF3; font-size: 12px; font-weight: 600; background: transparent;")
 
 
 class PhoneControlPanel(QFrame):
@@ -203,6 +203,7 @@ class PhoneControlPanel(QFrame):
     setup_wizard_requested = Signal()
     restart_adb_requested = Signal()
     action_requested = Signal(str)
+    switchboard_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -247,14 +248,41 @@ class PhoneControlPanel(QFrame):
         brand_text_box.setSpacing(1)
         brand_title = QLabel("FlashDock")
         brand_title.setStyleSheet("font-size: 14px; font-weight: 700; letter-spacing: -0.3px;")
-        brand_sub = QLabel("v1.1.0 Service Suite")
+        brand_sub = QLabel("v1.2.0 Service Suite")
         brand_sub.setStyleSheet("font-size: 11px; color: #8E8E93;")
         brand_text_box.addWidget(brand_title)
         brand_text_box.addWidget(brand_sub)
         brand_lay.addLayout(brand_text_box, 1)
         root.addWidget(brand_frame)
 
-        # ---- Primary Navigation Pills (HyperOS / iOS 18 Control Center style) ----
+        # ---- Primary Navigation Pills wrapped in sleek QScrollArea (Section 3.2) ----
+        nav_scroll = QScrollArea()
+        nav_scroll.setWidgetResizable(True)
+        nav_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        nav_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        nav_scroll.setStyleSheet("""
+            QScrollArea { background: transparent; border: none; }
+            QScrollBar:vertical {
+                background: transparent;
+                width: 4px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: rgba(142, 142, 147, 0.3);
+                border-radius: 2px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: rgba(142, 142, 147, 0.6);
+            }
+        """)
+
+        nav_container = QWidget()
+        nav_container.setStyleSheet("background: transparent;")
+        nav_lay = QVBoxLayout(nav_container)
+        nav_lay.setContentsMargins(0, 0, 0, 0)
+        nav_lay.setSpacing(4)
+
         self._nav_pills: dict[str, _NavPillButton] = {}
         nav_defs = [
             ("home",         "Overview / Tools",    "flash",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7)"),
@@ -272,13 +300,15 @@ class PhoneControlPanel(QFrame):
             pill = _NavPillButton(action_id, label, icon_name, grad)
             pill.clicked.connect(lambda checked=False, a=action_id: self._on_nav_pill_clicked(a))
             self._nav_pills[action_id] = pill
-            root.addWidget(pill)
+            nav_lay.addWidget(pill)
+
+        nav_lay.addStretch(1)
+        nav_scroll.setWidget(nav_container)
+        root.addWidget(nav_scroll, 1)
 
         # Set Home active initially
         self._active_nav_id = "home"
         self._nav_pills["home"].set_active(True)
-
-        root.addStretch(1)
 
         # ---- Collapsible Bottom Device Status Capsule ----
         dev_card = QFrame()
@@ -331,6 +361,15 @@ class PhoneControlPanel(QFrame):
             btn.clicked.connect(lambda checked, m=mode_id: self.reboot_requested.emit(m))
             self._buttons[mode_id] = btn
             reboot_row.addWidget(btn)
+
+        # Dedicated "More / Switchboard" button
+        self._btn_more_reboot = QPushButton("More...")
+        self._btn_more_reboot.setIcon(get_icon("tools", 11))
+        self._btn_more_reboot.setToolTip("Open Multi-Mode Power & Reboot Switchboard (EDL, Odin, FastbootD, Power Off)")
+        self._btn_more_reboot.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_more_reboot.setStyleSheet("font-size: 10px; padding: 4px 6px; border-radius: 8px; color: #007AFF; font-weight: 600;")
+        self._btn_more_reboot.clicked.connect(self.switchboard_requested.emit)
+        reboot_row.addWidget(self._btn_more_reboot)
 
         dev_lay.addLayout(reboot_row)
 

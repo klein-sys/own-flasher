@@ -66,6 +66,9 @@ class DeviceInfo:
     # ---- Misc ----
     kernel_version: str = ""
     battery_level: int = -1            # -1 = unknown
+    battery_temp_c: float = -1.0       # Temperature in Celsius (-1 = unknown)
+    battery_voltage_mv: int = -1       # Voltage in millivolts (-1 = unknown)
+    knox_warranty_bit: str = "0x0"     # Samsung Knox bit ("0x0" clean, "0x1" tripped)
     is_rooted: bool = False
     root_method: str = ""              # "magisk", "kernelsu", "apatch", ""
     encryption_state: str = "unknown"  # "encrypted", "unencrypted", "unknown"
@@ -319,12 +322,23 @@ class DeviceDetector:
         if res.success:
             info.kernel_version = res.stdout.strip()
 
-        # Battery
-        res = self._adb.shell("dumpsys battery | grep level", serial=info.serial, timeout=5)
+        # Battery telemetry
+        res = self._adb.shell("dumpsys battery", serial=info.serial, timeout=5)
         if res.success:
-            m = re.search(r"level:\s*(\d+)", res.stdout)
-            if m:
-                info.battery_level = int(m.group(1))
+            m_level = re.search(r"level:\s*(\d+)", res.stdout)
+            if m_level:
+                info.battery_level = int(m_level.group(1))
+            m_temp = re.search(r"temperature:\s*(\d+)", res.stdout)
+            if m_temp:
+                info.battery_temp_c = round(int(m_temp.group(1)) / 10.0, 1)
+            m_volt = re.search(r"voltage:\s*(\d+)", res.stdout)
+            if m_volt:
+                info.battery_voltage_mv = int(m_volt.group(1))
+
+        # Knox Warranty Bit (Samsung / OEM)
+        knox_bit = props.get("ro.boot.warranty_bit", "") or props.get("ro.warranty_bit", "")
+        if knox_bit:
+            info.knox_warranty_bit = "0x1" if knox_bit in ("1", "0x1") else "0x0"
 
         # Root detection
         info.is_rooted, info.root_method = self._detect_root(info.serial, props)
@@ -404,6 +418,20 @@ class DeviceDetector:
             "anti-rollback",
             vars_dict.get("rollback-index", ""),
         )
+
+        # Fastboot Battery level & voltage
+        batt_soc = vars_dict.get("battery-soc-ok", vars_dict.get("battery-soc", ""))
+        if batt_soc:
+            try:
+                info.battery_level = int(batt_soc.rstrip("%"))
+            except (ValueError, TypeError):
+                pass
+        batt_volt = vars_dict.get("battery-voltage", "")
+        if batt_volt:
+            try:
+                info.battery_voltage_mv = int(batt_volt.rstrip("mVmv"))
+            except (ValueError, TypeError):
+                pass
 
         # Brand guess from product name
         if not info.brand:

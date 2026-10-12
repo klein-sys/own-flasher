@@ -43,6 +43,7 @@ class DeviceSelector(QFrame):
     device_selected = Signal(str)
     serial_locked = Signal(str)
     serial_unlocked = Signal()
+    refresh_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -59,11 +60,20 @@ class DeviceSelector(QFrame):
         self._combo.currentIndexChanged.connect(self._on_combo_changed)
         layout.addWidget(self._combo, 1)
 
-        self._lock_btn = QPushButton("Lock")
+        # Dedicated 1-click Refresh Devices button
+        self._refresh_btn = QPushButton("Refresh")
+        self._refresh_btn.setIcon(get_icon("refresh", 13))
+        self._refresh_btn.setToolTip("Scan USB buses and query connected ADB/Fastboot devices")
+        self._refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._refresh_btn.clicked.connect(self.refresh_requested.emit)
+        layout.addWidget(self._refresh_btn)
+
+        # Safety Pin Serial Button
+        self._lock_btn = QPushButton("Pin Serial")
         self._lock_btn.setIcon(get_icon("lock", 13))
-        self._lock_btn.setToolTip("Lock onto this device's serial number for safety")
+        self._lock_btn.setToolTip("Pin onto this device's serial number so commands are never accidentally sent to another connected device.")
         self._lock_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._lock_btn.setFixedWidth(90)
+        self._lock_btn.setMinimumWidth(100)
         self._lock_btn.clicked.connect(self._toggle_lock)
         layout.addWidget(self._lock_btn)
 
@@ -126,14 +136,17 @@ class DeviceSelector(QFrame):
 
     def _update_lock_button(self) -> None:
         if self._locked_serial:
-            self._lock_btn.setText("Unlock")
+            self._lock_btn.setText("Unpin Serial")
             self._lock_btn.setIcon(get_icon("unlock", 13, color="#FF9500"))
-            self._lock_btn.setToolTip("Remove the serial lock")
-            self._lock_btn.setStyleSheet("color: #FF9500; font-weight: 600; border-color: #FF9500;")
+            self._lock_btn.setToolTip("Unpin from this serial number")
+            self._lock_btn.setStyleSheet(
+                "color: #FF9500; font-weight: 700; border: 1px solid #FF9500; "
+                "background-color: rgba(255, 149, 0, 0.12); border-radius: 6px;"
+            )
         else:
-            self._lock_btn.setText("Lock")
+            self._lock_btn.setText("Pin Serial")
             self._lock_btn.setIcon(get_icon("lock", 13))
-            self._lock_btn.setToolTip("Lock onto this device's serial number for safety")
+            self._lock_btn.setToolTip("Pin onto this device's serial number so commands are never accidentally sent to another connected device.")
             self._lock_btn.setStyleSheet("")
 
     # ---- Combo change -------------------------------------------------------

@@ -97,10 +97,10 @@ def get_icon_pixmap(
         # Fallback to info or check
         svg_data = ICON_SVGS.get("info", ICON_SVGS["flash"])
 
-    # Tint stroke or fill
-    if color:
-        svg_data = svg_data.replace('stroke="currentColor"', f'stroke="{color}"')
-        svg_data = svg_data.replace('fill="currentColor"', f'fill="{color}"')
+    # Tint stroke or fill: ensure vivid accent or specified color is always applied
+    effective_color = color or "#0A84FF"
+    svg_data = svg_data.replace('stroke="currentColor"', f'stroke="{effective_color}"')
+    svg_data = svg_data.replace('fill="currentColor"', f'fill="{effective_color}"')
 
     renderer = QSvgRenderer(QByteArray(svg_data.strip().encode("utf-8")))
     pixmap = QPixmap(width, height)

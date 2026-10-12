@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 from functools import partial
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import QMetaObject, QTimer, Qt, Q_ARG, Slot
@@ -29,6 +30,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QSplitter,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -60,15 +62,19 @@ from flashdock.ui.screens.integrity_screen import IntegrityScreen
 from flashdock.ui.screens.logs_help_screen import LogsHelpScreen
 from flashdock.ui.styles import get_stylesheet
 from flashdock.ui.widgets.device_card import DeviceCard
+from flashdock.ui.widgets.device_hud import LiveDeviceHud
 from flashdock.ui.widgets.device_selector import DeviceSelector
+from flashdock.ui.widgets.header_inspector_dialog import PartitionHeaderInspectorDialog
+from flashdock.ui.widgets.key_guide_dialog import HardwareKeyGuideDialog
 from flashdock.ui.widgets.phone_panel import PhoneControlPanel
+from flashdock.ui.widgets.reboot_switchboard import RebootSwitchboardDialog
 from flashdock.ui.widgets.scrcpy_dialog import ScrcpyDialog
+from flashdock.ui.widgets.selftest_dialog import SelfTestDialog
+from flashdock.ui.widgets.settings_dialog import SettingsDialog
+from flashdock.ui.widgets.setup_wizard_dialog import SetupWizardDialog
 from flashdock.ui.widgets.side_terminal import SideTerminalHandler, SideTerminalWidget
 from flashdock.ui.widgets.status_bar import StatusBarWidget
 from flashdock.ui.widgets.workflow_guide import WorkflowGuideDialog
-from flashdock.ui.widgets.selftest_dialog import SelfTestDialog
-from flashdock.ui.widgets.key_guide_dialog import HardwareKeyGuideDialog
-from flashdock.ui.widgets.setup_wizard_dialog import SetupWizardDialog
 from flashdock.workers.device_monitor import (
     DeviceMonitorWorker,
     HardwareMode,
@@ -182,6 +188,7 @@ class ActionCardButton(QPushButton):
         self.setProperty("cssClass", "action")
         self.setToolTip(desc)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.setMinimumHeight(82)
 
@@ -464,6 +471,10 @@ class MainWindow(QMainWindow):
 
         # ---- Tools ----
         tools_menu = menu.addMenu("&Tools")
+        tools_menu.addAction(self._action("&Preferences & Settings", lambda: self._on_action("settings"), "Ctrl+,"))
+        tools_menu.addAction(self._action("&Multi-Mode Power & Reboot Switchboard", self._open_reboot_switchboard))
+        tools_menu.addAction(self._action("&Partition Image & Header Inspector", self._open_header_inspector))
+        tools_menu.addSeparator()
         tools_menu.addAction(self._action("&Laptop & Workstation Setup Wizard", self._show_setup_wizard))
         tools_menu.addAction(self._action("&Phone Hardware Keys Guide", self._show_key_guide))
         tools_menu.addAction(self._action("&System Health & Self-Test", self._show_selftest))
@@ -473,6 +484,7 @@ class MainWindow(QMainWindow):
         help_menu.addAction(self._action("&Workflow & Function Guide", self._show_guide))
         help_menu.addAction(self._action("&Laptop Setup Wizard", self._show_setup_wizard))
         help_menu.addAction(self._action("&Phone Hardware Keys Guide", self._show_key_guide))
+        help_menu.addAction(self._action("&Preferences & Settings Center", lambda: self._on_action("settings")))
         help_menu.addAction(self._action("&About FlashDock", self._show_about))
 
     def _action(
@@ -514,8 +526,30 @@ class MainWindow(QMainWindow):
         self._phone_panel = PhoneControlPanel()
         body.addWidget(self._phone_panel)
 
+        # Center workspace container
+        self._center_container = QWidget(self)
+        center_lay = QVBoxLayout(self._center_container)
+        center_lay.setContentsMargins(0, 0, 0, 0)
+        center_lay.setSpacing(0)
+
+        # 1. Live Device State Visualizer & Diagnostics HUD (Section 1)
+        self._live_hud = LiveDeviceHud(self)
+        center_lay.addWidget(self._live_hud)
+
+        # 2. Resizable Horizontal Splitter (Section 4.4)
+        self._main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
+        self._main_splitter.setHandleWidth(5)
+        self._main_splitter.setStyleSheet("""
+            QSplitter::handle {
+                background: rgba(142, 142, 147, 0.15);
+            }
+            QSplitter::handle:hover {
+                background: #0A84FF;
+            }
+        """)
+
         # Stacked widget: page 0 = home, page 1 = device card, page 2 = checklist
-        self._stack = QStackedWidget()
+        self._stack = QStackedWidget(self)
         self._build_home_page()       # PAGE_HOME = 0
         self._build_device_page()     # PAGE_DEVICE_CARD = 1
         self._build_checklist_page()  # PAGE_CHECKLIST = 2
@@ -531,16 +565,23 @@ class MainWindow(QMainWindow):
         self._build_unbrick_page()       # PAGE_UNBRICK = 12
         self._build_integrity_page()     # PAGE_INTEGRITY = 13
         self._build_logs_help_page()     # PAGE_LOGS_HELP = 14
-        body.addWidget(self._stack, 1)
+        self._main_splitter.addWidget(self._stack)
 
         # Persistent Side Activity Terminal (User Addition 4)
-        self._side_terminal = SideTerminalWidget()
-        body.addWidget(self._side_terminal)
+        self._side_terminal = SideTerminalWidget(self)
+        self._main_splitter.addWidget(self._side_terminal)
+
+        # Stretch factor: 70% workspace, 30% side terminal
+        self._main_splitter.setStretchFactor(0, 7)
+        self._main_splitter.setStretchFactor(1, 3)
+
+        center_lay.addWidget(self._main_splitter, 1)
+        body.addWidget(self._center_container, 1)
 
         root_layout.addLayout(body, 1)
 
         # ---- Status bar (bottom) ----
-        self._status_bar = StatusBarWidget()
+        self._status_bar = StatusBarWidget(self)
         root_layout.addWidget(self._status_bar)
 
     def _build_top_segmented_bar(self) -> QWidget:
@@ -577,6 +618,28 @@ class MainWindow(QMainWindow):
             self._gsm_btn_group[key] = btn
 
         seg_layout.addStretch()
+
+        self._btn_driver_fix = QPushButton("Fix OEM Driver / COM Port")
+        self._btn_driver_fix.setIcon(get_icon("tools", 12))
+        self._btn_driver_fix.setToolTip("Install missing OEM USB drivers, fix MTK VCOM code 10, or fix Qualcomm 9008 COM port errors")
+        self._btn_driver_fix.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_driver_fix.setStyleSheet("""
+            QPushButton {
+                background: rgba(255, 159, 10, 0.15);
+                color: #FF9F0A;
+                border: 1px solid rgba(255, 159, 10, 0.4);
+                border-radius: 6px;
+                padding: 3px 10px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: rgba(255, 159, 10, 0.3);
+            }
+        """)
+        self._btn_driver_fix.clicked.connect(lambda: self._on_action("downloads"))
+        seg_layout.addWidget(self._btn_driver_fix)
+
         self._update_gsm_segments_style()
         return self._seg_frame
 
@@ -761,7 +824,7 @@ class MainWindow(QMainWindow):
 
         # 3. Category Filter Pills, Sort Dropdown & Count Badge
         filter_row = QHBoxLayout()
-        filter_row.setSpacing(6)
+        filter_row.setSpacing(4)
 
         self._active_category = "All"
         self._cat_buttons = {}
@@ -772,22 +835,23 @@ class MainWindow(QMainWindow):
         dev_count = len([a for a in MAIN_ACTIONS if len(a) > 4 and a[4] == "Device"])
 
         categories = [
-            ("All", "globe", f"All Tools ({all_count})"),
-            ("Root", "root", f"Root & Modules ({root_count})"),
-            ("Flashing", "flash", f"Flashing & ROMs ({flash_count})"),
-            ("Rescue", "unbrick", f"Rescue & Unbrick ({rescue_count})"),
-            ("Device", "diagnostics", f"Device & Tools ({dev_count})"),
+            ("All", "globe", f"All ({all_count})"),
+            ("Root", "root", f"Root ({root_count})"),
+            ("Flashing", "flash", f"Flashing ({flash_count})"),
+            ("Rescue", "unbrick", f"Rescue ({rescue_count})"),
+            ("Device", "diagnostics", f"Device ({dev_count})"),
         ]
 
         for cat_key, cat_icon, cat_label in categories:
             c_btn = QPushButton(cat_label)
             c_btn.setIcon(get_icon(cat_icon, 13))
             c_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            c_btn.setStyleSheet("padding: 5px 10px; font-size: 11px;")
             c_btn.clicked.connect(partial(self._on_category_clicked, cat_key))
             filter_row.addWidget(c_btn)
             self._cat_buttons[cat_key] = c_btn
 
-        filter_row.addSpacing(8)
+        filter_row.addSpacing(6)
 
         # Sort selector (User Request: "in all tools sort them also")
         sort_lbl = QLabel("Sort:")
@@ -795,7 +859,7 @@ class MainWindow(QMainWindow):
         filter_row.addWidget(sort_lbl)
 
         self._sort_combo = QComboBox()
-        self._sort_combo.setMinimumWidth(160)
+        self._sort_combo.setMinimumWidth(125)
         self._sort_combo.addItem("Recommended", "recommended")
         self._sort_combo.addItem("Alphabetical (A → Z)", "az")
         self._sort_combo.addItem("Alphabetical (Z → A)", "za")
@@ -909,7 +973,7 @@ class MainWindow(QMainWindow):
         btn = QPushButton("← Back to Home")
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
         btn.setFixedWidth(140)
-        btn.clicked.connect(lambda: self._stack.setCurrentIndex(PAGE_HOME))
+        btn.clicked.connect(lambda: self._on_action("home"))
         return btn
 
     def _build_device_page(self) -> None:
@@ -1405,6 +1469,7 @@ class MainWindow(QMainWindow):
         # Phone control panel -> device manager & scrcpy & hardware keys
         self._phone_panel.reboot_requested.connect(self._on_reboot_requested)
         self._phone_panel.refresh_requested.connect(self._refresh_device)
+        self._phone_panel.switchboard_requested.connect(self._open_reboot_switchboard)
         self._phone_panel.scrcpy_requested.connect(self._launch_scrcpy)
         self._phone_panel.key_event_requested.connect(self._on_key_event_requested)
         self._phone_panel.key_guide_requested.connect(self._show_key_guide)
@@ -1419,14 +1484,19 @@ class MainWindow(QMainWindow):
 
         # GSM Suite Flash Engine Worker
         self._flash_worker.progress_changed.connect(lambda cur, tot, pct: self._status_bar.set_progress(pct))
+        self._flash_worker.status_changed.connect(self._on_flash_status_changed)
         self._flash_worker.log_emitted.connect(lambda lvl, msg: self._side_terminal.append_colored_stream(lvl, msg))
         self._flash_worker.flash_finished.connect(self._on_flash_finished)
         self._flash_worker.started.connect(self._monitor_worker.pause_polling)
         self._flash_worker.finished.connect(self._monitor_worker.resume_polling)
 
-        # Device selector -> device manager
+        # Device selector -> device manager & refresh
         self._device_selector.serial_locked.connect(self._device_mgr.lock_serial)
         self._device_selector.serial_unlocked.connect(self._device_mgr.unlock_serial)
+        self._device_selector.refresh_requested.connect(self._refresh_device)
+
+        # Live Device Diagnostics HUD signals
+        self._live_hud.restore_preflash_requested.connect(self._on_restore_preflash_requested)
 
         # Initial status push
         self._status_bar.update_network(self._network.is_online)
@@ -1449,6 +1519,13 @@ class MainWindow(QMainWindow):
             self._side_terminal.append_colored_stream(
                 "WARN", f"Emergency interface active: {mode.upper()} port ({ident})"
             )
+            # Auto-highlight matching tab
+            if mode == "mtk_brom" and "mtk_brom" in self._gsm_btn_group:
+                self._gsm_btn_group["mtk_brom"].setChecked(True)
+            elif mode == "qualcomm_edl" and "qualcomm_edl" in self._gsm_btn_group:
+                self._gsm_btn_group["qualcomm_edl"].setChecked(True)
+            elif mode == "unisoc_sprd" and "unisoc_sprd" in self._gsm_btn_group:
+                self._gsm_btn_group["unisoc_sprd"].setChecked(True)
 
     @Slot()
     def _on_hardware_device_disconnected(self) -> None:
@@ -1456,16 +1533,58 @@ class MainWindow(QMainWindow):
         self._status_bar.update_connection_badge("disconnected", "")
         self._side_terminal.append_colored_stream("WARN", "Device disconnected from USB/COM bus.")
 
+    @Slot(str)
+    def _on_flash_status_changed(self, status: str) -> None:
+        """Map high-level status messages to stepped pipeline stage HUD tracker."""
+        status_l = status.lower()
+        if "integrity" in status_l or "checksum" in status_l or "verifying" in status_l:
+            self._live_hud.set_stepped_stage(1, status, 25)
+        elif "backup" in status_l or "calibration" in status_l or "partition" in status_l:
+            self._live_hud.set_stepped_stage(2, status, 50)
+        elif "flashing" in status_l or "writing" in status_l or "erase" in status_l:
+            self._live_hud.set_stepped_stage(3, status, 75)
+        elif "completed" in status_l or "success" in status_l or "verified" in status_l:
+            self._live_hud.set_stepped_stage(4, status, 100)
+        else:
+            self._live_hud.set_stepped_stage(1, status, 10)
+
     @Slot(bool, str)
     def _on_flash_finished(self, success: bool, message: str) -> None:
         """Handle completion of background flash engine task."""
         self._status_bar.hide_progress()
         if success:
+            self._live_hud.reset_pipeline("Operation Complete: Verified")
             self._side_terminal.append_colored_stream("SUCCESS", f"Flashing finished: {message}")
             QMessageBox.information(self, "Flash Complete", f"Operation completed successfully!\n\n{message}")
         else:
+            self._live_hud.trigger_failure_alert(message)
             self._side_terminal.append_colored_stream("ERROR", f"Flashing failed: {message}")
             QMessageBox.warning(self, "Flash Failed", f"Operation failed:\n\n{message}")
+
+    @Slot()
+    def _open_reboot_switchboard(self) -> None:
+        """Open the Universal Multi-Mode Reboot Switchboard modal."""
+        dlg = RebootSwitchboardDialog(self._device_mgr.device, self)
+        dlg.reboot_mode_selected.connect(self._on_reboot_requested)
+        dlg.exec()
+
+    @Slot(str)
+    def _on_restore_preflash_requested(self, serial: str) -> None:
+        """Execute 1-click Auto-Rescue restoration of pre-flash image dumps."""
+        reply = QMessageBox.warning(
+            self,
+            "Restore Pre-Flash State",
+            f"Are you sure you want to restore the pre-flash emergency backup for device [{serial}]?\n\n"
+            "This will flash the emergency saved partitions (boot, init_boot, vbmeta, persist, etc.) back to the device.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            ok, msg = self._flash_worker.restore_emergency_preflash(serial)
+            if ok:
+                QMessageBox.information(self, "Auto-Rescue Success", msg)
+            else:
+                QMessageBox.critical(self, "Auto-Rescue Failed", msg)
 
     # ==================================================================
     # Device handling
@@ -1474,6 +1593,7 @@ class MainWindow(QMainWindow):
     @Slot()
     def _handle_device_change(self, info: Optional[DeviceInfo]) -> None:
         """Called on the main thread when the device state changes."""
+        self._live_hud.update_device(info)
         if info and info.mode != "not_connected":
             # Update status bar
             self._status_bar.update_device(info.mode, info.summary_line)
@@ -1488,6 +1608,28 @@ class MainWindow(QMainWindow):
                 self._device_mgr.all_devices,
                 self._device_mgr.locked_serial,
             )
+
+            # Auto-highlight top GSM Suite brand or chipset
+            brand_norm = (getattr(info, "brand_normalized", None) or info.brand or "").lower()
+            chip_norm = (info.chipset_family or "").lower()
+            mode_norm = (info.mode or "").lower()
+
+            target_key = "universal"
+            if "xiaomi" in brand_norm or "poco" in brand_norm or "redmi" in brand_norm:
+                target_key = "xiaomi"
+            elif "samsung" in brand_norm:
+                target_key = "samsung"
+            elif any(t in brand_norm for t in ("tecno", "infinix", "itel", "transsion")):
+                target_key = "transsion"
+            elif mode_norm == "brom" or "mediatek" in chip_norm or "mtk" in chip_norm:
+                target_key = "mtk_brom"
+            elif mode_norm == "edl" or "qualcomm" in chip_norm or "snapdragon" in chip_norm:
+                target_key = "qualcomm_edl"
+            elif "unisoc" in chip_norm or "spreadtrum" in chip_norm or "sprd" in chip_norm:
+                target_key = "unisoc_sprd"
+
+            for k, btn in self._gsm_btn_group.items():
+                btn.setChecked(k == target_key)
 
             # If on the device card page, refresh it
             if self._stack.currentIndex() == PAGE_DEVICE_CARD:
@@ -1510,6 +1652,9 @@ class MainWindow(QMainWindow):
             self._phone_panel.set_summary("Connect a phone via USB")
             self._phone_panel.enable_buttons([])
             self._device_selector.update_devices([], None)
+            for btn in self._gsm_btn_group.values():
+                btn.setChecked(False)
+
 
     @Slot(str)
     def _on_reboot_requested(self, mode: str) -> None:
@@ -1555,16 +1700,24 @@ class MainWindow(QMainWindow):
         """Handle a main-menu or sidebar navigation button click."""
         log.info("Action triggered: %s", action_id)
 
+        # Deselect any sticky action cards when navigating
+        for card in self._action_buttons.values():
+            card.clearFocus()
+
         # Sync active state in sidebar navigation pills
         if hasattr(self, "_phone_panel"):
             self._phone_panel.set_active_nav(action_id, self._config.get("theme", "dark"))
 
         if action_id == "home":
+            if hasattr(self, "_phone_panel"):
+                self._phone_panel.set_active_nav("home", self._config.get("theme", "dark"))
             self._stack.setCurrentIndex(PAGE_HOME)
             return
 
         if action_id == "settings":
-            self._toggle_theme()
+            dlg = SettingsDialog(self._config, self)
+            dlg.theme_changed.connect(self._set_theme)
+            dlg.exec()
             return
 
         if action_id == "about":
@@ -1686,6 +1839,12 @@ class MainWindow(QMainWindow):
             adb_path=adb_p,
             parent=self,
         )
+        dlg.exec()
+
+    @Slot()
+    def _open_header_inspector(self, file_path: str = "") -> None:
+        """Open the Partition Image & Header Inspector modal (Hydra / CM2 style)."""
+        dlg = PartitionHeaderInspectorDialog(file_path=file_path, parent=self)
         dlg.exec()
 
     def _set_mode(self, mode: str) -> None:
@@ -1810,6 +1969,8 @@ class MainWindow(QMainWindow):
             self._update_gsm_segments_style()
         if hasattr(self, "_phone_panel"):
             self._phone_panel.apply_theme(theme_name)
+        if hasattr(self, "_live_hud"):
+            self._live_hud.apply_theme(theme_name)
 
         self._update_network_buttons(self._network.is_online)
         log.info("Theme switched to: %s", theme_name)

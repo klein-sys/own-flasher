@@ -1,6 +1,6 @@
 ---
 name: flashdock-workstation
-description: Architectural standards, zero-brick safety protocols, multi-chipset hardware resolution, macOS Big Sur design tokens, and verification workflow for the FlashDock Android service workstation.
+description: Architectural standards, zero-brick safety protocols, multi-chipset hardware resolution, macOS Big Sur design tokens, automatic version bumping, and release verification workflow for the FlashDock Android service workstation.
 ---
 
 # FlashDock Architectural & Engineering Standard
@@ -15,10 +15,11 @@ Activate and adhere to this skill whenever developing, modifying, refactoring, o
    - Never write to device partitions without confirming battery charge ($\ge 30\%$), correct USB connection mode, and active partition slot (`_a` or `_b`).
    - If Fastboot reports an ambiguous or null slot on A/B devices, never guess: abort slot-specific flashing and prompt for verification.
 
-2. **Mandatory Calibration Pre-Backups**:
+2. **Mandatory Calibration Pre-Backups & Auto-Rescue**:
    - Before executing any flash, rooting, or partition modification, dump telemetry/radio calibration blocks:
      - `efs`, `nvram`, `nvdata`, `persist`, `sec_efs`
    - Calculate and persist SHA-256 checksums to `data/backups/`.
+   - Automatically write pre-flash dumps to a dedicated emergency recovery slot in `data/backups/emergency_preflash/` so a 1-click restore is always available.
    - Abort immediately if free disk space is under 2 GB or if backup verification fails.
 
 3. **Anti-Rollback (ARP/AVB) & Anti-Relock Enforcements**:
@@ -73,15 +74,26 @@ Activate and adhere to this skill whenever developing, modifying, refactoring, o
 
 ---
 
-## 4. Testing, Documentation & Release Discipline
+## 4. MANDATORY LAW: Version Bump, Release Build & GitHub Sync Pipeline
 
-1. **Test-Driven Modifications**:
-   - Every core logic modification must be backed by unit tests under `tests/`.
-   - Run the full suite with `python scripts/release_build.py` or `pytest`.
-   - All tests must pass (baseline: 418+ tests passing).
+**CRITICAL INSTRUCTION: This rule is permanent and non-negotiable. Every agent MUST execute this entire pipeline at the conclusion of every phase or task, even if the user does NOT explicitly ask for it.**
 
-2. **Triple-Sync Documentation**:
-   - Whenever features, version tags, or test counts change, keep these 3 documents synchronized:
+1. **Automated Version Increment**:
+   - Whenever code is added, refactored, or improved, bump the release version across the entire project (e.g. `1.1.0` -> `1.2.0` or `1.2.1`):
+     - `flashdock/__init__.py`: Update `__version__`
+     - `flashdock/constants.py`: Update `APP_VERSION`
+     - `scripts/version_info.txt`: Update `FileVersion` and `ProductVersion`
+     - `README.md`, `read.md`, and `handoff.md`: Update frontmatter, badges, and headers to match the new version.
+2. **Automated Testing & Release Packaging**:
+   - Run `python scripts/release_build.py` (or `pytest`).
+   - Ensure 100% of tests pass (baseline: 442+ tests passing).
+   - Verify that `dist/FlashDock_Dist/FlashDock.exe` and `dist/FlashDock-v<version>-windows-x64.zip` compile cleanly with SHA-256 checksums written to `dist/SHA256SUMS.txt`.
+3. **Triple-Sync Documentation Integrity**:
+   - Keep these 3 documentation files strictly synchronized with the new version, phase number, and test count:
      - `README.md`
      - `read.md`
      - `handoff.md`
+4. **Git Commit & Push to GitHub**:
+   - Stage all updated files: `git add .`
+   - Commit with a descriptive semantic message: `git commit -m "feat(v<version>): <summary of improvements>"`
+   - Push immediately to GitHub: `git push origin main`

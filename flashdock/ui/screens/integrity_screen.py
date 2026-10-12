@@ -222,9 +222,13 @@ class IntegrityScreen(QWidget):
         scroll.setStyleSheet("background: transparent;")
 
         container = QWidget()
-        c_layout = QVBoxLayout(container)
+        c_layout = QHBoxLayout(container)
         c_layout.setContentsMargins(0, 0, 0, 0)
         c_layout.setSpacing(14)
+
+        # Left Column: Profile Selector & Table
+        left_col = QVBoxLayout()
+        left_col.setSpacing(12)
 
         # Profile Selector Box
         profile_box = QGroupBox("1. Select Verified Certified Fingerprint")
@@ -233,7 +237,7 @@ class IntegrityScreen(QWidget):
         pb_layout.setSpacing(10)
 
         sel_row = QHBoxLayout()
-        sel_row.setSpacing(10)
+        sel_row.setSpacing(8)
 
         lbl = QLabel("Profile:")
         lbl.setStyleSheet("font-size: 12px; font-weight: 600;")
@@ -247,15 +251,15 @@ class IntegrityScreen(QWidget):
         self._profile_combo.currentIndexChanged.connect(self._on_profile_selected)
         sel_row.addWidget(self._profile_combo, 1)
 
-        import_btn = QPushButton("Import pif.json")
-        import_btn.setIcon(get_icon("folder", 14))
+        import_btn = QPushButton("Import")
+        import_btn.setIcon(get_icon("folder", 13))
         import_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         import_btn.setToolTip("Import a custom pif.json from your computer")
         import_btn.clicked.connect(self._import_pif_file)
         sel_row.addWidget(import_btn)
 
-        export_btn = QPushButton("Export pif.json")
-        export_btn.setIcon(get_icon("folder", 14))
+        export_btn = QPushButton("Export")
+        export_btn.setIcon(get_icon("folder", 13))
         export_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         export_btn.setToolTip("Save the current profile configuration to a local pif.json")
         export_btn.clicked.connect(self._export_pif_file)
@@ -270,14 +274,18 @@ class IntegrityScreen(QWidget):
         self._props_table.horizontalHeader().setStretchLastSection(True)
         self._props_table.verticalHeader().setVisible(False)
         self._props_table.setAlternatingRowColors(True)
-        self._props_table.setMinimumHeight(140)
-        self._props_table.setMaximumHeight(180)
-        pb_layout.addWidget(self._props_table)
+        self._props_table.setMinimumHeight(240)
+        pb_layout.addWidget(self._props_table, 1)
 
-        c_layout.addWidget(profile_box)
+        left_col.addWidget(profile_box, 1)
+        c_layout.addLayout(left_col, 1)
+
+        # Right Column: Raw Preview & Injection Actions
+        right_col = QVBoxLayout()
+        right_col.setSpacing(12)
 
         # Raw JSON Editor Toggle & Area
-        json_box = QGroupBox("2. pif.json Configuration Preview & Direct Editor")
+        json_box = QGroupBox("2. pif.json Preview & Editor")
         json_box.setStyleSheet("font-weight: 600; font-size: 13px;")
         jb_layout = QVBoxLayout(json_box)
         jb_layout.setSpacing(8)
@@ -288,8 +296,8 @@ class IntegrityScreen(QWidget):
             "font-family: Consolas, 'Courier New', monospace; font-size: 12px; "
             "background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 6px;"
         )
-        jb_layout.addWidget(self._json_edit)
-        c_layout.addWidget(json_box)
+        jb_layout.addWidget(self._json_edit, 1)
+        right_col.addWidget(json_box, 1)
 
         # Injection Action Area
         action_box = QGroupBox("3. Device Injection & Cache Reset")
@@ -303,9 +311,9 @@ class IntegrityScreen(QWidget):
         ab_layout.addWidget(self._clear_cache_cb)
 
         btn_row = QHBoxLayout()
-        btn_row.setSpacing(10)
+        btn_row.setSpacing(8)
 
-        self._inject_btn = QPushButton("Apply & Inject pif.json to Phone")
+        self._inject_btn = QPushButton("Apply & Inject pif.json")
         self._inject_btn.setIcon(get_icon("rocket", 14))
         self._inject_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._inject_btn.setMinimumHeight(38)
@@ -318,7 +326,7 @@ class IntegrityScreen(QWidget):
         self._inject_btn.clicked.connect(self._inject_pif)
         btn_row.addWidget(self._inject_btn, 1)
 
-        self._flush_cache_btn = QPushButton("Flush GMS Cache Only")
+        self._flush_cache_btn = QPushButton("Flush GMS Cache")
         self._flush_cache_btn.setIcon(get_icon("trash", 14))
         self._flush_cache_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._flush_cache_btn.setMinimumHeight(38)
@@ -330,7 +338,7 @@ class IntegrityScreen(QWidget):
         self._flush_cache_btn.clicked.connect(self._clear_gms_cache)
         btn_row.addWidget(self._flush_cache_btn)
 
-        self._read_pif_btn = QPushButton("Read Current Active pif.json")
+        self._read_pif_btn = QPushButton("Read Active")
         self._read_pif_btn.setIcon(get_icon("refresh", 14))
         self._read_pif_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._read_pif_btn.setMinimumHeight(38)
@@ -344,12 +352,13 @@ class IntegrityScreen(QWidget):
 
         ab_layout.addLayout(btn_row)
 
-        self._inject_log_lbl = QLabel("Ready. Select a profile and click 'Apply & Inject pif.json to Phone'.")
+        self._inject_log_lbl = QLabel("Ready. Select a profile and click 'Apply & Inject pif.json'.")
         self._inject_log_lbl.setStyleSheet("font-size: 11px; color: #8E8E93;")
         self._inject_log_lbl.setWordWrap(True)
         ab_layout.addWidget(self._inject_log_lbl)
 
-        c_layout.addWidget(action_box)
+        right_col.addWidget(action_box)
+        c_layout.addLayout(right_col, 1)
 
         scroll.setWidget(container)
         layout.addWidget(scroll)

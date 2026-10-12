@@ -211,6 +211,8 @@ class FlashTask:
     allow_rollback: bool = False
     device_security_patch: str = ""
     block_on_arp_downgrade: bool = False
+    battery_level: Optional[int] = None
+    force_battery_override: bool = False
 
     def __post_init__(self) -> None:
         if self.partition_name and not self.partition:
@@ -349,6 +351,21 @@ class FlashEngineWorker(QThread):
         file_size = task.file_path.stat().st_size
         self.status_changed.emit(f"Verifying integrity of {task.file_path.name}...")
         self.log_emitted.emit("INFO", f"Target file size: {file_size / (1024*1024):.2f} MB")
+
+        # Battery Pre-Flight Gate (>= 30% required)
+        batt = task.battery_level
+        if batt is None:
+            try:
+                soc_val = self.fastboot.get_var("battery-soc", serial=task.serial)
+                if soc_val and str(soc_val).strip().rstrip("%").isdigit():
+                    batt = int(str(soc_val).strip().rstrip("%"))
+            except Exception:
+                pass
+        if batt is not None and 0 <= batt < 30 and not task.force_battery_override:
+            raise RuntimeError(
+                f"Battery Pre-Flight Gate Blocked: Device battery is at {batt}%, below mandatory 30% safety threshold. "
+                "Charge device before flashing to prevent catastrophic power-loss bricking."
+            )
 
         # Step 1: Calculate SHA-256 with byte progress updates
         sha256_hash = self.compute_sha256_with_progress(task.file_path)
@@ -630,6 +647,14 @@ class FlashEngineWorker(QThread):
         if manifest_lines:
             (target_dir / "sha256sum.txt").write_text("\n".join(manifest_lines) + "\n", encoding="utf-8")
 
+        # Copy to emergency recovery slot for 1-click Auto-Rescue
+        if backed_up > 0 or existing_imgs:
+            emergency_dir = self.backups_dir / "emergency_preflash" / (serial or "DEVICE")
+            emergency_dir.mkdir(parents=True, exist_ok=True)
+            for f in target_dir.iterdir():
+                if f.is_file():
+                    shutil.copy2(f, emergency_dir / f.name)
+
         if backed_up > 0:
             self.log_emitted.emit("INFO", f"Safety calibration backup complete: {backed_up} partition(s) secured.")
             if is_task_call:
@@ -640,6 +665,44 @@ class FlashEngineWorker(QThread):
             if is_task_call:
                 return False, f"Calibration backup could not dump partitions: fastboot fetch restricted by bootloader. Use root ADB or recovery."
             return target_dir
+
+    def restore_emergency_preflash(self, serial: str = "") -> tuple[bool, str]:
+        """
+        1-click emergency restore of pre-flash partition images saved in
+        data/backups/emergency_preflash/<serial>/.
+        Restores critical partitions (boot, init_boot, vbmeta, persist, efs, nvdata).
+        """
+        emergency_dir = self.backups_dir / "emergency_preflash" / (serial or "DEVICE")
+        if not emergency_dir.exists() or not any(emergency_dir.glob("*.img")):
+            return False, f"No emergency pre-flash backup found for device [{serial}]."
+
+        img_files = list(emergency_dir.glob("*.img"))
+        self.status_changed.emit("Executing 1-click Auto-Rescue pre-flash restoration...")
+        self.log_emitted.emit("WARN", f"AUTO-RESCUE: Restoring {len(img_files)} emergency partition(s)...")
+
+        restored = 0
+        for img in img_files:
+            part_name = img.stem
+            self.status_changed.emit(f"Restoring emergency partition: {part_name}...")
+            self.log_emitted.emit("INFO", f"Writing: fastboot flash {part_name} \"{img.name}\"")
+            res = self.fastboot.flash(part_name, str(img), serial=serial)
+            if getattr(res, "success", bool(res)):
+                restored += 1
+                self.log_emitted.emit("SUCCESS", f"Partition [{part_name}] restored successfully.")
+            else:
+                err = getattr(res, "stderr", None) or getattr(res, "output", "")
+                self.log_emitted.emit("ERROR", f"Failed to restore [{part_name}]: {err}")
+
+        if restored > 0:
+            msg = f"Auto-Rescue completed: Restored {restored}/{len(img_files)} partitions."
+            self.status_changed.emit(msg)
+            self.log_emitted.emit("SUCCESS", msg)
+            return True, msg
+        else:
+            msg = "Auto-Rescue failed: Unable to restore partition images via Fastboot."
+            self.status_changed.emit(msg)
+            self.log_emitted.emit("ERROR", msg)
+            return False, msg
 
     # -----------------------------------------------------------------------
     # 3. Bootloader Unlock & Lock Controllers
@@ -691,6 +754,20 @@ class FlashEngineWorker(QThread):
         """
         self.status_changed.emit("Evaluating Anti-Relock safety gates...")
         self.log_emitted.emit("INFO", "Performing pre-relock safety checks...")
+
+        # Battery Pre-Flight Gate (>= 30% required)
+        batt = task.battery_level
+        if batt is None:
+            try:
+                soc_val = self.fastboot.get_var("battery-soc", serial=task.serial)
+                if soc_val and str(soc_val).strip().rstrip("%").isdigit():
+                    batt = int(str(soc_val).strip().rstrip("%"))
+            except Exception:
+                pass
+        if batt is not None and 0 <= batt < 30 and not task.force_battery_override:
+            raise RuntimeError(
+                f"Battery Pre-Flight Gate Blocked: Device battery is at {batt}%, below mandatory 30% safety threshold for bootloader operations."
+            )
 
         # 1. Reject if in userspace fastboot (fastbootd)
         try:

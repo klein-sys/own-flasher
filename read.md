@@ -2,8 +2,8 @@
 title: "FlashDock — Personal Android Service Workstation"
 type: documentation
 status: completed
-version: 1.1.0
-phase: Phase 20
+version: 1.2.0
+phase: Phase 21
 updated: 2026-10-12
 tags:
   - flashdock
@@ -23,10 +23,10 @@ tags:
 
 # FlashDock — Personal Android Service Workstation
 
-[![Version](https://img.shields.io/badge/version-1.1.0-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
+[![Version](https://img.shields.io/badge/version-1.2.0-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-1D1D1F.svg)](https://github.com/klein-sys/own-flasher)
 [![License](https://img.shields.io/badge/license-MIT-30D158.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-442%20%2F%20442%20passing-30D158.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-448%20%2F%20448%20passing-30D158.svg)](tests/)
 [![Architecture](https://img.shields.io/badge/architecture-HyperOS%202.0%20%2B%20macOS%20Sequoia-BF5AF2.svg)](flashdock/ui/styles.py)
 [![App Icon](https://img.shields.io/badge/icon-macOS%20Squircle%20(1024x1024)-00F2FE.svg)](flashdock/resources/icon.png)
 [![UI Assets](https://img.shields.io/badge/vector%20graphics-100%25%20SVG%20%7C%20Apple%20HIG-FF9500.svg)](flashdock/ui/icon_assets.py)
@@ -39,7 +39,7 @@ FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing,
 
 ---
 
-## Current Status — Next-Generation Workstation Aesthetic Overhaul (v1.1.0)
+## Current Status — Comprehensive GSM Repair Suite Overhaul & Safety Hardening (v1.2.0)
 
 FlashDock features a fully modular, thread-safe, and asynchronous **GSM Suite Core Architecture** elevated with **Xiaomi HyperOS 2.0 fluidity**, **macOS Sequoia glassmorphism**, and **iOS 18 Control Center aesthetics**:
 
@@ -277,11 +277,11 @@ FlashDock Workstation
 
 ### Option A: Standalone Windows Binary (Recommended)
 Download the standalone precompiled release from `dist/`:
-1. Extract `FlashDock-v1.1.0-windows-x64.zip`.
+1. Extract `FlashDock-v1.2.0-windows-x64.zip`.
 2. Launch `FlashDock.exe` (or double-click `Run-FlashDock.bat`). No Python installation required!
 3. Verify integrity against `dist/SHA256SUMS.txt`:
-   - `FlashDock.exe`: `d205bbf204e968cde08daf40c0eff62f55a6a7b6021e608de8d948b7875a1de9`
-   - `FlashDock-v1.1.0-windows-x64.zip`: `e947cf2bd96cc7135764bcc5fe8c4cea2c143d8f85876cf44bb395a6bf4cec2c`
+   - `FlashDock.exe`: `98d049eb6eea7d930864dbcf23d0e516db80ee0ca235af478c0658e625b4a6d8`
+   - `FlashDock-v1.2.0-windows-x64.zip`: `1dddce28bec57a1dc19f999c1a122907eade122169f655c0c58cc82e3a506c2c`
 
 ---
 
@@ -319,7 +319,7 @@ python main.py
 ### Running Tests
 ```powershell
 python scripts/release_build.py
-# 442 passed in 80.13s (100% success rate)
+# 448 passed in 63.01s (100% success rate)
 ```
 
 ---
