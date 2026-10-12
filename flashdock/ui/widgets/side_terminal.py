@@ -67,6 +67,7 @@ class SideTerminalWidget(QWidget):
     """
 
     log_signal = Signal(str, str)  # message, level
+    collapse_requested = Signal()   # Emitted when the header collapse button is clicked
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
@@ -120,13 +121,28 @@ class SideTerminalWidget(QWidget):
         self._clear_btn.clicked.connect(self.clear)
         h_lay.addWidget(self._clear_btn)
 
-        # Collapse / Expand toggle button
+        # Collapse / Expand toggle button in terminal header (Fix 18)
         self._toggle_btn = QPushButton("»")
         self._toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._toggle_btn.setToolTip("Hide / Show Terminal")
+        self._toggle_btn.setToolTip("Hide Terminal (reclaim workspace canvas)")
         self._toggle_btn.setFixedSize(24, 22)
-        self._toggle_btn.setStyleSheet("font-weight: bold; font-size: 11px; padding: 0;")
-        self._toggle_btn.clicked.connect(self._toggle_collapse)
+        self._toggle_btn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                font-size: 13px;
+                padding: 0;
+                background: rgba(255, 255, 255, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.14);
+                border-radius: 4px;
+                color: #8E8E93;
+            }
+            QPushButton:hover {
+                background: rgba(10, 132, 255, 0.2);
+                color: #0A84FF;
+                border-color: #0A84FF;
+            }
+        """)
+        self._toggle_btn.clicked.connect(self._on_toggle_clicked)
         h_lay.addWidget(self._toggle_btn)
 
         layout.addWidget(header)
@@ -173,6 +189,10 @@ class SideTerminalWidget(QWidget):
 
     def _connect_signals(self) -> None:
         self.log_signal.connect(self._append_formatted)
+
+    def _on_toggle_clicked(self) -> None:
+        self.collapse_requested.emit()
+        self._toggle_collapse()
 
     def _toggle_collapse(self) -> None:
         self._is_collapsed = not self._is_collapsed

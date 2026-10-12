@@ -2,8 +2,8 @@
 title: "FlashDock — Agent Handoff Document"
 type: handoff
 status: completed
-version: 1.3.0
-phase: Phase 23
+version: 1.3.1
+phase: Phase 23 (Patch v1.3.1)
 updated: 2026-10-13
 tags:
   - flashdock
@@ -26,12 +26,12 @@ tags:
 # FlashDock — Agent Handoff Document
 
 **Date:** 2026-10-13  
-**Current Phase:** **Phase 23: Universal Sideloading Engine, Split App Bundle (XAPK) Installer & Android 14+ Restriction Bypass (v1.3.0 — 100% Completed)**  
+**Current Phase:** **Phase 23 (Patch v1.3.1): Defect Remediation, Header/Footer Ergonomics & Terminal Glitch Resolution (v1.3.1 — 100% Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
-**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.3.0-windows-x64.zip`)  
-**Test Suite:** **464 Passed Unit & Integration Tests across 45 test modules (`python scripts/release_build.py`, 100% success rate)**  
+**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.3.1-windows-x64.zip`)  
+**Test Suite:** **466 Passed Unit & Integration Tests across 45 test modules (`python scripts/release_build.py`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
 ---
@@ -432,42 +432,35 @@ stateDiagram-v2
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **464 passed in 70.91s** across 45 test modules (`python scripts/release_build.py`, 100% pass rate).
-- **Test Modules**: 45 individual test files in `tests/`, including `tests/test_sideload.py`.
-- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.92 MB, Exit code 0, custom high-res squircle icon, PE version resource 1.3.0.0, Authenticode signed).
-- **Release Archive**: `dist/FlashDock-v1.3.0-windows-x64.zip` (59.71 MB, bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
+- **Unit & Integration Tests**: **466 passed in 80s** across 45 test modules (`python scripts/release_build.py`, 100% pass rate).
+- **Test Modules**: 45 individual test files in `tests/`, including `tests/test_main_window.py` and `tests/test_side_terminal.py`.
+- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (Exit code 0, custom high-res squircle icon, PE version resource 1.3.1.0, Authenticode signed).
+- **Release Archive**: `dist/FlashDock-v1.3.1-windows-x64.zip` (bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
 - **Integrity Hashes (`dist/SHA256SUMS.txt`)**:
-  - `FlashDock.exe`: `8653b378a6163bfe97245f155e06b148ec275d39ce49e35fef5a58e72303cdd8`
-  - `Release ZIP`: `ce026b917a2b7e7b8f61c73cbbe3677c0e8d6d2327f787e2c0683ef6afb50a73`
+  - `FlashDock.exe`: `09f23e6293c0e9c663b954780d51135e2d80b56f8889ad1232e0e5ff5bfa48a9`
+  - `Release ZIP`: `af611258b479061328a54e969d7b38d2cdb75302f2be26d170b84d9dd586dab2`
 
 ---
 
-## 5. Phase 23 Deliverables Summary
+## 5. Phase 23 (Patch v1.3.1): Defect Remediation & Header/Footer Layout Sprint
 
-1. **Universal Sideloading Engine (`flashdock/tools/sideload.py`)**:
-   - Single & batch APK installation with permissions (`-g`), downgrade (`-d`), and reinstall (`-r`).
-   - Android 14+ (SDK 34+) legacy target SDK block bypass (`--bypass-low-target-sdk-block`).
-   - Split App Bundle extractor for `.xapk`, `.apks`, `.apkm` archives via atomic `adb install-multiple`.
-   - Automatic expansion OBB file placement into `/sdcard/Android/obb/<package_name>/`.
-   - Recovery mode OTA update ZIP sideload (`adb sideload <update.zip>`) with byte-accurate progress parsing.
-   - Pure-Python binary AXML manifest inspector & metadata extractor.
-   - Installed package management (pull APK to PC, clear cache/data, force stop, freeze/disable, uninstall).
-2. **Dedicated UI (`flashdock/ui/screens/sideload_screen.py`)**:
-   - Interactive elevated squircle drag-and-drop dropzone card.
-   - Real-time metadata preview (app name, package ID, version, min SDK, icon).
-   - Advanced options checklist.
-   - Tabbed view: Install Packages, Recovery OTA Sideload, and Installed Apps & Debloater.
-   - Live percentage progress bar and streaming activity terminal log.
-3. **Navigation & Home Integration**:
-   - `PAGE_SIDELOAD = 15` in `main_window.py`.
-   - Sidebar "Sideload & Apps" pill with vector icon in `phone_panel.py`.
-   - Home Action Card under "Device" category: "Sideload & App Manager".
-4. **Automated Verification**:
-   - 15 new tests in `tests/test_sideload.py`.
-   - Total test suite expanded to 464 passing tests.
-   - Release binary compiled and SHA-256 verified.
+1. **Fix 15: Resolve Crash on "More Reboot Options..." (`fix 15.png`)**:
+   - Fixed `NameError: name 'DeviceInfo' is not defined in flashdock/ui/widgets/reboot_switchboard.py` by importing `DeviceInfo` from `flashdock.core.device`.
+   - Enhanced `RebootSwitchboardDialog.__init__` to gracefully accept `DeviceInfo`, string serial, or empty arguments across both `main_window.py` and `phone_panel.py`.
+2. **Fix 16: Move Device Selector from Top Header to Bottom Bar (`fix 16.png` & `fix with 16.png`)**:
+   - Relocated `DeviceSelector` from the top header to the bottom footer immediately above `StatusBarWidget`.
+   - Consolidated `[USB Icon] [Device Dropdown] [Refresh] [Pin Serial]` alongside `[Fix OEM Driver / COM Port]` and `[Hide Terminal]` into a unified, ergonomic hardware connection control strip.
+   - Cleared the entire top of the window for the Brand Showcase Header.
+3. **Fix 17: Stretch Brand Showcase Evenly Across Top Header (`fix 17.png`)**:
+   - Styled Brand Showcase Header (`_build_top_brand_bar`) to stretch cleanly across the entire window width.
+   - Set each of the 12 OEM badges (`Tecno`, `Infinix`, `itel`, `Samsung`, `Xiaomi`, `Huawei`, `OPPO`, `Vivo`, `Realme`, `Pixel`, `OnePlus`, `Motorola`) to expand proportionally with stretch factor `1`, `border-radius: 8px`, `padding: 4px 6px`, and `spacing(8)`, eliminating dead space.
+4. **Fix 18: Eliminate Terminal Resize Glitches & Replace with Clean Hide/Show Toggle**:
+   - Locked the Live Telemetry Terminal (`SideTerminalWidget`) to a stable fixed width (`320px`) when open.
+   - Disabled manual QSplitter handle dragging to eliminate canvas distortion and glitches.
+   - Added dedicated Hide/Show Terminal toggle button in the bottom device footer bar (`self._btn_terminal_toggle`) and a chevron toggle button in the terminal header.
+   - Clicking the toggle smoothly calls `self._side_terminal.setVisible(...)`, reclaiming 100% of workspace canvas width when hidden with zero layout flicker.
+5. **Phase 23 Core Capabilities**:
+   - Universal Sideloading Engine (`flashdock/tools/sideload.py`) with APK, Split App Bundle (`.xapk`), Android 14+ low-SDK bypass, and Recovery OTA sideloading.
+   - 100% test pass rate across 466 tests.
 
-1. **Physical Hardware Field Testing**: Connect real MediaTek Dimensity, Qualcomm Snapdragon, and Unisoc T616 devices to test live BROM and EDL handshake speeds.
-2. **Community Partition Profiles**: Expand partition inspector signatures to support custom OEM sparse images (e.g. Realme OZIP, OnePlus OPS).
-3. **Firmware Cloud Indexer**: Optional fast hash matching against known stock boot images for 1-click root patch verification.
 

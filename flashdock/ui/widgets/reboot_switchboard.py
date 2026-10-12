@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from flashdock.core.device import DeviceInfo
 from flashdock.logger import get_logger
 from flashdock.ui.icon_assets import create_icon_label, get_icon, get_icon_pixmap
 
@@ -56,15 +57,22 @@ class RebootSwitchboardDialog(QDialog):
 
     def __init__(
         self,
-        device_or_serial: DeviceInfo | str = "",
-        current_mode: str = "system",
+        device_or_serial: DeviceInfo | str | None = None,
+        current_mode_or_parent: str | QWidget = "system",
         parent: Optional[QWidget] = None,
         device: Optional[DeviceInfo] = None,
     ) -> None:
-        super().__init__(parent)
+        actual_parent = parent
+        actual_mode = "system"
+        if isinstance(current_mode_or_parent, QWidget):
+            actual_parent = current_mode_or_parent
+        elif isinstance(current_mode_or_parent, str):
+            actual_mode = current_mode_or_parent
+
+        super().__init__(actual_parent)
         dev = device if device is not None else (device_or_serial if isinstance(device_or_serial, DeviceInfo) else None)
-        serial = dev.serial if dev else (str(device_or_serial) if isinstance(device_or_serial, str) else "")
-        current_mode = dev.mode if dev else current_mode
+        serial = dev.serial if dev else (str(device_or_serial) if isinstance(device_or_serial, str) and device_or_serial else "")
+        current_mode = dev.mode if dev else actual_mode
 
         self.setWindowTitle("Power & Reboot Switchboard — FlashDock")
         self.setFixedSize(540, 480)

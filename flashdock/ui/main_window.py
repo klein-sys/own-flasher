@@ -516,12 +516,8 @@ class MainWindow(QMainWindow):
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
 
-        # ---- Device selector bar ----
-        self._device_selector = DeviceSelector()
-        root_layout.addWidget(self._device_selector)
-
-        # ---- Top Navigation Bar: GSM Suite Segmented Control ----
-        self._top_segmented_bar = self._build_top_segmented_bar()
+        # ---- Top Navigation Bar: GSM Suite Brand Showcase Header (Fix 16 & 17) ----
+        self._top_segmented_bar = self._build_top_brand_bar()
         root_layout.addWidget(self._top_segmented_bar)
 
         # ---- Top area: sidebar + content ----
@@ -543,19 +539,13 @@ class MainWindow(QMainWindow):
         self._live_hud = LiveDeviceHud(self)
         center_lay.addWidget(self._live_hud)
 
-        # 2. Resizable Horizontal Splitter (Section 4.4)
+        # 2. Resizable Horizontal Splitter (Section 4.4, Fix 18: locked handle, no glitch)
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
-        self._main_splitter.setHandleWidth(6)
+        self._main_splitter.setHandleWidth(1)
+        self._main_splitter.setChildrenCollapsible(False)
         self._main_splitter.setStyleSheet("""
             QSplitter::handle:horizontal {
-                background: #1C2331;
-                border-left: 1px solid rgba(255, 255, 255, 0.08);
-                border-right: 1px solid rgba(0, 0, 0, 0.4);
-            }
-            QSplitter::handle:horizontal:hover {
-                background: #0A84FF;
-                border-left: 1px solid #0A84FF;
-                border-right: 1px solid #0A84FF;
+                background: rgba(255, 255, 255, 0.08);
             }
         """)
 
@@ -579,32 +569,90 @@ class MainWindow(QMainWindow):
         self._build_sideload_page()      # PAGE_SIDELOAD = 15
         self._main_splitter.addWidget(self._stack)
 
-        # Persistent Side Activity Terminal (User Addition 4)
+        # Persistent Side Activity Terminal (User Addition 4, Fix 18: fixed 320px width & collapse)
         self._side_terminal = SideTerminalWidget(self)
+        self._side_terminal.setFixedWidth(320)
+        self._side_terminal.collapse_requested.connect(self._toggle_terminal_visibility)
         self._main_splitter.addWidget(self._side_terminal)
 
-        # Explicit default sizing: 850px workspace, 320px telemetry
+        # Explicit default sizing: workspace expands, telemetry locked at 320px
         self._main_splitter.setSizes([850, 320])
-        self._main_splitter.setStretchFactor(0, 7)
-        self._main_splitter.setStretchFactor(1, 3)
+        self._main_splitter.setStretchFactor(0, 1)
+        self._main_splitter.setStretchFactor(1, 0)
+
+        # Lock splitter handle dragging to prevent layout distortion / glitches
+        splitter_handle = self._main_splitter.handle(1)
+        if splitter_handle:
+            splitter_handle.setEnabled(False)
 
         center_lay.addWidget(self._main_splitter, 1)
         body.addWidget(self._center_container, 1)
 
         root_layout.addLayout(body, 1)
 
+        # ---- Device selector footer bar (Fix 16: moved to bottom bar above status bar) ----
+        self._device_selector = DeviceSelector(self)
+
+        # Action widgets on the right side of the device footer bar
+        self._btn_driver_fix = QPushButton("Fix OEM Driver / COM Port")
+        self._btn_driver_fix.setIcon(get_icon("tools", 12))
+        self._btn_driver_fix.setToolTip("Install missing OEM USB drivers, fix MTK VCOM code 10, or fix Qualcomm 9008 COM port errors")
+        self._btn_driver_fix.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_driver_fix.setFixedHeight(28)
+        self._btn_driver_fix.setStyleSheet("""
+            QPushButton {
+                background: rgba(255, 159, 10, 0.15);
+                color: #FF9F0A;
+                border: 1px solid rgba(255, 159, 10, 0.4);
+                border-radius: 7px;
+                padding: 3px 12px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: rgba(255, 159, 10, 0.3);
+            }
+        """)
+        self._btn_driver_fix.clicked.connect(lambda: self._on_action("downloads"))
+        self._device_selector.add_action_widget(self._btn_driver_fix)
+
+        # Terminal Toggle Button (Fix 18)
+        self._btn_terminal_toggle = QPushButton("Hide Terminal")
+        self._btn_terminal_toggle.setIcon(get_icon("chevron_right", 12))
+        self._btn_terminal_toggle.setToolTip("Hide Live Telemetry Terminal to maximize workspace canvas")
+        self._btn_terminal_toggle.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._btn_terminal_toggle.setFixedHeight(28)
+        self._btn_terminal_toggle.setStyleSheet("""
+            QPushButton {
+                background: rgba(10, 132, 255, 0.12);
+                color: #0A84FF;
+                border: 1px solid rgba(10, 132, 255, 0.35);
+                border-radius: 7px;
+                padding: 3px 12px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            QPushButton:hover {
+                background: rgba(10, 132, 255, 0.22);
+            }
+        """)
+        self._btn_terminal_toggle.clicked.connect(self._toggle_terminal_visibility)
+        self._device_selector.add_action_widget(self._btn_terminal_toggle)
+
+        root_layout.addWidget(self._device_selector)
+
         # ---- Status bar (bottom) ----
         self._status_bar = StatusBarWidget(self)
         root_layout.addWidget(self._status_bar)
 
-    def _build_top_segmented_bar(self) -> QWidget:
-        """Build the Brand Logo Showcase Header displaying vector badges across supported OEMs."""
+    def _build_top_brand_bar(self) -> QWidget:
+        """Build the Brand Logo Showcase Header displaying vector badges across supported OEMs (Fix 17)."""
         self._seg_frame = QFrame()
-        self._seg_frame.setFixedHeight(42)
+        self._seg_frame.setFixedHeight(44)
         self._seg_frame.setProperty("cssClass", "segmented_control")
         seg_layout = QHBoxLayout(self._seg_frame)
-        seg_layout.setContentsMargins(12, 4, 12, 4)
-        seg_layout.setSpacing(6)
+        seg_layout.setContentsMargins(12, 6, 12, 6)
+        seg_layout.setSpacing(8)
 
         self._gsm_segments = [
             ("Tecno", "tecno", "Tecno Mobile (HiOS)"),
@@ -621,58 +669,23 @@ class MainWindow(QMainWindow):
             ("Motorola", "motorola", "Motorola (MyUX)"),
         ]
 
-        # Wrap brand badges in a scrollable container for responsiveness on laptop displays
-        brand_scroll = QScrollArea()
-        brand_scroll.setWidgetResizable(True)
-        brand_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        brand_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        brand_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        brand_scroll.setStyleSheet("background: transparent; border: none;")
-
-        brand_container = QWidget()
-        brand_container.setStyleSheet("background: transparent;")
-        badges_layout = QHBoxLayout(brand_container)
-        badges_layout.setContentsMargins(0, 0, 0, 0)
-        badges_layout.setSpacing(6)
-
         self._gsm_btn_group: dict[str, QPushButton] = {}
         for title, key, desc in self._gsm_segments:
             btn = QPushButton(title)
             btn.setIcon(get_brand_icon(key, 16))
             btn.setCheckable(True)
+            btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            btn.setFixedHeight(30)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setToolTip(f"{title}: {desc} — Click to filter tools catalog")
             btn.clicked.connect(lambda checked, k=key, t=title: self._on_gsm_segment_selected(k, t))
-            badges_layout.addWidget(btn)
+            seg_layout.addWidget(btn, 1)  # Expand proportionally across the entire header width
             self._gsm_btn_group[key] = btn
-
-        badges_layout.addStretch(1)
-        brand_scroll.setWidget(brand_container)
-        seg_layout.addWidget(brand_scroll, 1)
-
-        self._btn_driver_fix = QPushButton("Fix OEM Driver / COM Port")
-        self._btn_driver_fix.setIcon(get_icon("tools", 12))
-        self._btn_driver_fix.setToolTip("Install missing OEM USB drivers, fix MTK VCOM code 10, or fix Qualcomm 9008 COM port errors")
-        self._btn_driver_fix.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._btn_driver_fix.setStyleSheet("""
-            QPushButton {
-                background: rgba(255, 159, 10, 0.15);
-                color: #FF9F0A;
-                border: 1px solid rgba(255, 159, 10, 0.4);
-                border-radius: 8px;
-                padding: 4px 12px;
-                font-size: 11px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background: rgba(255, 159, 10, 0.3);
-            }
-        """)
-        self._btn_driver_fix.clicked.connect(lambda: self._on_action("downloads"))
-        seg_layout.addWidget(self._btn_driver_fix)
 
         self._update_gsm_segments_style()
         return self._seg_frame
+
+    _build_top_segmented_bar = _build_top_brand_bar
 
     def _update_gsm_segments_style(self) -> None:
         """Update Brand Showcase header bar colors according to current theme."""
@@ -681,21 +694,21 @@ class MainWindow(QMainWindow):
         theme = self._config.get("theme", "dark").lower()
         if theme == "light":
             self._seg_frame.setStyleSheet(
-                "background-color: #ECEFF4; border-bottom: 1px solid #DCE1E8; padding: 2px 10px;"
+                "background-color: #ECEFF4; border-bottom: 1px solid #DCE1E8; padding: 2px 8px;"
             )
             btn_style = (
                 "QPushButton { background: rgba(0, 0, 0, 0.04); border: 1px solid rgba(0, 0, 0, 0.10); "
-                "border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: #1C2024; } "
+                "border-radius: 8px; padding: 4px 6px; font-size: 11px; font-weight: 600; color: #1C2024; } "
                 "QPushButton:checked { background: #007AFF; color: #FFFFFF; font-weight: 700; border-color: #007AFF; } "
-                "QPushButton:hover:!checked { background: rgba(0, 122, 255, 0.12); color: #007AFF; }"
+                "QPushButton:hover:!checked { background: rgba(0, 122, 255, 0.12); color: #007AFF; border-color: rgba(0, 122, 255, 0.4); }"
             )
         else:
             self._seg_frame.setStyleSheet(
-                "background-color: #141820; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 2px 10px;"
+                "background-color: #141820; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 2px 8px;"
             )
             btn_style = (
                 "QPushButton { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.10); "
-                "border-radius: 10px; padding: 4px 10px; font-size: 11px; font-weight: 600; color: #E6EDF3; } "
+                "border-radius: 8px; padding: 4px 6px; font-size: 11px; font-weight: 600; color: #E6EDF3; } "
                 "QPushButton:checked { background: #0A84FF; color: #FFFFFF; font-weight: 700; border-color: #0A84FF; } "
                 "QPushButton:hover:!checked { background: rgba(10, 132, 255, 0.18); color: #0A84FF; border-color: rgba(10, 132, 255, 0.4); }"
             )
@@ -2047,9 +2060,85 @@ class MainWindow(QMainWindow):
             self._live_hud.apply_theme(theme_name)
         if hasattr(self, "_sideload_screen"):
             self._sideload_screen.apply_theme(theme_name)
+        if hasattr(self, "_device_selector"):
+            self._device_selector.apply_theme(theme_name)
+        if hasattr(self, "_side_terminal"):
+            self._update_terminal_toggle_ui(self._side_terminal.isVisible())
 
         self._update_network_buttons(self._network.is_online)
         log.info("Theme switched to: %s", theme_name)
+
+    @Slot()
+    def _toggle_terminal_visibility(self) -> None:
+        """Smoothly toggle Live Telemetry Terminal visibility without splitter glitches (Fix 18)."""
+        is_currently_visible = not self._side_terminal.isHidden()
+        new_state = not is_currently_visible
+        self._side_terminal.setVisible(new_state)
+        if new_state:
+            self._side_terminal.setFixedWidth(320)
+            self._main_splitter.setSizes([max(600, self.width() - 320), 320])
+        self._update_terminal_toggle_ui(new_state)
+
+    def _update_terminal_toggle_ui(self, is_visible: bool | None = None) -> None:
+        """Update toggle button text, icon, and styling based on terminal visibility."""
+        if hasattr(self, "_btn_terminal_toggle"):
+            if is_visible is None:
+                is_visible = not self._side_terminal.isHidden() if hasattr(self, "_side_terminal") else True
+            theme = self._config.get("theme", "dark").lower()
+            if is_visible:
+                self._btn_terminal_toggle.setText("Hide Terminal")
+                self._btn_terminal_toggle.setIcon(get_icon("chevron_right", 12))
+                self._btn_terminal_toggle.setToolTip("Hide Live Telemetry Terminal to maximize workspace canvas")
+                self._btn_terminal_toggle.setStyleSheet("""
+                    QPushButton {
+                        background: rgba(10, 132, 255, 0.12);
+                        color: #0A84FF;
+                        border: 1px solid rgba(10, 132, 255, 0.35);
+                        border-radius: 7px;
+                        padding: 3px 12px;
+                        font-size: 11px;
+                        font-weight: 600;
+                    }
+                    QPushButton:hover {
+                        background: rgba(10, 132, 255, 0.22);
+                    }
+                """)
+            else:
+                self._btn_terminal_toggle.setText("Show Terminal")
+                self._btn_terminal_toggle.setIcon(get_icon("terminal", 12))
+                self._btn_terminal_toggle.setToolTip("Show Live Telemetry Terminal")
+                if theme == "light":
+                    self._btn_terminal_toggle.setStyleSheet("""
+                        QPushButton {
+                            background: rgba(0, 0, 0, 0.05);
+                            color: #555555;
+                            border: 1px solid #DCE1E8;
+                            border-radius: 7px;
+                            padding: 3px 12px;
+                            font-size: 11px;
+                            font-weight: 600;
+                        }
+                        QPushButton:hover {
+                            background: rgba(0, 0, 0, 0.1);
+                            color: #1C2024;
+                        }
+                    """)
+                else:
+                    self._btn_terminal_toggle.setStyleSheet("""
+                        QPushButton {
+                            background: rgba(255, 255, 255, 0.06);
+                            color: #8E8E93;
+                            border: 1px solid rgba(255, 255, 255, 0.14);
+                            border-radius: 7px;
+                            padding: 3px 12px;
+                            font-size: 11px;
+                            font-weight: 600;
+                        }
+                        QPushButton:hover {
+                            background: rgba(255, 255, 255, 0.12);
+                            color: #E6EDF3;
+                        }
+                    """)
 
     def _theme_btn_text(self, theme: str) -> str:
         return "Dark Mode" if theme.lower() == "light" else "Light Mode"

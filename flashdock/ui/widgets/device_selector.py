@@ -47,10 +47,12 @@ class DeviceSelector(QFrame):
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
+        self.setFixedHeight(38)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(14, 8, 14, 8)
-        layout.setSpacing(10)
+        layout.setContentsMargins(14, 4, 14, 4)
+        layout.setSpacing(8)
+        self._layout = layout
 
         icon = create_icon_label("usb", 16, color="#007AFF")
         layout.addWidget(icon)
@@ -58,6 +60,7 @@ class DeviceSelector(QFrame):
         self._combo = QComboBox()
         self._combo.setMinimumWidth(260)
         self._combo.setMaximumWidth(480)
+        self._combo.setFixedHeight(28)
         self._combo.currentIndexChanged.connect(self._on_combo_changed)
         layout.addWidget(self._combo)
 
@@ -66,14 +69,14 @@ class DeviceSelector(QFrame):
         self._refresh_btn.setIcon(get_icon("refresh", 13))
         self._refresh_btn.setToolTip("Scan USB buses and query connected ADB/Fastboot devices")
         self._refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._refresh_btn.setFixedHeight(32)
+        self._refresh_btn.setFixedHeight(28)
         self._refresh_btn.setStyleSheet("""
             QPushButton {
                 background: rgba(10, 132, 255, 0.12);
                 color: #0A84FF;
                 border: 1px solid rgba(10, 132, 255, 0.3);
-                border-radius: 8px;
-                padding: 4px 12px;
+                border-radius: 7px;
+                padding: 3px 12px;
                 font-size: 11px;
                 font-weight: 600;
             }
@@ -89,14 +92,14 @@ class DeviceSelector(QFrame):
         self._lock_btn.setIcon(get_icon("lock", 13))
         self._lock_btn.setToolTip("Pin onto this device's serial number so commands are never accidentally sent to another connected device.")
         self._lock_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._lock_btn.setFixedHeight(32)
+        self._lock_btn.setFixedHeight(28)
         self._lock_btn.setMinimumWidth(95)
         self._lock_btn.setStyleSheet("""
             QPushButton {
                 background: rgba(255, 255, 255, 0.06);
                 border: 1px solid rgba(255, 255, 255, 0.12);
-                border-radius: 8px;
-                padding: 4px 12px;
+                border-radius: 7px;
+                padding: 3px 12px;
                 font-size: 11px;
                 font-weight: 600;
             }
@@ -111,6 +114,68 @@ class DeviceSelector(QFrame):
 
         self._locked_serial: Optional[str] = None
         self._devices: list[DeviceInfo] = []
+        self.apply_theme("dark")
+
+    def add_action_widget(self, widget: QWidget) -> None:
+        """Add an action button or widget to the right side of the device footer bar."""
+        self._layout.addWidget(widget)
+
+    def apply_theme(self, theme: str = "dark") -> None:
+        """Apply dark or light theme to the bottom device bar."""
+        if theme == "light":
+            self.setStyleSheet(
+                "DeviceSelector { background-color: #F0F4F8; border-top: 1px solid #DCE1E8; "
+                "border-bottom: 1px solid #E2E8F0; }"
+            )
+            self._combo.setStyleSheet("""
+                QComboBox {
+                    background-color: #FFFFFF;
+                    border: 1px solid #DCE1E8;
+                    border-radius: 7px;
+                    padding: 3px 10px;
+                    color: #1C2024;
+                    font-size: 11.5px;
+                }
+                QComboBox:hover {
+                    border: 1px solid #007AFF;
+                }
+                QComboBox::drop-down {
+                    border: none;
+                }
+                QComboBox QAbstractItemView {
+                    background-color: #FFFFFF;
+                    border: 1px solid #DCE1E8;
+                    selection-background-color: #007AFF;
+                    color: #1C2024;
+                }
+            """)
+        else:
+            self.setStyleSheet(
+                "DeviceSelector { background-color: #0B0E14; border-top: 1px solid rgba(255, 255, 255, 0.08); "
+                "border-bottom: 1px solid rgba(255, 255, 255, 0.04); }"
+            )
+            self._combo.setStyleSheet("""
+                QComboBox {
+                    background-color: rgba(255, 255, 255, 0.06);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
+                    border-radius: 7px;
+                    padding: 3px 10px;
+                    color: #E6EDF3;
+                    font-size: 11.5px;
+                }
+                QComboBox:hover {
+                    border: 1px solid rgba(10, 132, 255, 0.5);
+                }
+                QComboBox::drop-down {
+                    border: none;
+                }
+                QComboBox QAbstractItemView {
+                    background-color: #161B22;
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    selection-background-color: #0A84FF;
+                    color: #E6EDF3;
+                }
+            """)
 
     # ---- Public API -------------------------------------------------------
 

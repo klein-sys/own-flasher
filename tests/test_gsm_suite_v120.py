@@ -119,6 +119,18 @@ def test_reboot_switchboard_dialog(qapp):
     dlg._on_mode_clicked("recovery")
     assert emitted_modes == ["recovery"]
 
+    # Test positional DeviceInfo invocation (Fix 15 regression guard)
+    dlg_pos = RebootSwitchboardDialog(dev)
+    assert dlg_pos.windowTitle() != ""
+
+    # Test string serial invocation
+    dlg_str = RebootSwitchboardDialog("SERIAL_ABC")
+    assert dlg_str.windowTitle() != ""
+
+    # Test empty invocation
+    dlg_none = RebootSwitchboardDialog()
+    assert dlg_none.windowTitle() != ""
+
 
 def test_partition_header_inspector_parser(qapp, tmp_path: Path):
     # Create synthetic Android boot image v2 header (ANDROID! magic)

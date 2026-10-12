@@ -229,3 +229,34 @@ class TestMainWindow:
         win._reset_filters()
         assert win._sort_combo.currentData() == "recommended"
 
+    def test_device_selector_footer_and_stretched_brand_bar(self, qapp, mock_main_window):
+        """Fix 16 & Fix 17: DeviceSelector sits in bottom bar, brand showcase stretches evenly."""
+        win = mock_main_window
+        # Check brand bar stretches 12 OEM buttons
+        assert hasattr(win, "_seg_frame")
+        assert len(win._gsm_btn_group) == 12
+        for key, btn in win._gsm_btn_group.items():
+            assert btn.sizePolicy().horizontalPolicy().name == "Expanding"
+
+        # Check DeviceSelector is initialized in bottom bar with action widgets
+        assert hasattr(win, "_device_selector")
+        assert hasattr(win, "_btn_driver_fix")
+        assert hasattr(win, "_btn_terminal_toggle")
+
+    def test_terminal_clean_toggle_and_fixed_width(self, qapp, mock_main_window):
+        """Fix 18: Terminal is fixed 320px width when visible, toggles smoothly without layout glitches."""
+        win = mock_main_window
+        assert win._side_terminal.isHidden() is False
+        assert "Hide Terminal" in win._btn_terminal_toggle.text()
+
+        # Toggle terminal to hidden
+        win._toggle_terminal_visibility()
+        assert win._side_terminal.isHidden() is True
+        assert "Show Terminal" in win._btn_terminal_toggle.text()
+
+        # Toggle terminal back to visible
+        win._toggle_terminal_visibility()
+        assert win._side_terminal.isHidden() is False
+        assert win._side_terminal.maximumWidth() == 320
+        assert "Hide Terminal" in win._btn_terminal_toggle.text()
+
