@@ -1,29 +1,30 @@
 # FlashDock — Agent Handoff Document
 
 **Date:** 2026-10-12  
-**Current Phase:** **GSM Suite Core Architecture & Feature Expansion (Subsystems 1–4, 100% Scope Completed)**  
+**Current Phase:** **Phase 18: Vector SVG Icon Architecture & Complete UI Sticker Elimination (100% Scope Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
 **Distribution:** Standalone Windows Executable (`dist/FlashDock_App/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.0.0-windows-x64.zip`)  
-**Test Suite:** **413 Passed Unit & Integration Tests across 42 test modules (`python -m pytest tests/`, 100% success rate)**  
+**Test Suite:** **413 Passed Unit & Integration Tests across 42 test modules (`python scripts/release_build.py`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
 ---
 
 ## 1. Project Overview & Architecture
 
-FlashDock is a macOS Big Sur-inspired desktop Android flashing and service workstation for Windows 10/11 (64-bit), modeled on industry-standard multi-chipset repair platforms (UnlockTool, TFT Unlocker, Chimera Tool). It features a clean, thread-safe, and asynchronous core architecture across four primary subsystems:
+FlashDock is a macOS Big Sur-inspired desktop Android flashing and service workstation for Windows 10/11 (64-bit), modeled on industry-standard multi-chipset repair platforms (UnlockTool, TFT Unlocker, Chimera Tool). It features a clean, thread-safe, and asynchronous core architecture across five primary subsystems:
 
 ### Key Architectural Pillars
 - **Hardware Polling & VID/PID Engine (`device_monitor.py`)**: Non-blocking `QThread` polling USB/COM ports via Windows Registry enumeration (`SYSTEM\CurrentControlSet\Enum\USB` and `HARDWARE\DEVICEMAP\SERIALCOMM`). Comprehensive VID/PID mapping for ADB, Fastboot, MediaTek BROM (`0E8D:0003`), Preloader (`0E8D:2000`), Qualcomm EDL 9008 (`05C6:9008`), Qualcomm Diag (`05C6:9006`), Unisoc U2S Diag (`1782:4D00`), and FDL (`1782:4D02`).
 - **Device Diagnostics Engine (`diagnostics_engine.py`)**: Batch `getprop` query extracting model, brand, manufacturer, build ID, Android OS, baseband, security patch level, root status (`su` binary, Magisk/KSU), and Samsung Knox warranty bit. Safe Fastboot `getvar all` parser detecting active slot (`_a`/`_b`), bootloader unlocked status, Secure Boot state, CID, and max-download-size.
 - **Flashing & Calibration Backup Engine (`flash_engine.py`)**: Asynchronous worker thread supporting chunked single-image write operations (`boot`, `init_boot`, `recovery`, `super`, `system`), byte progress updates (`progress_changed`), pre-flash calibration backups targeting telemetry blocks (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) with SHA-256 validation, and bootloader unlock/relock controllers.
+- **High-DPI Vector Asset Engine (`icon_assets.py` & `brand_assets.py`)**: Centralized SVG vector graphic system replacing all informal unicode emoji text stickers across buttons, category selectors, tabs, badges, headers, and dialogs with crisp, antialiased vectors adhering to Apple Human Interface Guidelines. Dynamic `QIcon` generation on demand eliminates process-termination access violations on Windows with Python 3.14 / Qt 6.10.
 - **UI Architecture & macOS Big Sur Styling (`main_window.py` & `styles.py`)**: Top segmented control for high-volume OEMs (Xiaomi, Samsung, Transsion, Universal Android) and Universal Chipsets (MediaTek BROM, Qualcomm EDL, Unisoc SPRD). Left Operations Panel for mode-specific action triggers. Right Console Pane streaming color-coded process telemetry (`[INFO]` in Blue, `[WARN]` in Amber, `[SUCCESS]` in Green, `[ERROR]` in Red). Persistent connection badge and progress bar in status bar. Authentic macOS Big Sur design tokens (`#F5F5F7` background, `#FFFFFF` rounded containers with subtle borders, `#007AFF` accent).
 
 ---
 
-## 2. Complete Phase Breakdown (Phases 1–16 + Extended UX & Workstation Setup)
+## 2. Complete Phase Breakdown (Phases 1–18)
 
 ### Phase 1–3: Core Engine & Device Detection
 - **ADB & Fastboot wrappers** (`flashdock/tools/adb.py`, `flashdock/tools/fastboot.py`) with timeout management, device enumeration, and property parsing.
@@ -73,8 +74,8 @@ FlashDock is a macOS Big Sur-inspired desktop Android flashing and service works
 - **MTK & Unisoc Screen** (`flashdock/ui/screens/mtk_unisoc_screen.py`): scatter and PAC flasher with live log output.
 
 ### Phase 12: Downloads, OEM Drivers & Platform Tools Manager
-- **Driver Manager** (`flashdock/core/driver_manager.py`): installs OEM Windows drivers (Google ADB/Fastboot, Samsung USB, Xiaomi/Qualcomm QDLoader 9008, MTK VCOM, Unisoc SPD).
-- **Tools Manager** (`flashdock/core/tools_manager.py`): verifies and downloads 20 bundled service binaries.
+- **Driver Manager** (`flashdock/core/driver_manager.py`): installs OEM Windows drivers (Google ADB/Fastboot, Samsung USB, Xiaomi/Qualcomm QDLoader 9008, MTK VCOM, Unisoc SPD, Transsion USB).
+- **Tools Manager** (`flashdock/core/tools_manager.py`): verifies and downloads bundled service binaries.
 - **Downloads Screen** (`flashdock/ui/screens/downloads_screen.py`): 4-tab manager for drivers, platform tools, firmwares, and repositories.
 
 ### Phase 13: Emergency Unbrick & EDL Flasher
@@ -84,40 +85,34 @@ FlashDock is a macOS Big Sur-inspired desktop Android flashing and service works
 ### Phase 14: Play Integrity Fixer & Fingerprint Spoofer
 - **Integrity Engine** (`flashdock/core/integrity.py`): Play Integrity API check guidance, PIF `pif.json` manager, custom `keybox.xml` injector, and Zygisk module injection.
 - **Integrity Screen** (`flashdock/ui/screens/integrity_screen.py`): 4-tab dashboard for device status, fingerprint manager, keybox injector, and certification instructions.
-- **Banking Protection Redesign**: Completely overhauled Banking / Root Hiding Guard tab into a spacious, scrollable 2-column card layout, fixing the crowded and overlapping button bugs.
+- **Banking Protection Redesign**: Completely overhauled Banking / Root Hiding Guard tab into a spacious, scrollable 2-column card layout.
 
 ### Phase 15: Logs, Telemetry & Interactive Troubleshooting Center
 - **Troubleshooter Engine** (`flashdock/core/troubleshooter.py`): automated ADB daemon restart, Windows Device Manager launcher (`devmgmt.msc`), device logcat dump & buffer clearing, and kernel dmesg capture.
 - **Logs & Help Screen** (`flashdock/ui/screens/logs_help_screen.py`): 4-tab screen for application logs, device logcat, guided interactive triage cards, and partition architecture reference.
 
-### Phase 16 & UX Hardening: Production Polish, Setup Wizard & Phone Controls
-- **Laptop & Workstation Setup Wizard** (`flashdock/ui/widgets/setup_wizard_dialog.py`):
-  - 4-step wizard: platform-tools auto-install, OEM Windows driver setup, laptop USB port & sleep best practices, live connection test.
-- **Hardware Phone Controls & Navigation Guide** (`flashdock/ui/widgets/key_guide_dialog.py`):
-  - Physical button combination guide (Vol+, Vol-, Power) for entering Bootloader, Recovery, FastbootD, EDL, and Download modes across Google, Samsung, Xiaomi, OnePlus, Motorola, LG, and MTK.
-  - Sidebar hardware key controls (`🔊 +`, `🔉 -`, `⚡ Pwr`) and modal button launcher.
-- **System Self-Tester & Modal Dialog** (`flashdock/core/selftest.py`, `flashdock/ui/widgets/selftest_dialog.py`):
-  - Dark/light mode Apple HIG cards (`#1C1C1E` dark mode background), fast 2-second timeout, `CREATE_NO_WINDOW` flags preventing hangs.
-- **Scrcpy Guard**: Guarded device property lookups in `scrcpy_dialog.py`, fixing the `NoneType` brand crash when launched without a connected phone.
-- **Telemetry Spam Elimination**: Lowered missing tool runner logging from error to debug and added disk existence guards in device manager cycle.
-- **UI Decluttering**: Removed redundant Quick Access chip row to give the 15 main action cards plenty of breathing room, and broadened the Sort dropdown to 160px min-width to avoid text clipping.
+### Phase 16: Production Hardening, Release Packaging & Setup Wizard
+- **Laptop & Workstation Setup Wizard** (`flashdock/ui/widgets/setup_wizard_dialog.py`): 4-step wizard for platform-tools auto-install, OEM Windows driver setup, laptop USB port & sleep best practices, live connection test.
+- **Hardware Key Guide & Remote** (`flashdock/ui/widgets/key_guide_dialog.py`): Physical button combination guide (Vol+, Vol-, Power) for entering Bootloader, Recovery, FastbootD, EDL, and Download modes.
+- **System Self-Tester & Modal Dialog** (`flashdock/core/selftest.py`, `flashdock/ui/widgets/selftest_dialog.py`): 9-point workstation health inspection.
+- **Automated Production Release Builder** (`scripts/release_build.py`): Validates automated tests, compiles via PyInstaller, creates release ZIP, and writes `dist/SHA256SUMS.txt`.
 
 ### Phase 17: GSM Suite Core Architecture & Multi-Chipset Subsystems
-- **Subsystem 1 — Hardware Polling Engine (`flashdock/workers/device_monitor.py`)**:
-  - Non-blocking `QThread` polling Windows registry for USB and serial devices without external dependencies.
-  - VID/PID table for ADB, Fastboot, MTK BROM (`0E8D:0003`), Preloader (`0E8D:2000`), Qualcomm EDL 9008 (`05C6:9008`), Unisoc U2S Diag (`1782:4D00`), and FDL (`1782:4D02`).
-  - Signals: `device_connected(mode, ident, details)` and `device_disconnected()`.
-- **Subsystem 2 — Device Diagnostics Engine (`flashdock/core/diagnostics_engine.py`)**:
-  - Batch `getprop` query: brand, model, Android version, baseband, security patch level, Knox void bit, root presence (`su` binary, Magisk/KSU), and battery telemetry.
-  - Deep Fastboot `getvar all` query: active partition slot (`_a`/`_b`), unlocked bootloader flag, Secure Boot flag, CID, and max download size. Structured fallback dictionaries for offline/unauthorized states.
-- **Subsystem 3 — Flashing & Calibration Backup Engine (`flashdock/workers/flash_engine.py`)**:
-  - Asynchronous flashing worker with chunked single-image writing (`boot`, `init_boot`, `recovery`, `super`, `system`), byte progress reporting (`progress_changed`), and pre-flash calibration backups (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) with SHA-256 verification.
-  - Bootloader unlock (`flashing unlock`, `oem unlock`) and relock controllers.
-- **Subsystem 4 — UI Architecture & macOS Big Sur Styling (`flashdock/ui/main_window.py` & `flashdock/ui/styles.py`)**:
-  - Top segmented control for high-volume OEMs (Xiaomi, Samsung, Transsion, Universal Android) and Universal Chipsets (MediaTek BROM, Qualcomm EDL, Unisoc SPRD).
-  - Left Operations Panel: Device Diagnostics, Partition Backup, Flash Firmware, Bootloader Tools, and Reboot Shortcuts.
-  - Right Console Pane: Persistent read-only terminal with color-coded stream prefixes (`[INFO]` in Blue, `[WARN]` in Amber, `[SUCCESS]` in Green, `[ERROR]` in Red).
-  - Bottom Status Bar: Persistent USB connection badge and smooth `QProgressBar`.
+- **Subsystem 1 — Hardware Polling Engine (`flashdock/workers/device_monitor.py`)**: Non-blocking `QThread` polling Windows registry for USB and serial devices without external dependencies. VID/PID table for ADB, Fastboot, MTK BROM, Preloader, Qualcomm EDL 9008, Unisoc SPRD U2S Diag, and FDL.
+- **Subsystem 2 — Device Diagnostics Engine (`flashdock/core/diagnostics_engine.py`)**: Batch `getprop` query and deep Fastboot `getvar all` query with active slot detection.
+- **Subsystem 3 — Flashing & Calibration Backup Engine (`flashdock/workers/flash_engine.py`)**: Asynchronous flashing worker with chunked single-image writing, progress reporting, and pre-flash calibration backups with SHA-256 verification.
+- **Subsystem 4 — UI Architecture & macOS Big Sur Styling (`flashdock/ui/main_window.py` & `flashdock/ui/styles.py`)**: Top segmented control for OEMs and Chipsets, Left Operations Panel, Right Console Pane, Bottom Status Bar.
+
+### Phase 18: Vector SVG Icon Asset Manager & UI Sticker Elimination
+- **Vector Icon Asset Manager (`flashdock/ui/icon_assets.py`)**:
+  - Implemented 37+ Lucide/Feather/Apple HIG-inspired SVG vector icons (`search`, `checklist`, `check`, `cross`, `warning`, `unlock`, `lock`, `root`, `flash`, `modules`, `diagnostics`, `integrity`, `backup`, `unbrick`, `return_stock`, `mtk_unisoc`, `scrcpy`, `downloads`, `logs_help`, `phone`, `refresh`, `tools`, `power`, `info`, `book`, `folder`, `trash`, `plus`, `copy`, `sun`, `moon`, `globe`, `terminal`, `usb`, `battery`, `rocket`, `fire`, `box`, `shield`, `key`, `play`, `unroot`, `save`, `app_logo`).
+  - High-DPI antialiased pixmap rendering with dynamic color tinting (`#007AFF`, `#34C759`, `#FF3B30`, `#FF9500`, etc.).
+  - On-demand `QIcon` generation resolving Qt C++ lifecycle access violations during Python process teardown.
+- **100% UI Sticker Removal Across All Screens and Widgets**:
+  - Migrated `main_window.py` category buttons, action cards, headers, and theme toggles.
+  - Migrated all 13 screens: `flash_rom_screen.py`, `downloads_screen.py`, `return_stock_screen.py`, `root_screen.py`, `integrity_screen.py`, `unbrick_screen.py`, `modules_screen.py`, `logs_help_screen.py`, `mtk_unisoc_screen.py`, `unlock_screen.py`, `backup_screen.py`, `checklist_screen.py`, and `diagnostics_screen.py`.
+  - Migrated all dialogs and widgets: `phone_panel.py`, `device_selector.py`, `side_terminal.py`, `flash_shield.py`, `crash_dialog.py`, `key_guide_dialog.py`, `workflow_guide.py`, `selftest_dialog.py`, `scrcpy_dialog.py`, `root_library_dialog.py`, `setup_wizard_dialog.py`, and `device_card.py`.
+  - Replaced all raw unicode emoji characters (⚡, 🔒, 🔓, 🛡️, 📱, 📦, 📁, 🔍, 💡, ⚙️, 🗑️, ➕, 🌐, 🏠, 🚨, 🧹, 🚀, 🎭, 🏦, 📚, 🩺, 🔋, ↻) with native vector graphics and clean typography.
 
 ---
 
@@ -148,34 +143,18 @@ FlashDock is a macOS Big Sur-inspired desktop Android flashing and service works
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **413 passed in 43.60s** (100% pass rate).
+- **Unit & Integration Tests**: **413 passed in 27.07s** (100% pass rate).
 - **Test Modules**: 42 individual test files in `tests/`.
-- **Standalone Binary**: `dist/FlashDock_App/FlashDock.exe` (2.71 MB, Exit code 0).
-- **Release Archive**: `dist/FlashDock-v1.0.0-windows-x64.zip` (56.25 MB).
-- **Integrity Hashes**:
-  - `FlashDock.exe`: `82271f2d47862d3a28ce250bfa997001ae785c90415fcf54a3cac47e5147f6ed`
-  - `Release ZIP`: `36788d1a6067629f871cc713151f9acb26e16e86ff54104d5a55d3f65874be2f`
+- **Standalone Binary**: `dist/FlashDock_App/FlashDock.exe` (2.77 MB, Exit code 0).
+- **Release Archive**: `dist/FlashDock-v1.0.0-windows-x64.zip` (56.30 MB).
+- **Integrity Hashes (`dist/SHA256SUMS.txt`)**:
+  - `FlashDock.exe`: `52349273b9a8327a1aeb35d136dd666a5a0c746705b6db378fa3502ebe5d4931`
+  - `Release ZIP`: `ebb6e41d34da7e8980745a797c2c2c29f8d937d5ddcaab5e3fa6bd639368cee0`
 
 ---
 
-## 5. Recent Additions & Enhancements
+## 5. Next Steps for Continuing Work
 
-1. **Transsion Holdings Support**:
-   - Implemented `flashdock/brands/transsion.py` providing complete handlers for **Tecno** (HiOS), **Infinix** (XOS), and **itel** (itelOS).
-   - Bootloader unlock flows with `fastboot flashing unlock` and `fastboot flashing unlock_critical`, Volume Up hardware confirmation guides, and Carlcare official firmware portals.
-   - Updated `DeviceInfo.brand_normalized` and cataloged `transsion_usb` and `unisoc_spd` driver packages.
-
-2. **Clean Vector Brand Badges & Icons**:
-   - Created `flashdock/ui/brand_assets.py` rendering high-resolution, pixel-perfect vector SVG brand logos (Google, Samsung, Xiaomi, Tecno, Infinix, itel, OnePlus, Motorola, MediaTek, Qualcomm, Unisoc, Android).
-   - Replaced emoji stickers in `DeviceCard` and `UnlockScreen` with modern vector badges.
-
-3. **Smart Connection Helper & Troubleshooting**:
-   - Added connection guidance card in the sidebar: informs users when phone is in MTP/Charge mode, guides enabling USB Debugging, and displays high-visibility amber prompt when RSA key is unauthorized.
-   - 1-click **Setup Wizard** and **Restart ADB & Re-prompt** actions for quick resolution.
-
-4. **Hardware Key Guide & Remote**:
-   - Replaced loose sidebar sticker buttons with dedicated, contextual `HardwareKeyGuideDialog` modal detailing hardware combinations for Recovery, Fastboot, Bootloader unlock confirmation, and force restarts.
-
-5. **Driver Links & Portal Fix**:
-   - Fixed SP Flash Tool 404 URL by updating root portal to `https://spflashtool.com/`.
-   - Added official Transsion Carlcare, Tecno, and Infinix stock ROM repositories to Firmware Finder.
+1. **Physical Hardware Field Validation**: Test device flashing and BROM handshake over physical USB ports across MediaTek, Qualcomm, and Unisoc hardware.
+2. **Payload Dumper Performance**: Profile memory usage during 4GB+ Android 15 OTA payload decompression.
+3. **Optional Custom Theme Editor**: Allow user-defined color accents alongside standard Apple System Blue and Dark Mode.

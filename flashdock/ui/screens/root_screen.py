@@ -42,6 +42,7 @@ from flashdock.core.safety import SafetyEngine
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 from flashdock.ui.widgets.flash_shield import FlashShieldDialog
 from flashdock.ui.widgets.root_library_dialog import RootAppsLibraryDialog, RootDownloadsDialog
 
@@ -77,9 +78,14 @@ class RootScreen(QWidget):
         layout.setSpacing(12)
 
         # Header
-        title = QLabel("🌱  Root My Phone (Magisk · KernelSU · APatch)")
+        header_row = QHBoxLayout()
+        header_row.setSpacing(10)
+        header_row.addWidget(create_icon_label("root", 22))
+        title = QLabel("Root My Phone (Magisk · KernelSU · APatch)")
         title.setProperty("cssClass", "heading")
-        layout.addWidget(title)
+        header_row.addWidget(title)
+        header_row.addStretch()
+        layout.addLayout(header_row)
 
         self._subtitle = QLabel("Connect a device to view root compatibility and guided patching.")
         self._subtitle.setProperty("cssClass", "muted")
@@ -96,9 +102,9 @@ class RootScreen(QWidget):
         self._setup_unroot_tab()
         self._setup_guide_tab()
 
-        self._tabs.addTab(self._tab_wizard, "Root Wizard")
-        self._tabs.addTab(self._tab_unroot, "Unroot / Remove Root")
-        self._tabs.addTab(self._tab_guide, "Zygisk & Safety Guide")
+        self._tabs.addTab(self._tab_wizard, get_icon("root", 16), "Root Wizard")
+        self._tabs.addTab(self._tab_unroot, get_icon("unroot", 16), "Unroot / Remove Root")
+        self._tabs.addTab(self._tab_guide, get_icon("book", 16), "Zygisk & Safety Guide")
 
         layout.addWidget(self._tabs, 1)
 
@@ -134,14 +140,14 @@ class RootScreen(QWidget):
         sol_layout.addWidget(sol_title)
 
         self._btn_group = QButtonGroup(self)
-        self._rb_magisk = QRadioButton("🌱 Magisk Official (Standard stable systemless root with Zygisk)")
-        self._rb_magisk_alpha = QRadioButton("⚡ Magisk Alpha (Bleeding-edge build by vvb2060 with latest isolation patches)")
-        self._rb_kitsune = QRadioButton("🦊 Kitsune Mask / Magisk Delta (Built-in MagiskHide & SuList for banking apps)")
-        self._rb_canary = QRadioButton("🐤 Magisk Canary (Official upstream master Canary channel)")
-        self._rb_ksu = QRadioButton("🐧 KernelSU Official (Kernel-space root for GKI Linux 5.10+)")
-        self._rb_ksu_next = QRadioButton("🚀 KernelSU Next (Enhanced community KernelSU fork)")
-        self._rb_sukisu = QRadioButton("🥷 SukiSU Ultra (Stealth KernelSU with custom supath)")
-        self._rb_apatch = QRadioButton("🛡️ APatch (KernelPatch-based root with superkey)")
+        self._rb_magisk = QRadioButton("Magisk Official (Standard stable systemless root with Zygisk)")
+        self._rb_magisk_alpha = QRadioButton("Magisk Alpha (Bleeding-edge build by vvb2060 with latest isolation patches)")
+        self._rb_kitsune = QRadioButton("Kitsune Mask / Magisk Delta (Built-in MagiskHide & SuList for banking apps)")
+        self._rb_canary = QRadioButton("Magisk Canary (Official upstream master Canary channel)")
+        self._rb_ksu = QRadioButton("KernelSU Official (Kernel-space root for GKI Linux 5.10+)")
+        self._rb_ksu_next = QRadioButton("KernelSU Next (Enhanced community KernelSU fork)")
+        self._rb_sukisu = QRadioButton("SukiSU Ultra (Stealth KernelSU with custom supath)")
+        self._rb_apatch = QRadioButton("APatch (KernelPatch-based root with superkey)")
 
         self._built_in_radios = [
             (self._rb_magisk, "magisk"),
@@ -169,19 +175,22 @@ class RootScreen(QWidget):
 
         # Custom Root APK & Library Actions
         custom_row = QHBoxLayout()
-        self._btn_add_custom_apk = QPushButton("➕ Add Custom Root APK...")
+        self._btn_add_custom_apk = QPushButton("Add Custom Root APK...")
+        self._btn_add_custom_apk.setIcon(get_icon("plus", 14))
         self._btn_add_custom_apk.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_add_custom_apk.setProperty("cssClass", "secondary")
         self._btn_add_custom_apk.clicked.connect(self._on_add_custom_root_apk)
         custom_row.addWidget(self._btn_add_custom_apk)
 
-        self._btn_manage_repo = QPushButton("📦 Manage Root Apps Library...")
+        self._btn_manage_repo = QPushButton("Manage Root Apps Library...")
+        self._btn_manage_repo.setIcon(get_icon("box", 14))
         self._btn_manage_repo.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_manage_repo.setProperty("cssClass", "secondary")
         self._btn_manage_repo.clicked.connect(self._on_manage_root_apps_library)
         custom_row.addWidget(self._btn_manage_repo)
 
-        self._btn_downloads = QPushButton("🌐 Official Download Releases...")
+        self._btn_downloads = QPushButton("Official Download Releases...")
+        self._btn_downloads.setIcon(get_icon("globe", 14))
         self._btn_downloads.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_downloads.setProperty("cssClass", "secondary")
         self._btn_downloads.clicked.connect(self._on_open_downloads_dialog)
@@ -215,7 +224,8 @@ class RootScreen(QWidget):
         self._edit_stock_path.setPlaceholderText("Select stock boot.img or init_boot.img from your firmware...")
         picker_row.addWidget(self._edit_stock_path, 1)
 
-        browse_btn = QPushButton("📁 Browse...")
+        browse_btn = QPushButton("Browse...")
+        browse_btn.setIcon(get_icon("folder", 14))
         browse_btn.setProperty("cssClass", "secondary")
         browse_btn.clicked.connect(self._on_browse_stock_image)
         picker_row.addWidget(browse_btn)
@@ -235,23 +245,27 @@ class RootScreen(QWidget):
 
         btns_row = QHBoxLayout()
 
-        self._btn_patch = QPushButton("⚡ 1. Patch Image")
+        self._btn_patch = QPushButton("1. Patch Image")
+        self._btn_patch.setIcon(get_icon("flash", 14))
         self._btn_patch.setProperty("cssClass", "primary")
         self._btn_patch.clicked.connect(self._on_patch_image)
         btns_row.addWidget(self._btn_patch)
 
-        self._btn_flash = QPushButton("🔥 2. Flash to Phone")
+        self._btn_flash = QPushButton("2. Flash to Phone")
+        self._btn_flash.setIcon(get_icon("fire", 14))
         self._btn_flash.setProperty("cssClass", "danger")
         self._btn_flash.setEnabled(False)
         self._btn_flash.clicked.connect(self._on_flash_patched_image)
         btns_row.addWidget(self._btn_flash)
 
-        self._btn_install_mgr = QPushButton("📲 3. Install Manager APK")
+        self._btn_install_mgr = QPushButton("3. Install Manager APK")
+        self._btn_install_mgr.setIcon(get_icon("phone", 14))
         self._btn_install_mgr.setProperty("cssClass", "primary")
         self._btn_install_mgr.clicked.connect(self._on_install_manager_app)
         btns_row.addWidget(self._btn_install_mgr)
 
-        self._btn_verify = QPushButton("🔍 4. Verify Root")
+        self._btn_verify = QPushButton("4. Verify Root")
+        self._btn_verify.setIcon(get_icon("search", 14))
         self._btn_verify.setProperty("cssClass", "secondary")
         self._btn_verify.clicked.connect(self._on_verify_root)
         btns_row.addWidget(self._btn_verify)
@@ -302,7 +316,8 @@ class RootScreen(QWidget):
         self._edit_unroot_path.setPlaceholderText("Select stock boot image to restore...")
         unroot_row.addWidget(self._edit_unroot_path, 1)
 
-        unroot_browse_btn = QPushButton("📁 Browse...")
+        unroot_browse_btn = QPushButton("Browse...")
+        unroot_browse_btn.setIcon(get_icon("folder", 14))
         unroot_browse_btn.setProperty("cssClass", "secondary")
         unroot_browse_btn.clicked.connect(self._on_browse_unroot_image)
         unroot_row.addWidget(unroot_browse_btn)
@@ -315,7 +330,8 @@ class RootScreen(QWidget):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        self._btn_unroot = QPushButton("🏠  Restore Stock Boot & Unroot")
+        self._btn_unroot = QPushButton("Restore Stock Boot & Unroot")
+        self._btn_unroot.setIcon(get_icon("unroot", 14))
         self._btn_unroot.setProperty("cssClass", "danger")
         self._btn_unroot.clicked.connect(self._on_execute_unroot)
         btn_row.addWidget(self._btn_unroot)
@@ -350,19 +366,19 @@ class RootScreen(QWidget):
             layout.addWidget(f)
 
         add_guide_section(
-            "🛡️ What is Zygisk and DenyList?",
+            "What is Zygisk and DenyList?",
             "Zygisk allows modules to execute code directly inside Android's Zygote application starter process. "
             "DenyList configures Magisk to revert all modifications and hide root from selected apps (like banking or work apps)."
         )
 
         add_guide_section(
-            "🏦 Banking Apps & Play Integrity",
+            "Banking Apps & Play Integrity",
             "Rooting by itself trips Google Play Integrity (Device Integrity). Banking apps check this flag. "
             "To restore functionality, install Play Integrity Fix or Tricky Store in the Modules screen (Phase 8)."
         )
 
         add_guide_section(
-            "🔄 Safe OTA Updates While Rooted",
+            "Safe OTA Updates While Rooted",
             "To take an official Android system update without losing data:\n"
             "1. Open Magisk app > Uninstall > Restore Images (do NOT reboot).\n"
             "2. Install the OTA update in Android Settings.\n"
@@ -392,7 +408,7 @@ class RootScreen(QWidget):
         report = self._root_engine.analyze_device(device)
         self._compat_report = report
 
-        root_status_str = f"✅ Rooted ({device.root_method.title()})" if device.is_rooted else "❌ Not Rooted"
+        root_status_str = f"Rooted ({device.root_method.title()})" if device.is_rooted else "Not Rooted"
         self._subtitle.setText(f"{device.summary_line} · Root Status: {root_status_str}")
 
         # Target partition update
@@ -452,7 +468,7 @@ class RootScreen(QWidget):
             )
             self._custom_solutions[sol_id] = sol_info
 
-            rb = QRadioButton(f"✨ {app['name']} ({app['size_mb']} MB)")
+            rb = QRadioButton(f"{app['name']} ({app['size_mb']} MB)")
             self._btn_group.addButton(rb)
             self._custom_sol_container.addWidget(rb)
             self._custom_radios[sol_id] = rb
@@ -584,7 +600,7 @@ class RootScreen(QWidget):
         self._status_box.setText(f"Installing {apk_path.name} via ADB...")
         res = self._root_engine.install_manager_app(apk_path=apk_path, adb=self._adb, serial=device.serial)
         if res.success:
-            self._status_box.setText(f"✅ {apk_path.name} successfully installed.")
+            self._status_box.setText(f"{apk_path.name} successfully installed.")
             QMessageBox.information(
                 self,
                 "Manager Installed",
@@ -592,7 +608,7 @@ class RootScreen(QWidget):
                 "Open the app on your phone to configure modules and grant superuser access.",
             )
         else:
-            self._status_box.setText(f"❌ Failed to install {apk_path.name}: {res.stderr}")
+            self._status_box.setText(f"Failed to install {apk_path.name}: {res.stderr}")
             QMessageBox.critical(
                 self,
                 "Installation Failed",
@@ -645,7 +661,7 @@ class RootScreen(QWidget):
 
         if ok:
             self._patched_image_path = Path(patched_path)
-            self._status_box.setText(f"✅ {msg}")
+            self._status_box.setText(f"{msg}")
             self._btn_flash.setEnabled(True)
             QMessageBox.information(
                 self,
@@ -653,7 +669,7 @@ class RootScreen(QWidget):
                 f"{msg}\n\nStock image was safely backed up.\nClick '2. Flash to Phone' to proceed.",
             )
         else:
-            self._status_box.setText(f"❌ {msg}")
+            self._status_box.setText(f"{msg}")
             QMessageBox.critical(self, "Patch Failed", msg)
 
     def _on_flash_patched_image(self) -> None:
@@ -699,10 +715,10 @@ class RootScreen(QWidget):
 
         if res.success:
             shield.mark_completed(True, f"Root image successfully flashed to {target_part}!")
-            self._status_box.setText(f"✅ Flashed to {target_part}. Reboot device and click 'Verify Root'.")
+            self._status_box.setText(f"Flashed to {target_part}. Reboot device and click 'Verify Root'.")
         else:
             shield.mark_completed(False, f"Flashing failed: {res.stderr}")
-            self._status_box.setText(f"❌ Fastboot error: {res.stderr}")
+            self._status_box.setText(f"Fastboot error: {res.stderr}")
 
     def _on_verify_root(self) -> None:
         device = self._current_device
@@ -712,15 +728,15 @@ class RootScreen(QWidget):
 
         ok, msg = self._root_engine.verify_root(self._adb, serial=device.serial)
         if ok:
-            QMessageBox.information(self, "Root Confirmed! 🎉", f"Device is successfully rooted!\n\n{msg}")
-            self._status_box.setText(f"✅ {msg}")
+            QMessageBox.information(self, "Root Confirmed!", f"Device is successfully rooted!\n\n{msg}")
+            self._status_box.setText(f"{msg}")
         else:
             QMessageBox.warning(
                 self,
                 "Root Not Active",
                 f"{msg}\n\nEnsure you have installed the manager APK and granted superuser permissions.",
             )
-            self._status_box.setText(f"⚠️ {msg}")
+            self._status_box.setText(f"{msg}")
 
     def _on_execute_unroot(self) -> None:
         stock_file = self._edit_unroot_path.text().strip()

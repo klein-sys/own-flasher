@@ -42,6 +42,7 @@ from flashdock.core.safety import SafetyEngine
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 from flashdock.ui.widgets.flash_shield import FlashShieldDialog
 
 log = get_logger(__name__)
@@ -76,9 +77,14 @@ class BackupScreen(QWidget):
         layout.setSpacing(12)
 
         # Header
-        title = QLabel("💼  Backup & Restore Manager")
+        title_h = QHBoxLayout()
+        title_h.setSpacing(8)
+        title_h.addWidget(create_icon_label("backup", 22))
+        title = QLabel("Backup & Restore Manager")
         title.setProperty("cssClass", "heading")
-        layout.addWidget(title)
+        title_h.addWidget(title)
+        title_h.addStretch(1)
+        layout.addLayout(title_h)
 
         self._subtitle = QLabel("Protect your device data and critical firmware partitions before flashing.")
         self._subtitle.setProperty("cssClass", "muted")
@@ -95,9 +101,9 @@ class BackupScreen(QWidget):
         self._setup_adb_tab()
         self._setup_restore_tab()
 
-        self._tabs.addTab(self._tab_partitions, "Partition Backup")
-        self._tabs.addTab(self._tab_adb, "Full ADB Backup")
-        self._tabs.addTab(self._tab_restore, "Restore Backups")
+        self._tabs.addTab(self._tab_partitions, get_icon("backup", 16), "Partition Backup")
+        self._tabs.addTab(self._tab_adb, get_icon("phone", 16), "Full ADB Backup")
+        self._tabs.addTab(self._tab_restore, get_icon("refresh", 16), "Restore Backups")
 
         layout.addWidget(self._tabs, 1)
 
@@ -119,11 +125,16 @@ class BackupScreen(QWidget):
         layout.addWidget(info)
 
         # Radio/EFS warning
-        efs_warn = QLabel(
-            "💡 TIP: Backing up EFS / NVRAM partitions preserves your device's unique IMEI and radio calibration data."
-        )
-        efs_warn.setProperty("cssClass", "info_banner")
-        layout.addWidget(efs_warn)
+        efs_frame = QFrame()
+        efs_frame.setProperty("cssClass", "info_banner")
+        ef_layout = QHBoxLayout(efs_frame)
+        ef_layout.setContentsMargins(10, 6, 10, 6)
+        ef_layout.setSpacing(8)
+        ef_layout.addWidget(create_icon_label("info", 16))
+        efs_warn = QLabel("TIP: Backing up EFS / NVRAM partitions preserves your device's unique IMEI and radio calibration data.")
+        efs_warn.setWordWrap(True)
+        ef_layout.addWidget(efs_warn, 1)
+        layout.addWidget(efs_frame)
 
         # Checkboxes for partitions
         part_group = QFrame()
@@ -156,7 +167,8 @@ class BackupScreen(QWidget):
 
         btn_row.addStretch()
 
-        self._btn_start_part_backup = QPushButton("▶  Start Partition Backup")
+        self._btn_start_part_backup = QPushButton("Start Partition Backup")
+        self._btn_start_part_backup.setIcon(get_icon("play", 14))
         self._btn_start_part_backup.setProperty("cssClass", "primary")
         self._btn_start_part_backup.clicked.connect(self._on_start_partition_backup)
         btn_row.addWidget(self._btn_start_part_backup)
@@ -187,19 +199,27 @@ class BackupScreen(QWidget):
         self._cb_adb_shared = QCheckBox("Include shared internal storage (/sdcard)")
         layout.addWidget(self._cb_adb_shared)
 
+        note_frame = QFrame()
+        note_frame.setProperty("cssClass", "warn_banner")
+        nf_layout = QHBoxLayout(note_frame)
+        nf_layout.setContentsMargins(10, 6, 10, 6)
+        nf_layout.setSpacing(8)
+        nf_layout.addWidget(create_icon_label("warning", 16))
         note_box = QLabel(
-            "⚠️  ON-PHONE ACTION REQUIRED:\n"
+            "ON-PHONE ACTION REQUIRED:\n"
             "After clicking 'Start ADB Backup', unlock your phone screen and tap 'Back up my data' when prompted."
         )
-        note_box.setProperty("cssClass", "warn_banner")
-        layout.addWidget(note_box)
+        note_box.setWordWrap(True)
+        nf_layout.addWidget(note_box, 1)
+        layout.addWidget(note_frame)
 
         layout.addStretch()
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
-        self._btn_start_adb_backup = QPushButton("▶  Start ADB Backup")
+        self._btn_start_adb_backup = QPushButton("Start ADB Backup")
+        self._btn_start_adb_backup.setIcon(get_icon("play", 14))
         self._btn_start_adb_backup.setProperty("cssClass", "primary")
         self._btn_start_adb_backup.clicked.connect(self._on_start_adb_backup)
         btn_row.addWidget(self._btn_start_adb_backup)
@@ -221,7 +241,8 @@ class BackupScreen(QWidget):
         header_row.addWidget(info)
         header_row.addStretch()
 
-        refresh_btn = QPushButton("🔄 Refresh Catalog")
+        refresh_btn = QPushButton("Refresh Catalog")
+        refresh_btn.setIcon(get_icon("refresh", 14))
         refresh_btn.setProperty("cssClass", "secondary")
         refresh_btn.clicked.connect(self.refresh_catalog)
         header_row.addWidget(refresh_btn)
@@ -240,14 +261,16 @@ class BackupScreen(QWidget):
         # Action row
         btn_row = QHBoxLayout()
 
-        self._btn_delete_backup = QPushButton("🗑️ Delete Backup")
+        self._btn_delete_backup = QPushButton("Delete Backup")
+        self._btn_delete_backup.setIcon(get_icon("trash", 14))
         self._btn_delete_backup.setProperty("cssClass", "danger")
         self._btn_delete_backup.clicked.connect(self._on_delete_backup)
         btn_row.addWidget(self._btn_delete_backup)
 
         btn_row.addStretch()
 
-        self._btn_restore = QPushButton("⚡ Restore Partition...")
+        self._btn_restore = QPushButton("Restore Partition...")
+        self._btn_restore.setIcon(get_icon("flash", 14))
         self._btn_restore.setProperty("cssClass", "primary")
         self._btn_restore.clicked.connect(self._on_restore_selected)
         btn_row.addWidget(self._btn_restore)
@@ -415,7 +438,7 @@ class BackupScreen(QWidget):
         text, ok = QInputDialog.getText(
             self,
             f"Confirm Flashing {part.upper()}",
-            f"⚠️ RESTORE WARNING:\n\n"
+            f"RESTORE WARNING:\n\n"
             f"This will OVERWRITE the '{part}' partition on your phone with the backed-up image.\n\n"
             f"Type '{confirm_word}' to proceed:",
         )

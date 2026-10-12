@@ -48,6 +48,7 @@ from flashdock.core.integrity import (
 )
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger(__name__)
 
@@ -84,9 +85,12 @@ class IntegrityScreen(QWidget):
         header_row = QHBoxLayout()
         header_row.setSpacing(12)
 
+        header_icon = create_icon_label("integrity", 24)
+        header_row.addWidget(header_icon)
+
         title_box = QVBoxLayout()
         title_box.setSpacing(2)
-        title = QLabel("🛡️  Play Integrity Fixer & Fingerprint Spoofer")
+        title = QLabel("Play Integrity Fixer & Fingerprint Spoofer")
         title.setProperty("cssClass", "heading")
         title.setStyleSheet("font-size: 18px; font-weight: 700;")
         title_box.addWidget(title)
@@ -98,7 +102,8 @@ class IntegrityScreen(QWidget):
         title_box.addWidget(self._subtitle)
         header_row.addLayout(title_box, 1)
 
-        self._redetect_btn = QPushButton("🔄  Re-Diagnose")
+        self._redetect_btn = QPushButton("Re-Diagnose")
+        self._redetect_btn.setIcon(get_icon("refresh", 14))
         self._redetect_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._redetect_btn.setStyleSheet(
             "QPushButton { background-color: rgba(10, 132, 255, 0.12); color: #0A84FF; "
@@ -147,9 +152,9 @@ class IntegrityScreen(QWidget):
         self._setup_banking_tab()
         self._setup_guide_tab()
 
-        self._tabs.addTab(self._tab_injector, "🎭  Fingerprint Vault & Injector")
-        self._tabs.addTab(self._tab_banking, "🏦  Banking & Root Hiding Guard")
-        self._tabs.addTab(self._tab_guide, "📚  Integrity Architecture Guide")
+        self._tabs.addTab(self._tab_injector, get_icon("root", 16), "Fingerprint Vault & Injector")
+        self._tabs.addTab(self._tab_banking, get_icon("shield", 16), "Banking & Root Hiding Guard")
+        self._tabs.addTab(self._tab_guide, get_icon("book", 16), "Integrity Architecture Guide")
 
         layout.addWidget(self._tabs, 1)
 
@@ -186,16 +191,16 @@ class IntegrityScreen(QWidget):
         v_upper = verdict.upper()
         if "PASS" in v_upper:
             color = "#30D158"  # Apple HIG Green
-            icon = "✅ PASS"
+            icon = "PASS"
         elif "FAIL" in v_upper:
             color = "#FF453A"  # Apple HIG Red
-            icon = "❌ FAIL"
+            icon = "FAIL"
         elif "WARNING" in v_upper or "WARN" in v_upper:
             color = "#FF9F0A"  # Apple HIG Orange
-            icon = "⚠️ WARNING"
+            icon = "WARNING"
         else:
             color = "#8E8E93"  # Gray
-            icon = f"ℹ️ {verdict}"
+            icon = f"{verdict}"
 
         card["value"].setText(icon)
         card["value"].setStyleSheet(f"font-size: 15px; font-weight: 700; color: {color};")
@@ -242,13 +247,15 @@ class IntegrityScreen(QWidget):
         self._profile_combo.currentIndexChanged.connect(self._on_profile_selected)
         sel_row.addWidget(self._profile_combo, 1)
 
-        import_btn = QPushButton("📂 Import pif.json")
+        import_btn = QPushButton("Import pif.json")
+        import_btn.setIcon(get_icon("folder", 14))
         import_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         import_btn.setToolTip("Import a custom pif.json from your computer")
         import_btn.clicked.connect(self._import_pif_file)
         sel_row.addWidget(import_btn)
 
-        export_btn = QPushButton("💾 Export pif.json")
+        export_btn = QPushButton("Export pif.json")
+        export_btn.setIcon(get_icon("folder", 14))
         export_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         export_btn.setToolTip("Save the current profile configuration to a local pif.json")
         export_btn.clicked.connect(self._export_pif_file)
@@ -298,7 +305,8 @@ class IntegrityScreen(QWidget):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(10)
 
-        self._inject_btn = QPushButton("🚀  Apply & Inject pif.json to Phone")
+        self._inject_btn = QPushButton("Apply & Inject pif.json to Phone")
+        self._inject_btn.setIcon(get_icon("rocket", 14))
         self._inject_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._inject_btn.setMinimumHeight(38)
         self._inject_btn.setStyleSheet(
@@ -310,7 +318,8 @@ class IntegrityScreen(QWidget):
         self._inject_btn.clicked.connect(self._inject_pif)
         btn_row.addWidget(self._inject_btn, 1)
 
-        self._flush_cache_btn = QPushButton("🧹  Flush GMS Cache Only")
+        self._flush_cache_btn = QPushButton("Flush GMS Cache Only")
+        self._flush_cache_btn.setIcon(get_icon("trash", 14))
         self._flush_cache_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._flush_cache_btn.setMinimumHeight(38)
         self._flush_cache_btn.setStyleSheet(
@@ -321,7 +330,8 @@ class IntegrityScreen(QWidget):
         self._flush_cache_btn.clicked.connect(self._clear_gms_cache)
         btn_row.addWidget(self._flush_cache_btn)
 
-        self._read_pif_btn = QPushButton("🔄  Read Current Active pif.json")
+        self._read_pif_btn = QPushButton("Read Current Active pif.json")
+        self._read_pif_btn.setIcon(get_icon("refresh", 14))
         self._read_pif_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._read_pif_btn.setMinimumHeight(38)
         self._read_pif_btn.setStyleSheet(
@@ -396,7 +406,7 @@ class IntegrityScreen(QWidget):
 
             info_col = QVBoxLayout()
             info_col.setSpacing(1)
-            name_lbl = QLabel(f"🛡️  {name}")
+            name_lbl = QLabel(name)
             name_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #FFFFFF;")
             pkg_lbl = QLabel(pkg)
             pkg_lbl.setStyleSheet("font-size: 10px; color: #8E8E93;")
@@ -404,7 +414,8 @@ class IntegrityScreen(QWidget):
             info_col.addWidget(pkg_lbl)
             c_lay.addLayout(info_col, 1)
 
-            btn = QPushButton("➕ Protect")
+            btn = QPushButton("Protect")
+            btn.setIcon(get_icon("shield", 12))
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(
                 "QPushButton { background-color: rgba(10, 132, 255, 0.15); color: #0A84FF; font-weight: 600; font-size: 11px; "
@@ -433,7 +444,8 @@ class IntegrityScreen(QWidget):
         self._custom_pkg_input.setMinimumHeight(36)
         cb_layout.addWidget(self._custom_pkg_input, 1)
 
-        add_custom_btn = QPushButton("➕ Add to DenyList")
+        add_custom_btn = QPushButton("Add to DenyList")
+        add_custom_btn.setIcon(get_icon("plus", 14))
         add_custom_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_custom_btn.setStyleSheet(
             "QPushButton { background-color: #0A84FF; color: #FFFFFF; font-weight: 600; "
@@ -475,18 +487,18 @@ class IntegrityScreen(QWidget):
 
         guide_cards = [
             (
-                "🔑 Play Integrity Verdicts Explained",
+                "Play Integrity Verdicts Explained",
                 "1. MEETS_BASIC_INTEGRITY: Device runs genuine Android without known tampering.\n"
                 "2. MEETS_DEVICE_INTEGRITY: Device matches CTS certified Google build. Passing this restores Google Wallet contactless payments, banking logins, and Play Store certification.\n"
                 "3. MEETS_STRONG_INTEGRITY: Enforced via hardware keystore attestation in the TEE/Titan chip. Once the bootloader is unlocked, hardware keys report unlocked state. (Passing Basic + Device is sufficient for 99.9% of all banking apps!).",
             ),
             (
-                "🎯 Why FIRST_API_LEVEL <= 32 Triggers Software Attestation",
+                "Why FIRST_API_LEVEL <= 32 Triggers Software Attestation",
                 "Google introduced mandatory hardware-backed key attestation starting with Android 13 (API 33).\n"
                 "By spoofing build properties of certified stock devices launched on Android 12 or older (such as Pixel 5 or POCO F1), Google Play Services is forced to fallback to software-backed key evaluation, successfully passing MEETS_DEVICE_INTEGRITY even on unlocked bootloaders!",
             ),
             (
-                "🛡️ Recommended Stealth Setup for Maximum Compatibility",
+                "Recommended Stealth Setup for Maximum Compatibility",
                 "1. Root via Magisk (Zygisk enabled) or KernelSU / APatch.\n"
                 "2. Install PlayIntegrityFix module (chiteroman) or PlayIntegrityNext.\n"
                 "3. Inject a certified fingerprint using FlashDock's Fingerprint Vault.\n"
@@ -562,7 +574,7 @@ class IntegrityScreen(QWidget):
 
         if diag.custom_pif_active:
             self._inject_log_lbl.setText(
-                f"✅ Active pif.json detected on device: {diag.current_spoofed_model or 'Custom build'}"
+                f"Active pif.json detected on device: {diag.current_spoofed_model or 'Custom build'}"
             )
 
     def _populate_profile_table(self, profile: FingerprintProfile) -> None:
@@ -648,7 +660,7 @@ class IntegrityScreen(QWidget):
         json_str = self._json_edit.toPlainText().strip()
         clear_gms = self._clear_cache_cb.isChecked()
 
-        self._inject_log_lbl.setText("⏳ Injecting pif.json to device...")
+        self._inject_log_lbl.setText("Injecting pif.json to device...")
         self._inject_btn.setEnabled(False)
 
         def _do_inject() -> None:
@@ -659,11 +671,11 @@ class IntegrityScreen(QWidget):
             )
             self._inject_btn.setEnabled(True)
             if ok:
-                self._inject_log_lbl.setText(f"✅ {msg}")
+                self._inject_log_lbl.setText(f"{msg}")
                 QMessageBox.information(self, "Injection Successful", msg)
                 self._run_diagnostics()
             else:
-                self._inject_log_lbl.setText(f"❌ Injection Failed: {msg}")
+                self._inject_log_lbl.setText(f"Injection Failed: {msg}")
                 QMessageBox.warning(self, "Injection Failed", msg)
 
         QTimer.singleShot(50, _do_inject)
@@ -676,10 +688,10 @@ class IntegrityScreen(QWidget):
 
         ok, msg = self._fixer.clear_gms_cache(self._current_device.serial)
         if ok:
-            self._inject_log_lbl.setText(f"✅ {msg}")
+            self._inject_log_lbl.setText(f"{msg}")
             QMessageBox.information(self, "GMS Cache Cleared", msg)
         else:
-            self._inject_log_lbl.setText(f"❌ {msg}")
+            self._inject_log_lbl.setText(f"{msg}")
             QMessageBox.warning(self, "Cache Flush Error", msg)
 
     def _read_active_pif(self) -> None:
@@ -695,9 +707,9 @@ class IntegrityScreen(QWidget):
             for row, (k, v) in enumerate(pif_data.items()):
                 self._props_table.setItem(row, 0, QTableWidgetItem(str(k)))
                 self._props_table.setItem(row, 1, QTableWidgetItem(str(v)))
-            self._inject_log_lbl.setText(f"✅ Loaded active pif.json from device ({pif_data.get('MODEL', 'Custom')})")
+            self._inject_log_lbl.setText(f"Loaded active pif.json from device ({pif_data.get('MODEL', 'Custom')})")
         else:
-            self._inject_log_lbl.setText("ℹ️ No active /data/adb/pif.json found on device (or root denied).")
+            self._inject_log_lbl.setText("No active /data/adb/pif.json found on device (or root denied).")
             QMessageBox.information(
                 self,
                 "No Custom pif.json",
@@ -713,9 +725,9 @@ class IntegrityScreen(QWidget):
 
         ok, msg = self._fixer.add_package_to_denylist(self._current_device.serial, package_name)
         if ok:
-            self._banking_log.setText(f"✅ {msg}")
+            self._banking_log.setText(f"{msg}")
         else:
-            self._banking_log.setText(f"⚠️ {msg}")
+            self._banking_log.setText(f"{msg}")
 
     def _add_custom_denylist_pkg(self) -> None:
         """Add custom package entered in line edit."""

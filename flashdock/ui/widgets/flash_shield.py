@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from flashdock.logger import get_logger
 from flashdock.tools.runner import acquire_flash_lock, is_flash_locked, release_flash_lock
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger(__name__)
 
@@ -40,7 +41,7 @@ class FlashShieldDialog(QDialog):
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("⚡ FlashDock — Flash in Progress")
+        self.setWindowTitle("FlashDock — Flash in Progress")
         self.setModal(True)
         self.setMinimumSize(620, 480)
         # Prevent standard window close button from letting user abort easily
@@ -64,10 +65,16 @@ class FlashShieldDialog(QDialog):
         banner_layout = QVBoxLayout(banner_frame)
         banner_layout.setSpacing(8)
 
-        warn_title = QLabel("⚠️  FLASH IN PROGRESS — DO NOT UNPLUG")
+        warn_title_row = QHBoxLayout()
+        warn_title_row.setSpacing(8)
+        warn_icon = create_icon_label("warning", 20, color="#FF3B30")
+        warn_title_row.addWidget(warn_icon)
+
+        warn_title = QLabel("FLASH IN PROGRESS — DO NOT UNPLUG")
         warn_title.setProperty("cssClass", "error")
-        warn_title.setStyleSheet("font-size: 16px; font-weight: 800;")
-        banner_layout.addWidget(warn_title)
+        warn_title.setStyleSheet("font-size: 16px; font-weight: 800; color: #FF3B30;")
+        warn_title_row.addWidget(warn_title, 1)
+        banner_layout.addLayout(warn_title_row)
 
         warn_sub = QLabel(
             "Firmware partitions are being written directly to device storage.\n"
@@ -134,11 +141,11 @@ class FlashShieldDialog(QDialog):
         release_flash_lock()
 
         if success:
-            self._status_label.setText(f"✅  {message or 'Flashing completed successfully!'}")
+            self._status_label.setText(message or "Flashing completed successfully!")
             self._status_label.setProperty("cssClass", "success")
             self._progress_bar.setValue(100)
         else:
-            self._status_label.setText(f"❌  {message or 'Flashing operation failed!'}")
+            self._status_label.setText(message or "Flashing operation failed!")
             self._status_label.setProperty("cssClass", "error")
 
         self._close_btn.setEnabled(True)

@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 
 from flashdock.core.device import DeviceInfo
 from flashdock.logger import get_logger
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger(__name__)
 
@@ -50,8 +51,7 @@ class DeviceSelector(QFrame):
         layout.setContentsMargins(14, 8, 14, 8)
         layout.setSpacing(10)
 
-        icon = QLabel("🔌")
-        icon.setStyleSheet("font-size: 14px; background: transparent;")
+        icon = create_icon_label("usb", 16, color="#007AFF")
         layout.addWidget(icon)
 
         self._combo = QComboBox()
@@ -59,7 +59,8 @@ class DeviceSelector(QFrame):
         self._combo.currentIndexChanged.connect(self._on_combo_changed)
         layout.addWidget(self._combo, 1)
 
-        self._lock_btn = QPushButton("🔒 Lock")
+        self._lock_btn = QPushButton("Lock")
+        self._lock_btn.setIcon(get_icon("lock", 13))
         self._lock_btn.setToolTip("Lock onto this device's serial number for safety")
         self._lock_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._lock_btn.setFixedWidth(90)
@@ -125,11 +126,13 @@ class DeviceSelector(QFrame):
 
     def _update_lock_button(self) -> None:
         if self._locked_serial:
-            self._lock_btn.setText("🔓 Unlock")
+            self._lock_btn.setText("Unlock")
+            self._lock_btn.setIcon(get_icon("unlock", 13, color="#FF9500"))
             self._lock_btn.setToolTip("Remove the serial lock")
             self._lock_btn.setStyleSheet("color: #FF9500; font-weight: 600; border-color: #FF9500;")
         else:
-            self._lock_btn.setText("🔒 Lock")
+            self._lock_btn.setText("Lock")
+            self._lock_btn.setIcon(get_icon("lock", 13))
             self._lock_btn.setToolTip("Lock onto this device's serial number for safety")
             self._lock_btn.setStyleSheet("")
 

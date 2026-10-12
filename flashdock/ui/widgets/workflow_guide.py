@@ -26,12 +26,16 @@ from PySide6.QtWidgets import (
 )
 
 
+from flashdock.ui.icon_assets import create_icon_label, get_icon
+
+
 class WorkflowGuideDialog(QDialog):
     """Interactive modal guide detailing workflows and function references."""
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("📖 FlashDock — Workflow & Function Guide")
+        self.setWindowIcon(get_icon("book", 16))
         self.setMinimumSize(780, 560)
         self._setup_ui()
 
@@ -42,8 +46,7 @@ class WorkflowGuideDialog(QDialog):
 
         # Header
         header = QHBoxLayout()
-        icon = QLabel("📖")
-        icon.setStyleSheet("font-size: 24px;")
+        icon = create_icon_label("book", 26)
         header.addWidget(icon)
 
         title_box = QVBoxLayout()
@@ -61,9 +64,12 @@ class WorkflowGuideDialog(QDialog):
         # Tabs
         tabs = QTabWidget()
 
-        tabs.addTab(self._build_workflow_tab(), "⚡ Recommended Safe Workflow")
-        tabs.addTab(self._build_functions_tab(), "🛠️ 13 Functions Reference")
-        tabs.addTab(self._build_under_the_hood_tab(), "🛡️ How It Works & Anti-Brick Rules")
+        tabs.addTab(self._build_workflow_tab(), "Recommended Safe Workflow")
+        tabs.setTabIcon(0, get_icon("flash", 14))
+        tabs.addTab(self._build_functions_tab(), "Functions Reference")
+        tabs.setTabIcon(1, get_icon("tools", 14))
+        tabs.addTab(self._build_under_the_hood_tab(), "How It Works & Anti-Brick Rules")
+        tabs.setTabIcon(2, get_icon("integrity", 14))
 
         layout.addWidget(tabs, 1)
 
@@ -88,13 +94,13 @@ class WorkflowGuideDialog(QDialog):
         layout.setSpacing(12)
 
         steps = [
-            ("Step 1: Check My Phone 🔍", "Connect your device and verify connection mode, codename, chipset, battery (≥ 60%), and active slot."),
-            ("Step 2: Pre-Flash Checklist ✅", "Run the 18 automated safety checks: confirm USB debugging, driver installation, and battery health."),
-            ("Step 3: Backup Partitions 💼", "Always dump critical partitions (boot, efs, persist) and ADB data before flashing any modifications."),
-            ("Step 4: Unlock Bootloader 🔓", "Follow the brand-aware unlock wizard (Google, Xiaomi token, Samsung Download, etc.). Note: unlocking wipes data."),
-            ("Step 5: Root or Flash Custom ROM 💾🌱", "Patch boot/init_boot with Magisk/KernelSU/APatch or flash clean custom ROM / GSI images via fastboot."),
-            ("Step 6: Root Modules & Integrity 🛡️", "Install essential modules (Zygisk, Shamiko) and run the Integrity Fixer to pass Google Play Integrity."),
-            ("Step 7: Return to Stock & Relock 🏠", "When selling or returning phone to factory state: re-flash 100% clean OEM stock firmware, then safely relock."),
+            ("Step 1: Check My Phone", "Connect your device and verify connection mode, codename, chipset, battery (≥ 60%), and active slot."),
+            ("Step 2: Pre-Flash Checklist", "Run the 18 automated safety checks: confirm USB debugging, driver installation, and battery health."),
+            ("Step 3: Backup Partitions", "Always dump critical partitions (boot, efs, persist) and ADB data before flashing any modifications."),
+            ("Step 4: Unlock Bootloader", "Follow the brand-aware unlock wizard (Google, Xiaomi token, Samsung Download, etc.). Note: unlocking wipes data."),
+            ("Step 5: Root or Flash Custom ROM", "Patch boot/init_boot with Magisk/KernelSU/APatch or flash clean custom ROM / GSI images via fastboot."),
+            ("Step 6: Root Modules & Integrity", "Install essential modules (Zygisk, Shamiko) and run the Integrity Fixer to pass Google Play Integrity."),
+            ("Step 7: Return to Stock & Relock", "When selling or returning phone to factory state: re-flash 100% clean OEM stock firmware, then safely relock."),
         ]
 
         for title, desc in steps:
@@ -126,19 +132,19 @@ class WorkflowGuideDialog(QDialog):
         layout.setSpacing(10)
 
         funcs = [
-            ("🔍 Check my phone", "Detects device via ADB or Fastboot. Builds full hardware profile (chipset, slot scheme, GKI kernel, and OS modification status)."),
-            ("✅ Checklist", "18-step pre-flight check covering files, drivers, backup readiness, and battery to prevent preventable errors."),
-            ("🔓 Unlock bootloader", "Brand-specific unlock flows: Pixel standard flashing unlock, Xiaomi token prompts, Samsung Download mode, Motorola OEM codes."),
-            ("🌱 Root my phone", "GKI kernel detection, boot vs init_boot targeting (Android 13+), automatic pre-root backup, patch pipeline, and unrooting."),
-            ("💾 Flash ROM / GSI / Recovery", "Flashes full custom ROMs, dynamic Super partitions, Treble GSIs (arm64 A/B), and TWRP/OrangeFox custom recoveries."),
-            ("📦 Modules", "Inspects and flashes root ZIPs, discovers installed modules across Magisk/KernelSU/APatch, and provides emergency bootloop kill-switch."),
-            ("🛡️ Fix Integrity", "Diagnoses Google Play Integrity verdicts (Basic, Device, Strong) and guides fingerprint spoofing to pass banking app checks."),
-            ("💼 Backup / Restore", "Raw block partition dumps over ADB/Fastboot, full user app/data backup, metadata catalog, and 1-click restore."),
-            ("🔧 Fix bricked phone", "Emergency recovery for bootloops, soft bricks, and corrupted partitions using fastboot and EDL/BROM recovery."),
-            ("🏠 Return to Stock", "Restores pure factory OEM firmware, wipes custom modifications, and provides guarded bootloader relocking."),
-            ("⚙️ MTK / Unisoc mode", "Low-level hardware flashing for MediaTek (BROM / MTKClient) and Unisoc (PAC files / SPD Research Download)."),
-            ("⬇️ Downloads & Updates", "Manages platform-tools, drivers (ADB, Fastboot, Samsung, EDL 9008), and firmware finder repository."),
-            ("📋 Logs & Help", "Real-time action log with automatic serial number masking for safe sharing and troubleshooting guides."),
+            ("Check my phone", "Detects device via ADB or Fastboot. Builds full hardware profile (chipset, slot scheme, GKI kernel, and OS modification status)."),
+            ("Checklist", "18-step pre-flight check covering files, drivers, backup readiness, and battery to prevent preventable errors."),
+            ("Unlock bootloader", "Brand-specific unlock flows: Pixel standard flashing unlock, Xiaomi token prompts, Samsung Download mode, Motorola OEM codes."),
+            ("Root my phone", "GKI kernel detection, boot vs init_boot targeting (Android 13+), automatic pre-root backup, patch pipeline, and unrooting."),
+            ("Flash ROM / GSI / Recovery", "Flashes full custom ROMs, dynamic Super partitions, Treble GSIs (arm64 A/B), and TWRP/OrangeFox custom recoveries."),
+            ("Modules", "Inspects and flashes root ZIPs, discovers installed modules across Magisk/KernelSU/APatch, and provides emergency bootloop kill-switch."),
+            ("Fix Integrity", "Diagnoses Google Play Integrity verdicts (Basic, Device, Strong) and guides fingerprint spoofing to pass banking app checks."),
+            ("Backup / Restore", "Raw block partition dumps over ADB/Fastboot, full user app/data backup, metadata catalog, and 1-click restore."),
+            ("Fix bricked phone", "Emergency recovery for bootloops, soft bricks, and corrupted partitions using fastboot and EDL/BROM recovery."),
+            ("Return to Stock", "Restores pure factory OEM firmware, wipes custom modifications, and provides guarded bootloader relocking."),
+            ("MTK / Unisoc mode", "Low-level hardware flashing for MediaTek (BROM / MTKClient) and Unisoc (PAC files / SPD Research Download)."),
+            ("Downloads & Updates", "Manages platform-tools, drivers (ADB, Fastboot, Samsung, EDL 9008), and firmware finder repository."),
+            ("Logs & Help", "Real-time action log with automatic serial number masking for safe sharing and troubleshooting guides."),
         ]
 
         for name, detail in funcs:
@@ -170,7 +176,7 @@ class WorkflowGuideDialog(QDialog):
         layout.setSpacing(12)
 
         txt = QLabel(
-            "<h2>🛡️ How Android Flashing Works Under the Hood</h2>"
+            "<h2>How Android Flashing Works Under the Hood</h2>"
             "<p>Understanding the architecture behind flashing prevents mistakes and keeps your device 100% safe:</p>"
             "<h3>1. Android Verified Boot (AVB) & dm-verity</h3>"
             "<p>Modern Android uses AVB 2.0 to mathematically hash and sign partitions (<code>vbmeta</code>, <code>boot</code>, <code>system</code>). "

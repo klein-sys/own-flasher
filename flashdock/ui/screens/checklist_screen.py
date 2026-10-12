@@ -35,6 +35,7 @@ from flashdock.core.checklist import (
 from flashdock.core.device import DeviceInfo
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger(__name__)
 
@@ -50,9 +51,23 @@ _STATUS_COLORS = {
 }
 
 _CATEGORY_LABELS = {
-    "phone_settings": "📱  Phone Settings",
-    "files":          "📁  Files to Have Ready",
-    "safety":         "🛡️  Safety",
+    "phone_settings": "Phone Settings",
+    "files":          "Files to Have Ready",
+    "safety":         "Safety",
+}
+
+_CATEGORY_ICONS = {
+    "phone_settings": "phone",
+    "files":          "folder",
+    "safety":         "shield",
+}
+
+_STATUS_ICON_NAMES = {
+    CheckStatus.PASS: ("check", "#3fb950"),
+    CheckStatus.FAIL: ("cross", "#f85149"),
+    CheckStatus.WARN: ("warning", "#d29922"),
+    CheckStatus.SKIP: ("info", "#8b949e"),
+    CheckStatus.INFO: ("info", "#58a6ff"),
 }
 
 _CATEGORY_ORDER = ["phone_settings", "files", "safety"]
@@ -76,9 +91,9 @@ class _CheckItemWidget(QFrame):
         top = QHBoxLayout()
         top.setSpacing(8)
 
-        icon = QLabel(item.icon)
-        icon.setFixedWidth(24)
-        top.addWidget(icon)
+        icon_name, icon_col = _STATUS_ICON_NAMES.get(item.status, ("check", "#3fb950"))
+        icon_lbl = create_icon_label(icon_name, 18, color=icon_col)
+        top.addWidget(icon_lbl)
 
         label = QLabel(item.label)
         label.setProperty("cssClass", "subheading")
@@ -102,13 +117,15 @@ class _CheckItemWidget(QFrame):
         if item.fix_hint and item.status in (CheckStatus.FAIL, CheckStatus.WARN, CheckStatus.INFO):
             hint_frame = QFrame()
             hint_frame.setProperty("cssClass", "warn_banner")
-            hint_layout = QVBoxLayout(hint_frame)
+            hint_layout = QHBoxLayout(hint_frame)
             hint_layout.setContentsMargins(8, 6, 8, 6)
+            hint_layout.setSpacing(6)
+            hint_layout.addWidget(create_icon_label("info", 14))
 
-            hint_label = QLabel("💡  " + item.fix_hint)
+            hint_label = QLabel(item.fix_hint)
             hint_label.setWordWrap(True)
             hint_label.setProperty("cssClass", "warning")
-            hint_layout.addWidget(hint_label)
+            hint_layout.addWidget(hint_label, 1)
             layout.addWidget(hint_frame)
 
 
@@ -128,6 +145,9 @@ class _CategorySection(QFrame):
         # Header with category label and pass/fail counts
         header = QHBoxLayout()
         header.setSpacing(8)
+
+        cat_icon_name = _CATEGORY_ICONS.get(category, "check")
+        header.addWidget(create_icon_label(cat_icon_name, 16))
 
         title = QLabel(_CATEGORY_LABELS.get(category, category.title()))
         title.setProperty("cssClass", "subheading")
@@ -173,12 +193,17 @@ class ChecklistScreen(QWidget):
         header_row = QHBoxLayout()
         header_row.setSpacing(12)
 
-        title = QLabel("✅  Pre-Flash Checklist")
+        title_h = QHBoxLayout()
+        title_h.setSpacing(8)
+        title_h.addWidget(create_icon_label("checklist", 22))
+        title = QLabel("Pre-Flash Checklist")
         title.setProperty("cssClass", "heading")
-        header_row.addWidget(title)
+        title_h.addWidget(title)
+        header_row.addLayout(title_h)
         header_row.addStretch()
 
-        self._refresh_btn = QPushButton("🔄  Re-check")
+        self._refresh_btn = QPushButton("Re-check")
+        self._refresh_btn.setIcon(get_icon("refresh", 14))
         self._refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._refresh_btn.setProperty("cssClass", "primary")
         self._refresh_btn.clicked.connect(lambda: self.run_checks(self._last_device))
@@ -246,7 +271,7 @@ class ChecklistScreen(QWidget):
 
         # Summary
         self._summary_label.setText(
-            f"📋  {result.summary}  |  Device: {result.device_model or 'None'}"
+            f"{result.summary}  |  Device: {result.device_model or 'None'}"
         )
 
         # Progress bar

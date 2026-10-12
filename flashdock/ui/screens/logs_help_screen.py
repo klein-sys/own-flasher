@@ -43,6 +43,7 @@ from flashdock.core.troubleshooter import (
     TroubleshootingItem,
 )
 from flashdock.logger import get_log_file_path, get_logger, mask_serials
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 from flashdock.ui.widgets.selftest_dialog import SelfTestDialog
 from flashdock.tools.adb import ADB
 
@@ -82,10 +83,15 @@ class LogsHelpScreen(QWidget):
 
         title_box = QVBoxLayout()
         title_box.setSpacing(2)
-        title = QLabel("📋  Logs, Telemetry & Troubleshooting Center")
+        title_h = QHBoxLayout()
+        title_h.setSpacing(8)
+        title_h.addWidget(create_icon_label("logs_help", 22))
+        title = QLabel("Logs, Telemetry & Troubleshooting Center")
         title.setProperty("cssClass", "heading")
         title.setStyleSheet("font-size: 18px; font-weight: 700;")
-        title_box.addWidget(title)
+        title_h.addWidget(title)
+        title_h.addStretch(1)
+        title_box.addLayout(title_h)
 
         self._subtitle = QLabel(
             "Inspect application telemetry, stream device logcat, and solve connection or boot issues."
@@ -95,13 +101,15 @@ class LogsHelpScreen(QWidget):
         header_row.addLayout(title_box, 1)
 
         # Quick actions in header
-        open_logs_btn = QPushButton("📂 Open Logs Folder")
+        open_logs_btn = QPushButton("Open Logs Folder")
+        open_logs_btn.setIcon(get_icon("folder", 14))
         open_logs_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         open_logs_btn.setToolTip("Open data/logs in Windows Explorer")
         open_logs_btn.clicked.connect(self._open_logs_folder)
         header_row.addWidget(open_logs_btn)
 
-        restart_adb_btn = QPushButton("🔄 Restart ADB")
+        restart_adb_btn = QPushButton("Restart ADB")
+        restart_adb_btn.setIcon(get_icon("refresh", 14))
         restart_adb_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         restart_adb_btn.setStyleSheet(
             "QPushButton { background-color: rgba(10, 132, 255, 0.12); color: #0A84FF; "
@@ -128,10 +136,10 @@ class LogsHelpScreen(QWidget):
         self._setup_troubleshoot_tab()
         self._setup_knowledge_tab()
 
-        self._tabs.addTab(self._tab_app_logs, "📜  FlashDock Application Logs")
-        self._tabs.addTab(self._tab_logcat, "📱  Device Logcat & Kernel dmesg")
-        self._tabs.addTab(self._tab_troubleshoot, "🛠️  Guided Interactive Troubleshooting")
-        self._tabs.addTab(self._tab_knowledge, "📚  Partition & Architecture Guide")
+        self._tabs.addTab(self._tab_app_logs, get_icon("logs_help", 16), "FlashDock Application Logs")
+        self._tabs.addTab(self._tab_logcat, get_icon("phone", 16), "Device Logcat & Kernel dmesg")
+        self._tabs.addTab(self._tab_troubleshoot, get_icon("tools", 16), "Guided Interactive Troubleshooting")
+        self._tabs.addTab(self._tab_knowledge, get_icon("book", 16), "Partition & Architecture Guide")
 
         layout.addWidget(self._tabs, 1)
 
@@ -158,7 +166,8 @@ class LogsHelpScreen(QWidget):
         self._file_combo.currentIndexChanged.connect(self._on_log_file_selected)
         toolbar.addWidget(self._file_combo)
 
-        reload_btn = QPushButton("🔄")
+        reload_btn = QPushButton("")
+        reload_btn.setIcon(get_icon("refresh", 14))
         reload_btn.setToolTip("Reload log files list and content")
         reload_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         reload_btn.clicked.connect(self._refresh_log_files_list)
@@ -179,7 +188,7 @@ class LogsHelpScreen(QWidget):
         toolbar.addSpacing(10)
 
         self._search_input = QLineEdit()
-        self._search_input.setPlaceholderText("🔍 Filter logs by keyword...")
+        self._search_input.setPlaceholderText("Filter logs by keyword...")
         self._search_input.setClearButtonEnabled(True)
         self._search_input.setMinimumHeight(30)
         self._search_input.textChanged.connect(self._apply_log_filters)
@@ -209,18 +218,21 @@ class LogsHelpScreen(QWidget):
         bot_row = QHBoxLayout()
         bot_row.setSpacing(10)
 
-        export_btn = QPushButton("💾  Export Log (Mask Serials)")
+        export_btn = QPushButton("Export Log (Mask Serials)")
+        export_btn.setIcon(get_icon("save", 14))
         export_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         export_btn.setToolTip("Export current log file with device serials scrubbed for sharing")
         export_btn.clicked.connect(self._export_log_file)
         bot_row.addWidget(export_btn)
 
-        copy_btn = QPushButton("📋  Copy All Visible")
+        copy_btn = QPushButton("Copy All Visible")
+        copy_btn.setIcon(get_icon("copy", 14))
         copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         copy_btn.clicked.connect(self._copy_visible_logs)
         bot_row.addWidget(copy_btn)
 
-        clear_btn = QPushButton("🧹  Clear Viewer")
+        clear_btn = QPushButton("Clear Viewer")
+        clear_btn.setIcon(get_icon("trash", 14))
         clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         clear_btn.clicked.connect(self._log_viewer.clear)
         bot_row.addWidget(clear_btn)
@@ -279,7 +291,8 @@ class LogsHelpScreen(QWidget):
         self._logcat_filter_input.setMinimumHeight(30)
         ctrl_row.addWidget(self._logcat_filter_input, 1)
 
-        self._capture_logcat_btn = QPushButton("▶️  Capture Dump")
+        self._capture_logcat_btn = QPushButton("Capture Dump")
+        self._capture_logcat_btn.setIcon(get_icon("play", 14))
         self._capture_logcat_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._capture_logcat_btn.setStyleSheet(
             "QPushButton { background-color: #0A84FF; color: #FFFFFF; font-weight: 600; "
@@ -289,7 +302,8 @@ class LogsHelpScreen(QWidget):
         self._capture_logcat_btn.clicked.connect(self._run_logcat_capture)
         ctrl_row.addWidget(self._capture_logcat_btn)
 
-        clear_buf_btn = QPushButton("🧹 Clear Buffer")
+        clear_buf_btn = QPushButton("Clear Buffer")
+        clear_buf_btn.setIcon(get_icon("trash", 14))
         clear_buf_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         clear_buf_btn.setToolTip("Run adb logcat -c to empty device circular buffer")
         clear_buf_btn.clicked.connect(self._clear_device_logcat)
@@ -311,12 +325,14 @@ class LogsHelpScreen(QWidget):
         lc_bot = QHBoxLayout()
         lc_bot.setSpacing(10)
 
-        save_lc_btn = QPushButton("💾  Save Logcat Dump")
+        save_lc_btn = QPushButton("Save Logcat Dump")
+        save_lc_btn.setIcon(get_icon("save", 14))
         save_lc_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_lc_btn.clicked.connect(self._save_logcat_file)
         lc_bot.addWidget(save_lc_btn)
 
-        copy_lc_btn = QPushButton("📋  Copy to Clipboard")
+        copy_lc_btn = QPushButton("Copy to Clipboard")
+        copy_lc_btn.setIcon(get_icon("copy", 14))
         copy_lc_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         copy_lc_btn.clicked.connect(self._copy_logcat)
         lc_bot.addWidget(copy_lc_btn)
@@ -348,8 +364,7 @@ class LogsHelpScreen(QWidget):
         st_lay.setContentsMargins(8, 4, 8, 4)
         st_lay.setSpacing(12)
 
-        st_icon = QLabel("⚡")
-        st_icon.setStyleSheet("font-size: 22px;")
+        st_icon = create_icon_label("flash", 22)
         st_lay.addWidget(st_icon)
 
         st_text_col = QVBoxLayout()
@@ -362,7 +377,8 @@ class LogsHelpScreen(QWidget):
         st_text_col.addWidget(st_desc)
         st_lay.addLayout(st_text_col, 1)
 
-        run_st_btn = QPushButton("▶️  Run Self-Test")
+        run_st_btn = QPushButton("Run Self-Test")
+        run_st_btn.setIcon(get_icon("play", 14))
         run_st_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         run_st_btn.setStyleSheet(
             "QPushButton { background-color: #0A84FF; color: #FFFFFF; font-weight: 600; "
@@ -411,13 +427,29 @@ class LogsHelpScreen(QWidget):
         h_row = QHBoxLayout()
         h_row.setSpacing(8)
 
-        t_lbl = QLabel(f"{item.icon}  {item.title}")
+        icon_map = {
+            "device_not_detected": "usb",
+            "fastboot_waiting": "flash",
+            "bootloop_rescue": "unbrick",
+            "play_integrity_fail": "integrity",
+            "xiaomi_wait_time": "tools",
+            "samsung_knox_trip": "lock",
+        }
+        card_icon = icon_map.get(item.id, "tools")
+        h_row.addWidget(create_icon_label(card_icon, 18))
+
+        t_lbl = QLabel(item.title)
         t_lbl.setStyleSheet("font-size: 14px; font-weight: 700; color: #FFFFFF;")
         h_row.addWidget(t_lbl, 1)
 
         # Quick action button if available
         if item.quick_action_id:
-            act_btn = QPushButton(item.quick_action_label)
+            clean_label = item.quick_action_label
+            for ch in ["🔄", "🗂️", "🚑", "🛡️"]:
+                clean_label = clean_label.replace(ch, "").strip()
+            act_btn = QPushButton(clean_label)
+            btn_icon_name = "refresh" if "restart" in item.quick_action_id else ("tools" if "device_manager" in item.quick_action_id else ("unbrick" if "unbrick" in item.quick_action_id else "integrity"))
+            act_btn.setIcon(get_icon(btn_icon_name, 14))
             act_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             act_btn.setStyleSheet(
                 "QPushButton { background-color: rgba(10, 132, 255, 0.15); color: #0A84FF; "
@@ -472,7 +504,8 @@ class LogsHelpScreen(QWidget):
 
         topics = [
             (
-                "📂 Critical Android Partition Layout & Roles",
+                "folder",
+                "Critical Android Partition Layout & Roles",
                 "• <b>boot.img</b>: Contains the Linux kernel and root ramdisk (on Android 12 and older).\n"
                 "• <b>init_boot.img</b>: Introduced in Android 13 (GKI 2.0). Contains the genuine init ramdisk. Magisk and KernelSU patch THIS partition on modern devices.\n"
                 "• <b>vbmeta.img</b>: Android Verified Boot (AVB 2.0) hash tree and cryptographic signing. Corrupting this causes immediate bootloops.\n"
@@ -481,26 +514,29 @@ class LogsHelpScreen(QWidget):
                 "• <b>dtbo.img</b>: Device Tree Blob Overlay, defines hardware pin configurations and peripheral timing.",
             ),
             (
-                "🔄 A/B Seamless Partition Scheme Explained",
+                "refresh",
+                "A/B Seamless Partition Scheme Explained",
                 "• Devices with A/B partitioning feature two copies of boot partitions (e.g., boot_a and boot_b, system_a and system_b).\n"
                 "• During an OTA update, the inactive slot is flashed in the background. On reboot, the device attempts to boot from the updated slot.\n"
                 "• If boot fails 7 times consecutively, the hardware automatically rolls back to the previous working slot!\n"
                 "• In Fastboot, you can manually switch active slots via: <code>fastboot --set-active=a</code> or <code>b</code>.",
             ),
             (
-                "🛡️ Root Method Architecture Comparison",
+                "shield",
+                "Root Method Architecture Comparison",
                 "• <b>Magisk</b>: Systemless root patching boot.img ramdisk. Operates at init stage. Features Zygisk in-memory hooking and module ecosystem.\n"
                 "• <b>KernelSU</b>: Kernel-level root residing directly inside Linux kernel space. Zero root footprint in userspace. Highly stealthy against banking apps.\n"
                 "• <b>APatch</b>: KernelPatch-based root combining KernelSU's kernel space hook with SuperKey access control. Works on non-GKI legacy kernels.",
             ),
             (
-                "⚡ Fastboot vs FastbootD (Userspace Fastboot)",
+                "flash",
+                "Fastboot vs FastbootD (Userspace Fastboot)",
                 "• <b>Bootloader Fastboot</b>: Hosted by the motherboard bootloader (abl/xbl). Used for unlocking bootloader and flashing boot, init_boot, recovery, and vbmeta.\n"
                 "• <b>FastbootD</b>: Hosted in userspace recovery ramdisk. REQUIRED for flashing dynamic sub-partitions inside super (system, vendor, product).",
             ),
         ]
 
-        for title, body in topics:
+        for icon_key, title, body in topics:
             box = QFrame()
             box.setStyleSheet(
                 "background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); "
@@ -509,9 +545,13 @@ class LogsHelpScreen(QWidget):
             b_layout = QVBoxLayout(box)
             b_layout.setSpacing(6)
 
+            h_box = QHBoxLayout()
+            h_box.setSpacing(8)
+            h_box.addWidget(create_icon_label(icon_key, 16))
             t = QLabel(title)
             t.setStyleSheet("font-size: 13px; font-weight: 700; color: #FFFFFF;")
-            b_layout.addWidget(t)
+            h_box.addWidget(t, 1)
+            b_layout.addLayout(h_box)
 
             b = QLabel(body.replace("\n", "<br>"))
             b.setStyleSheet("font-size: 12px; color: #8E8E93; line-height: 1.4;")
@@ -651,7 +691,7 @@ class LogsHelpScreen(QWidget):
         lines = self._logcat_lines_spin.value()
         filt = self._logcat_filter_input.text()
 
-        self._logcat_status_lbl.setText("⏳ Capturing logcat from device...")
+        self._logcat_status_lbl.setText("Capturing logcat from device...")
         self._capture_logcat_btn.setEnabled(False)
 
         def _do_capture() -> None:
@@ -683,7 +723,7 @@ class LogsHelpScreen(QWidget):
         ok, msg = self._troubleshooter.clear_device_logcat(self._current_device.serial)
         if ok:
             self._logcat_viewer.clear()
-            self._logcat_status_lbl.setText("✅ Device logcat circular buffer cleared.")
+            self._logcat_status_lbl.setText("Device logcat circular buffer cleared.")
         else:
             QMessageBox.warning(self, "Clear Failed", msg)
 

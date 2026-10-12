@@ -52,6 +52,7 @@ from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
 from flashdock.tools.scrcpy import ScrcpyManager
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 from flashdock.ui.widgets.scrcpy_dialog import ScrcpyDialog
 
 log = get_logger(__name__)
@@ -105,9 +106,14 @@ class DownloadsScreen(QWidget):
         title_col = QVBoxLayout()
         title_col.setSpacing(2)
 
-        title = QLabel("⬇️ Downloads, Drivers & Tools Manager")
+        t_row = QHBoxLayout()
+        t_row.setSpacing(8)
+        t_row.addWidget(create_icon_label("downloads", 22))
+        title = QLabel("Downloads, Drivers & Tools Manager")
         title.setProperty("cssClass", "heading")
-        title_col.addWidget(title)
+        t_row.addWidget(title)
+        t_row.addStretch()
+        title_col.addLayout(t_row)
 
         subtitle = QLabel(
             "Manage official platform-tools, install OEM USB drivers, and browse stock firmware repositories."
@@ -128,9 +134,9 @@ class DownloadsScreen(QWidget):
 
         # ---- Main 3-Tab Widget ----
         self._tabs = QTabWidget()
-        self._tabs.addTab(self._build_tools_tab(), "🛠️ Platform-Tools & Daemon")
-        self._tabs.addTab(self._build_drivers_tab(), "🔌 OEM USB Drivers & Fixer")
-        self._tabs.addTab(self._build_firmware_tab(), "📦 Official Firmware & GSI Repos")
+        self._tabs.addTab(self._build_tools_tab(), get_icon("tools", 16), "Platform-Tools & Daemon")
+        self._tabs.addTab(self._build_drivers_tab(), get_icon("usb", 16), "OEM USB Drivers & Fixer")
+        self._tabs.addTab(self._build_firmware_tab(), get_icon("downloads", 16), "Official Firmware & GSI Repos")
         root_layout.addWidget(self._tabs, 1)
 
         # ---- Global Download Progress Bar ----
@@ -163,9 +169,14 @@ class DownloadsScreen(QWidget):
         adb_box = QVBoxLayout(self._adb_card)
         adb_box.setSpacing(6)
 
-        adb_header = QLabel("⚡ ADB (Android Debug Bridge)")
+        adb_h_row = QHBoxLayout()
+        adb_h_row.setSpacing(6)
+        adb_h_row.addWidget(create_icon_label("terminal", 16))
+        adb_header = QLabel("ADB (Android Debug Bridge)")
         adb_header.setProperty("cssClass", "subheading")
-        adb_box.addWidget(adb_header)
+        adb_h_row.addWidget(adb_header)
+        adb_h_row.addStretch()
+        adb_box.addLayout(adb_h_row)
 
         self._adb_status_text = QLabel("Checking ADB...")
         self._adb_status_text.setWordWrap(True)
@@ -178,9 +189,14 @@ class DownloadsScreen(QWidget):
         fb_box = QVBoxLayout(self._fb_card)
         fb_box.setSpacing(6)
 
-        fb_header = QLabel("🚀 Fastboot")
+        fb_h_row = QHBoxLayout()
+        fb_h_row.setSpacing(6)
+        fb_h_row.addWidget(create_icon_label("flash", 16))
+        fb_header = QLabel("Fastboot")
         fb_header.setProperty("cssClass", "subheading")
-        fb_box.addWidget(fb_header)
+        fb_h_row.addWidget(fb_header)
+        fb_h_row.addStretch()
+        fb_box.addLayout(fb_h_row)
 
         self._fb_status_text = QLabel("Checking Fastboot...")
         self._fb_status_text.setWordWrap(True)
@@ -193,9 +209,14 @@ class DownloadsScreen(QWidget):
         scrcpy_box = QVBoxLayout(self._scrcpy_card)
         scrcpy_box.setSpacing(6)
 
-        scrcpy_header = QLabel("🖥️ scrcpy Screen Mirror")
+        scrcpy_h_row = QHBoxLayout()
+        scrcpy_h_row.setSpacing(6)
+        scrcpy_h_row.addWidget(create_icon_label("scrcpy", 16))
+        scrcpy_header = QLabel("scrcpy Screen Mirror")
         scrcpy_header.setProperty("cssClass", "subheading")
-        scrcpy_box.addWidget(scrcpy_header)
+        scrcpy_h_row.addWidget(scrcpy_header)
+        scrcpy_h_row.addStretch()
+        scrcpy_box.addLayout(scrcpy_h_row)
 
         self._scrcpy_status_text = QLabel("Checking scrcpy...")
         self._scrcpy_status_text.setWordWrap(True)
@@ -204,13 +225,15 @@ class DownloadsScreen(QWidget):
         scrcpy_btn_row = QHBoxLayout()
         scrcpy_btn_row.setSpacing(6)
 
-        self._btn_launch_scrcpy = QPushButton("🖥️ Mirror Screen")
+        self._btn_launch_scrcpy = QPushButton("Mirror Screen")
+        self._btn_launch_scrcpy.setIcon(get_icon("scrcpy", 16))
         self._btn_launch_scrcpy.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_launch_scrcpy.setProperty("cssClass", "primary")
         self._btn_launch_scrcpy.clicked.connect(self._on_launch_scrcpy)
         scrcpy_btn_row.addWidget(self._btn_launch_scrcpy)
 
-        self._btn_download_scrcpy = QPushButton("⬇️ Get scrcpy")
+        self._btn_download_scrcpy = QPushButton("Get scrcpy")
+        self._btn_download_scrcpy.setIcon(get_icon("downloads", 16))
         self._btn_download_scrcpy.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_download_scrcpy.clicked.connect(self._on_download_scrcpy)
         scrcpy_btn_row.addWidget(self._btn_download_scrcpy)
@@ -225,25 +248,29 @@ class DownloadsScreen(QWidget):
         actions_layout = QHBoxLayout(actions_group)
         actions_layout.setSpacing(10)
 
-        self._btn_verify_tools = QPushButton("🔄 Verify & Check Versions")
+        self._btn_verify_tools = QPushButton("Verify & Check Versions")
+        self._btn_verify_tools.setIcon(get_icon("refresh", 16))
         self._btn_verify_tools.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_verify_tools.clicked.connect(self.refresh_tools_status)
         actions_layout.addWidget(self._btn_verify_tools)
 
-        self._btn_restart_adb = QPushButton("⚡ Restart ADB Daemon")
+        self._btn_restart_adb = QPushButton("Restart ADB Daemon")
+        self._btn_restart_adb.setIcon(get_icon("refresh", 16))
         self._btn_restart_adb.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_restart_adb.setToolTip("Kill ADB server and start a fresh server instance")
         self._btn_restart_adb.clicked.connect(self._on_restart_adb_daemon)
         actions_layout.addWidget(self._btn_restart_adb)
 
-        self._btn_download_pt = QPushButton("⬇️ Download Google Platform-Tools")
+        self._btn_download_pt = QPushButton("Download Google Platform-Tools")
+        self._btn_download_pt.setIcon(get_icon("downloads", 16))
         self._btn_download_pt.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_download_pt.setProperty("cssClass", "primary")
         self._btn_download_pt.setToolTip("Download and install official platform-tools directly from Google")
         self._btn_download_pt.clicked.connect(self._on_download_platform_tools)
         actions_layout.addWidget(self._btn_download_pt)
 
-        self._btn_open_pt_dir = QPushButton("📁 Open Tools Folder")
+        self._btn_open_pt_dir = QPushButton("Open Tools Folder")
+        self._btn_open_pt_dir.setIcon(get_icon("folder", 16))
         self._btn_open_pt_dir.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_open_pt_dir.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(TOOLS_DIR))))
         actions_layout.addWidget(self._btn_open_pt_dir)
@@ -254,15 +281,20 @@ class DownloadsScreen(QWidget):
         info_frame = QFrame()
         info_frame.setProperty("cssClass", "card_subtle")
         info_layout = QVBoxLayout(info_frame)
-        info_title = QLabel("💡 Platform-Tools Architecture & Port Information")
+        info_h_row = QHBoxLayout()
+        info_h_row.setSpacing(6)
+        info_h_row.addWidget(create_icon_label("info", 16))
+        info_title = QLabel("Platform-Tools Architecture & Port Information")
         info_title.setStyleSheet("font-weight: 600; font-size: 13px; color: #0A84FF;")
+        info_h_row.addWidget(info_title)
+        info_h_row.addStretch()
+        info_layout.addLayout(info_h_row)
         info_desc = QLabel(
             "• FlashDock communicates with Android devices via standard TCP port 5037 (ADB Daemon).\n"
             "• If your device is connected but not recognized, ensure USB Debugging is ON and click 'Restart ADB Daemon'.\n"
             "• Platform-tools binaries are isolated in the local data directory without cluttering global system PATH."
         )
         info_desc.setProperty("cssClass", "muted")
-        info_layout.addWidget(info_title)
         info_layout.addWidget(info_desc)
         layout.addWidget(info_frame)
 
@@ -284,24 +316,27 @@ class DownloadsScreen(QWidget):
         banner_row.setSpacing(10)
 
         self._driver_suggestion_lbl = QLabel(
-            "💡 Plug in your device to get targeted driver recommendations."
+            "Plug in your device to get targeted driver recommendations."
         )
         self._driver_suggestion_lbl.setProperty("cssClass", "card_subtle")
         banner_row.addWidget(self._driver_suggestion_lbl, 1)
 
-        btn_scan_pnp = QPushButton("🔍 Scan Windows for Driver Errors")
+        btn_scan_pnp = QPushButton("Scan Windows for Driver Errors")
+        btn_scan_pnp.setIcon(get_icon("search", 16))
         btn_scan_pnp.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_scan_pnp.setToolTip("Scan Windows Device Manager for Android devices in yellow warning state")
         btn_scan_pnp.clicked.connect(self._on_scan_pnp_devices)
         banner_row.addWidget(btn_scan_pnp)
 
-        btn_open_drivers = QPushButton("📁 Open Drivers Folder")
+        btn_open_drivers = QPushButton("Open Drivers Folder")
+        btn_open_drivers.setIcon(get_icon("folder", 16))
         btn_open_drivers.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_open_drivers.setToolTip("Open local drivers storage folder")
         btn_open_drivers.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(DRIVERS_DIR))))
         banner_row.addWidget(btn_open_drivers)
 
-        btn_install_file = QPushButton("➕ Install Driver from File (.inf / .zip / .exe)")
+        btn_install_file = QPushButton("Install Driver from File (.inf / .zip / .exe)")
+        btn_install_file.setIcon(get_icon("plus", 16))
         btn_install_file.setProperty("cssClass", "primary")
         btn_install_file.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_install_file.setToolTip("Browse and install ANY driver file (.inf, .zip, .exe, .msi) from your computer")
@@ -388,12 +423,14 @@ class DownloadsScreen(QWidget):
         # Bottom Quick Storage Buttons
         quick_row = QHBoxLayout()
         quick_row.setSpacing(10)
-        btn_open_roms = QPushButton("📁 Open Local ROMs Folder (data/roms/)")
+        btn_open_roms = QPushButton("Open Local ROMs Folder (data/roms/)")
+        btn_open_roms.setIcon(get_icon("folder", 16))
         btn_open_roms.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_open_roms.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(ROMS_DIR))))
         quick_row.addWidget(btn_open_roms)
 
-        btn_open_gsis = QPushButton("📁 Open Local GSIs Folder (data/gsis/)")
+        btn_open_gsis = QPushButton("Open Local GSIs Folder (data/gsis/)")
+        btn_open_gsis.setIcon(get_icon("folder", 16))
         btn_open_gsis.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_open_gsis.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(GSIS_DIR))))
         quick_row.addWidget(btn_open_gsis)
@@ -454,25 +491,25 @@ class DownloadsScreen(QWidget):
         # Update ADB Card
         if adb_info.status == "ready":
             self._adb_status_text.setText(
-                f"✅ <b>Ready</b><br>"
+                f"<b>Ready</b><br>"
                 f"Version: <code>{adb_info.version}</code><br>"
                 f"Path: <small>{adb_info.binary_path}</small>"
             )
         else:
             self._adb_status_text.setText(
-                "❌ <b>Missing</b><br>ADB binary not found on system. Click 'Download Google Platform-Tools'."
+                "<b>Missing</b><br>ADB binary not found on system. Click 'Download Google Platform-Tools'."
             )
 
         # Update Fastboot Card
         if fb_info.status == "ready":
             self._fb_status_text.setText(
-                f"✅ <b>Ready</b><br>"
+                f"<b>Ready</b><br>"
                 f"Version: <code>{fb_info.version}</code><br>"
                 f"Path: <small>{fb_info.binary_path}</small>"
             )
         else:
             self._fb_status_text.setText(
-                "❌ <b>Missing</b><br>Fastboot binary not found. Click 'Download Google Platform-Tools'."
+                "<b>Missing</b><br>Fastboot binary not found. Click 'Download Google Platform-Tools'."
             )
 
         # Update scrcpy Card
@@ -481,22 +518,24 @@ class DownloadsScreen(QWidget):
                 scrcpy_exe = self._scrcpy_mgr.get_executable()
                 scrcpy_ver = self._scrcpy_mgr.get_version()
                 self._scrcpy_status_text.setText(
-                    f"✅ <b>Ready</b><br>"
+                    f"<b>Ready</b><br>"
                     f"Version: <code>{scrcpy_ver}</code><br>"
                     f"Path: <small>{scrcpy_exe}</small>"
                 )
                 if hasattr(self, "_btn_launch_scrcpy"):
                     self._btn_launch_scrcpy.setEnabled(True)
                 if hasattr(self, "_btn_download_scrcpy"):
-                    self._btn_download_scrcpy.setText("🔄 Update")
+                    self._btn_download_scrcpy.setText("Update")
+                    self._btn_download_scrcpy.setIcon(get_icon("refresh", 16))
             else:
                 self._scrcpy_status_text.setText(
-                    "❌ <b>Not Installed</b><br>Screen mirroring binary not found. Click 'Get scrcpy'."
+                    "<b>Not Installed</b><br>Screen mirroring binary not found. Click 'Get scrcpy'."
                 )
                 if hasattr(self, "_btn_launch_scrcpy"):
                     self._btn_launch_scrcpy.setEnabled(False)
                 if hasattr(self, "_btn_download_scrcpy"):
-                    self._btn_download_scrcpy.setText("⬇️ Get scrcpy")
+                    self._btn_download_scrcpy.setText("Get scrcpy")
+                    self._btn_download_scrcpy.setIcon(get_icon("downloads", 16))
 
     @Slot()
     def _on_launch_scrcpy(self) -> None:
@@ -596,11 +635,13 @@ class DownloadsScreen(QWidget):
 
         # Header: Name & Status
         top_row = QHBoxLayout()
-        name_lbl = QLabel(f"🔌 {drv.name}")
+        top_row.setSpacing(8)
+        top_row.addWidget(create_icon_label("usb", 16))
+        name_lbl = QLabel(drv.name)
         name_lbl.setProperty("cssClass", "subheading")
         top_row.addWidget(name_lbl, 1)
 
-        status_text = "✅ Ready" if drv.is_installed else ("📦 Downloaded" if drv.is_downloaded else "☁️ Available")
+        status_text = "Ready" if drv.is_installed else ("Downloaded" if drv.is_downloaded else "Available")
         status_color = "#30D158" if drv.is_installed else ("#0A84FF" if drv.is_downloaded else "#8E8E93")
         status_lbl = QLabel(f" {status_text} ")
         status_lbl.setStyleSheet(
@@ -625,13 +666,15 @@ class DownloadsScreen(QWidget):
         btn_row.addStretch(1)
 
         if not drv.is_downloaded:
-            btn_dl = QPushButton("⬇️ Download Driver")
+            btn_dl = QPushButton("Download Driver")
+            btn_dl.setIcon(get_icon("downloads", 16))
             btn_dl.setMinimumHeight(32)
             btn_dl.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_dl.clicked.connect(lambda _, did=drv.id: self._on_download_driver(did))
             btn_row.addWidget(btn_dl)
         else:
-            btn_inst = QPushButton("⚙️ Install Driver (INF / Setup)")
+            btn_inst = QPushButton("Install Driver (INF / Setup)")
+            btn_inst.setIcon(get_icon("tools", 16))
             btn_inst.setProperty("cssClass", "primary")
             btn_inst.setMinimumHeight(32)
             btn_inst.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -640,7 +683,8 @@ class DownloadsScreen(QWidget):
 
         portal_url = drv.official_portal_url or drv.download_url
         if portal_url:
-            btn_portal = QPushButton("🌐 Official Site")
+            btn_portal = QPushButton("Official Site")
+            btn_portal.setIcon(get_icon("globe", 14))
             btn_portal.setMinimumHeight(32)
             btn_portal.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_portal.clicked.connect(lambda _, u=portal_url: QDesktopServices.openUrl(QUrl(u)))
@@ -648,7 +692,8 @@ class DownloadsScreen(QWidget):
 
         if drv.is_downloaded and drv.local_path:
             folder_p = drv.local_path if drv.local_path.is_dir() else drv.local_path.parent
-            btn_folder = QPushButton("📁 Folder")
+            btn_folder = QPushButton("Folder")
+            btn_folder.setIcon(get_icon("folder", 14))
             btn_folder.setMinimumHeight(32)
             btn_folder.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_folder.clicked.connect(lambda _, f=folder_p: QDesktopServices.openUrl(QUrl.fromLocalFile(str(f))))
@@ -667,13 +712,13 @@ class DownloadsScreen(QWidget):
             QMessageBox.information(
                 self,
                 "Device Manager Scan",
-                "✅ No USB or Android driver issues detected.\n"
+                "No USB or Android driver issues detected.\n"
                 "All connected devices are properly recognized by Windows.",
             )
             self._status_label.setText("PnP Scan: All connected devices OK.")
             return
 
-        msg_lines = ["⚠️ The following devices have driver warnings or errors in Windows:\n"]
+        msg_lines = ["The following devices have driver warnings or errors in Windows:\n"]
         for item in issues:
             name = item.get("name", "Unknown")
             status = item.get("status", "Error")
@@ -794,7 +839,9 @@ class DownloadsScreen(QWidget):
         box.setSpacing(6)
 
         header_row = QHBoxLayout()
-        title = QLabel(f"📦 {repo.name}")
+        header_row.setSpacing(8)
+        header_row.addWidget(create_icon_label("downloads", 16))
+        title = QLabel(repo.name)
         title.setProperty("cssClass", "subheading")
         header_row.addWidget(title, 1)
 
@@ -822,7 +869,8 @@ class DownloadsScreen(QWidget):
         btn_row = QHBoxLayout()
         btn_row.addStretch(1)
 
-        btn_open = QPushButton("🌐 Open Official Portal")
+        btn_open = QPushButton("Open Official Portal")
+        btn_open.setIcon(get_icon("globe", 14))
         btn_open.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_open.setProperty("cssClass", "primary")
         btn_open.clicked.connect(lambda _, url=repo.url: QDesktopServices.openUrl(QUrl(url)))
@@ -842,7 +890,7 @@ class DownloadsScreen(QWidget):
             brand = (device.brand or "").strip()
             model = (device.model or "").strip()
             codename = (device.device or "").strip()
-            dev_text = f"📱 {brand} {model} ({codename}) [{device.mode.upper()}]"
+            dev_text = f"{brand} {model} ({codename}) [{device.mode.upper()}]"
             self._device_badge.setText(dev_text)
 
             # Suggest driver
@@ -856,12 +904,12 @@ class DownloadsScreen(QWidget):
                 rec_driver = "MediaTek MTK VCOM Driver"
 
             self._driver_suggestion_lbl.setText(
-                f"💡 Connected: <b>{brand} {model}</b>. Recommended USB Driver: <b>{rec_driver}</b>."
+                f"Connected: <b>{brand} {model}</b>. Recommended USB Driver: <b>{rec_driver}</b>."
             )
         else:
             self._device_badge.setText("No device connected")
             self._driver_suggestion_lbl.setText(
-                "💡 Plug in your device to get targeted driver recommendations."
+                "Plug in your device to get targeted driver recommendations."
             )
 
         self._populate_firmware_cards()

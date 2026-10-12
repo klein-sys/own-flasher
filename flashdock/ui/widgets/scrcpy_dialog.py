@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 
 from flashdock.core.device import DeviceInfo
 from flashdock.tools.scrcpy import ScrcpyManager
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 
 class _ScrcpyDownloadThread(QThread):
@@ -74,9 +75,14 @@ class ScrcpyDialog(QDialog):
         layout.setSpacing(14)
 
         # Header
-        title = QLabel("🖥️ Screen Mirroring & Device Control")
+        title_box = QHBoxLayout()
+        title_box.setSpacing(10)
+        title_box.addWidget(create_icon_label("scrcpy", 22))
+        title = QLabel("Screen Mirroring & Device Control")
         title.setProperty("cssClass", "heading")
-        layout.addWidget(title)
+        title_box.addWidget(title)
+        title_box.addStretch()
+        layout.addLayout(title_box)
 
         subtitle = QLabel("High performance, ultra-low latency screen display and interaction via scrcpy.")
         subtitle.setProperty("cssClass", "muted")
@@ -87,15 +93,18 @@ class ScrcpyDialog(QDialog):
         dev_card.setProperty("cssClass", "card_subtle")
         d_lay = QHBoxLayout(dev_card)
         d_lay.setContentsMargins(12, 10, 12, 10)
+        d_lay.setSpacing(8)
+        d_lay.addWidget(create_icon_label("phone", 16))
         if self._device:
             serial_str = self._device.serial or "Default Device"
             brand = self._device.brand or ""
             model = self._device.model or ""
             model_str = f"{brand} {model}".strip() or "Android Device"
-            self._device_lbl = QLabel(f"📱 <b>Target:</b> {model_str}  <span style='color:#8E8E93;'>({serial_str})</span>")
+            self._device_lbl = QLabel(f"<b>Target:</b> {model_str}  <span style='color:#8E8E93;'>({serial_str})</span>")
         else:
-            self._device_lbl = QLabel("📱 <b>Target:</b> <span style='color:#E5A93C;'>No Device Connected</span> — connect phone via USB")
+            self._device_lbl = QLabel("<b>Target:</b> <span style='color:#E5A93C;'>No Device Connected</span> — connect phone via USB")
         d_lay.addWidget(self._device_lbl)
+        d_lay.addStretch()
         layout.addWidget(dev_card)
 
         # Status & Version Card
@@ -120,9 +129,14 @@ class ScrcpyDialog(QDialog):
         opt_lay.setContentsMargins(14, 12, 14, 12)
         opt_lay.setSpacing(10)
 
-        opt_title = QLabel("⚙️ Mirroring Options")
+        opt_title_row = QHBoxLayout()
+        opt_title_row.setSpacing(6)
+        opt_title_row.addWidget(create_icon_label("tools", 14))
+        opt_title = QLabel("Mirroring Options")
         opt_title.setStyleSheet("font-weight: 600; font-size: 13px;")
-        opt_lay.addWidget(opt_title)
+        opt_title_row.addWidget(opt_title)
+        opt_title_row.addStretch()
+        opt_lay.addLayout(opt_title_row)
 
         self._stay_awake_cb = QCheckBox("Keep device awake while mirroring (--stay-awake)")
         self._stay_awake_cb.setChecked(True)
@@ -169,12 +183,14 @@ class ScrcpyDialog(QDialog):
         btn_row = QHBoxLayout()
         btn_row.setSpacing(10)
 
-        self._dl_btn = QPushButton("⬇️ Download scrcpy (GitHub v3.1)")
+        self._dl_btn = QPushButton("Download scrcpy (GitHub v3.1)")
+        self._dl_btn.setIcon(get_icon("downloads", 16))
         self._dl_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._dl_btn.clicked.connect(self._start_download)
         btn_row.addWidget(self._dl_btn)
 
-        self._launch_btn = QPushButton("🚀 Start Screen Mirroring")
+        self._launch_btn = QPushButton("Start Screen Mirroring")
+        self._launch_btn.setIcon(get_icon("rocket", 16))
         self._launch_btn.setProperty("cssClass", "primary")
         self._launch_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._launch_btn.setMinimumHeight(38)
@@ -194,14 +210,14 @@ class ScrcpyDialog(QDialog):
             exe = self._manager.get_executable()
             ver = self._manager.get_version()
             self._status_lbl.setText(
-                f"✅ <b>scrcpy is Ready:</b> {ver}<br>"
+                f"<b>scrcpy is Ready:</b> {ver}<br>"
                 f"<span style='color:#8E8E93; font-size:11px;'>Location: {exe}</span>"
             )
             self._dl_btn.setVisible(False)
             self._launch_btn.setEnabled(True)
         else:
             self._status_lbl.setText(
-                "⚠️ <b>scrcpy is not installed.</b> Click Download below for automatic 1-click setup from official GitHub releases."
+                "<b>scrcpy is not installed.</b> Click Download below for automatic 1-click setup from official GitHub releases."
             )
             self._dl_btn.setVisible(True)
             self._launch_btn.setEnabled(False)

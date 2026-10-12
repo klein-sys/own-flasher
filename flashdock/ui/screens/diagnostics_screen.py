@@ -55,6 +55,7 @@ from flashdock.core.diagnostics import (
 )
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger(__name__)
 
@@ -96,9 +97,14 @@ class DiagnosticsScreen(QWidget):
         title_col = QVBoxLayout()
         title_col.setSpacing(2)
 
-        title = QLabel("🩺 Diagnostics, Debloater & System Tweaks")
+        title_h = QHBoxLayout()
+        title_h.setSpacing(8)
+        title_h.addWidget(create_icon_label("diagnostics", 22))
+        title = QLabel("Diagnostics, Debloater & System Tweaks")
         title.setProperty("cssClass", "heading")
-        title_col.addWidget(title)
+        title_h.addWidget(title)
+        title_h.addStretch()
+        title_col.addLayout(title_h)
 
         subtitle = QLabel("Remove carrier/OEM bloatware, view hardware & battery telemetry, and tune device scales.")
         subtitle.setProperty("cssClass", "muted")
@@ -116,9 +122,9 @@ class DiagnosticsScreen(QWidget):
 
         # ---- Tab Widget ----
         self._tabs = QTabWidget()
-        self._tabs.addTab(self._build_debloater_tab(), "📦 Package Debloater")
-        self._tabs.addTab(self._build_health_tab(), "🔋 Hardware & Battery Health")
-        self._tabs.addTab(self._build_tweaks_tab(), "⚙️ System Tweaks")
+        self._tabs.addTab(self._build_debloater_tab(), get_icon("box", 16), "Package Debloater")
+        self._tabs.addTab(self._build_health_tab(), get_icon("battery", 16), "Hardware & Battery Health")
+        self._tabs.addTab(self._build_tweaks_tab(), get_icon("tools", 16), "System Tweaks")
         root_layout.addWidget(self._tabs, 1)
 
     # -------------------------------------------------------------------------
@@ -157,7 +163,8 @@ class DiagnosticsScreen(QWidget):
         self._state_combo.currentIndexChanged.connect(self._apply_package_filter)
         filter_row.addWidget(self._state_combo)
 
-        btn_refresh = QPushButton("↻ Refresh")
+        btn_refresh = QPushButton("Refresh")
+        btn_refresh.setIcon(get_icon("refresh", 14))
         btn_refresh.setToolTip("Reload package list from device")
         btn_refresh.clicked.connect(self.refresh_packages)
         filter_row.addWidget(btn_refresh)
@@ -183,6 +190,7 @@ class DiagnosticsScreen(QWidget):
         btn_row.setSpacing(10)
 
         btn_select_bloat = QPushButton("Select Recommended Bloat")
+        btn_select_bloat.setIcon(get_icon("checklist", 14))
         btn_select_bloat.setToolTip("Auto-select all identified carrier and bloatware packages")
         btn_select_bloat.clicked.connect(self._select_recommended_bloat)
         btn_row.addWidget(btn_select_bloat)
@@ -190,17 +198,20 @@ class DiagnosticsScreen(QWidget):
         btn_row.addStretch(1)
 
         self._btn_disable = QPushButton("Disable Selected")
+        self._btn_disable.setIcon(get_icon("cross", 14))
         self._btn_disable.setToolTip("Disable package for user 0 (prevents background running)")
         self._btn_disable.clicked.connect(self._on_disable_clicked)
         btn_row.addWidget(self._btn_disable)
 
         self._btn_uninstall = QPushButton("Uninstall for User")
+        self._btn_uninstall.setIcon(get_icon("trash", 14))
         self._btn_uninstall.setProperty("cssClass", "danger")
         self._btn_uninstall.setToolTip("Uninstall app from user space while keeping APK in system image for safety")
         self._btn_uninstall.clicked.connect(self._on_uninstall_clicked)
         btn_row.addWidget(self._btn_uninstall)
 
         self._btn_restore = QPushButton("Restore / Re-enable")
+        self._btn_restore.setIcon(get_icon("refresh", 14))
         self._btn_restore.setProperty("cssClass", "primary")
         self._btn_restore.setToolTip("Restore or re-enable disabled/uninstalled system app")
         self._btn_restore.clicked.connect(self._on_restore_clicked)
@@ -309,7 +320,8 @@ class DiagnosticsScreen(QWidget):
         layout.addWidget(hw_group)
 
         # Refresh button
-        btn_refresh_health = QPushButton("↻ Refresh Diagnostics & Health Data")
+        btn_refresh_health = QPushButton("Refresh Diagnostics & Health Data")
+        btn_refresh_health.setIcon(get_icon("refresh", 14))
         btn_refresh_health.setProperty("cssClass", "primary")
         btn_refresh_health.clicked.connect(self.refresh_health)
         layout.addWidget(btn_refresh_health)
@@ -385,11 +397,13 @@ class DiagnosticsScreen(QWidget):
         dpi_controls.addWidget(self._spin_dpi)
 
         btn_apply_dpi = QPushButton("Apply DPI")
+        btn_apply_dpi.setIcon(get_icon("check", 14))
         btn_apply_dpi.setProperty("cssClass", "primary")
         btn_apply_dpi.clicked.connect(self._apply_dpi)
         dpi_controls.addWidget(btn_apply_dpi)
 
         btn_reset_dpi = QPushButton("Reset to Factory Default")
+        btn_reset_dpi.setIcon(get_icon("refresh", 14))
         btn_reset_dpi.clicked.connect(self._reset_dpi)
         dpi_controls.addWidget(btn_reset_dpi)
 
@@ -409,7 +423,8 @@ class DiagnosticsScreen(QWidget):
         wifi_btn_row = QHBoxLayout()
         wifi_btn_row.setSpacing(10)
 
-        btn_enable_wifi = QPushButton("⚡ Enable Wireless ADB")
+        btn_enable_wifi = QPushButton("Enable Wireless ADB")
+        btn_enable_wifi.setIcon(get_icon("flash", 14))
         btn_enable_wifi.setProperty("cssClass", "primary")
         btn_enable_wifi.clicked.connect(self._enable_wireless_adb)
         wifi_btn_row.addWidget(btn_enable_wifi)
@@ -419,6 +434,7 @@ class DiagnosticsScreen(QWidget):
         wifi_btn_row.addWidget(self._lbl_wifi_ip, 1)
 
         btn_copy_cmd = QPushButton("Copy Command")
+        btn_copy_cmd.setIcon(get_icon("copy", 14))
         btn_copy_cmd.clicked.connect(self._copy_wireless_cmd)
         wifi_btn_row.addWidget(btn_copy_cmd)
 

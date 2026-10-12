@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from flashdock.logger import get_logger
+from flashdock.ui.icon_assets import create_icon_label, get_icon, get_icon_pixmap
 
 log = get_logger(__name__)
 
@@ -115,9 +116,15 @@ class PhoneControlPanel(QFrame):
         helper_lay.setContentsMargins(4, 4, 4, 4)
         helper_lay.setSpacing(6)
 
-        self._helper_title = QLabel("💡 Phone Not Detected?")
+        helper_title_row = QHBoxLayout()
+        helper_title_row.setSpacing(6)
+        self._helper_icon = create_icon_label("info", 14, color="#C96E00")
+        helper_title_row.addWidget(self._helper_icon)
+
+        self._helper_title = QLabel("Phone Not Detected?")
         self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #C96E00;")
-        helper_lay.addWidget(self._helper_title)
+        helper_title_row.addWidget(self._helper_title, 1)
+        helper_lay.addLayout(helper_title_row)
 
         self._helper_text = QLabel(
             "1. Settings > About Phone > Tap 'Build Number' 7x.\n"
@@ -131,14 +138,16 @@ class PhoneControlPanel(QFrame):
         helper_btn_row = QHBoxLayout()
         helper_btn_row.setSpacing(4)
 
-        self._btn_setup_diag = QPushButton("🛠️ Setup")
+        self._btn_setup_diag = QPushButton("Setup")
+        self._btn_setup_diag.setIcon(get_icon("tools", 12))
         self._btn_setup_diag.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_setup_diag.setStyleSheet("font-size: 10px; padding: 4px 6px; font-weight: 600;")
         self._btn_setup_diag.setToolTip("Open Laptop Setup Wizard & USB driver installer")
         self._btn_setup_diag.clicked.connect(self.setup_wizard_requested.emit)
         helper_btn_row.addWidget(self._btn_setup_diag)
 
-        self._btn_rescan = QPushButton("🔄 Scan")
+        self._btn_rescan = QPushButton("Scan")
+        self._btn_rescan.setIcon(get_icon("refresh", 12))
         self._btn_rescan.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_rescan.setStyleSheet("font-size: 10px; padding: 4px 6px; font-weight: 600;")
         self._btn_rescan.setToolTip("Re-scan USB devices and restart ADB detection")
@@ -154,25 +163,29 @@ class PhoneControlPanel(QFrame):
         ops_header.setStyleSheet("font-size: 10px; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px; color: #8E8E93;")
         root.addWidget(ops_header)
 
-        self._btn_op_info = QPushButton("🔍  Device Diagnostics")
+        self._btn_op_info = QPushButton("Device Diagnostics")
+        self._btn_op_info.setIcon(get_icon("search", 14))
         self._btn_op_info.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_op_info.setToolTip("Deep device property inspection & root/Knox detection")
         self._btn_op_info.clicked.connect(lambda: self.action_requested.emit("check_phone"))
         root.addWidget(self._btn_op_info)
 
-        self._btn_op_backup = QPushButton("💼  Partition Backup")
+        self._btn_op_backup = QPushButton("Partition Backup")
+        self._btn_op_backup.setIcon(get_icon("backup", 14))
         self._btn_op_backup.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_op_backup.setToolTip("Back up calibration blocks (NVRAM, EFS, Persist)")
         self._btn_op_backup.clicked.connect(lambda: self.action_requested.emit("backup"))
         root.addWidget(self._btn_op_backup)
 
-        self._btn_op_flash = QPushButton("⚡  Flash Firmware")
+        self._btn_op_flash = QPushButton("Flash Firmware")
+        self._btn_op_flash.setIcon(get_icon("flash", 14))
         self._btn_op_flash.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_op_flash.setToolTip("Flash images, fastboot packages, or Treble GSIs")
         self._btn_op_flash.clicked.connect(lambda: self.action_requested.emit("flash_rom"))
         root.addWidget(self._btn_op_flash)
 
-        self._btn_op_unlock = QPushButton("🔓  Bootloader Tools")
+        self._btn_op_unlock = QPushButton("Bootloader Tools")
+        self._btn_op_unlock.setIcon(get_icon("unlock", 14))
         self._btn_op_unlock.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_op_unlock.setToolTip("Brand-aware bootloader unlock / relock wizard")
         self._btn_op_unlock.clicked.connect(lambda: self.action_requested.emit("unlock_bl"))
@@ -191,18 +204,19 @@ class PhoneControlPanel(QFrame):
 
         self._buttons: dict[str, QPushButton] = {}
         button_defs = [
-            ("system",     "⟳  Reboot",          "Reboot into Android"),
-            ("recovery",   "🔧  Recovery",        "Reboot to Recovery mode"),
-            ("bootloader", "⚡  Bootloader",      "Reboot to Bootloader / Fastboot"),
-            ("fastbootd",  "⚡  FastbootD",       "Reboot to userspace Fastboot"),
-            ("download",   "⬇  Download",         "Samsung Download mode"),
-            ("edl",        "🔌  EDL",             "Qualcomm EDL / 9008 mode"),
-            ("poweroff",   "⏻  Power off",       "Power off the device"),
-            ("safemode",   "🛡  Safe mode",       "Reboot into Safe Mode"),
+            ("system",     "Reboot",      "refresh",    "Reboot into Android"),
+            ("recovery",   "Recovery",    "tools",      "Reboot to Recovery mode"),
+            ("bootloader", "Bootloader",  "flash",      "Reboot to Bootloader / Fastboot"),
+            ("fastbootd",  "FastbootD",   "flash",      "Reboot to userspace Fastboot"),
+            ("download",   "Download",    "downloads",  "Samsung Download mode"),
+            ("edl",        "EDL",         "usb",        "Qualcomm EDL / 9008 mode"),
+            ("poweroff",   "Power off",   "power",      "Power off the device"),
+            ("safemode",   "Safe mode",   "integrity",  "Reboot into Safe Mode"),
         ]
 
-        for mode_id, label, tooltip in button_defs:
+        for mode_id, label, icon_name, tooltip in button_defs:
             btn = QPushButton(label)
+            btn.setIcon(get_icon(icon_name, 13))
             btn.setToolTip(tooltip)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setEnabled(False)
@@ -216,7 +230,8 @@ class PhoneControlPanel(QFrame):
         root.addWidget(sep2)
 
         # ---- Screen mirror (scrcpy) ----
-        self._mirror_btn = QPushButton("🖥️  Mirror Screen")
+        self._mirror_btn = QPushButton("Mirror Screen")
+        self._mirror_btn.setIcon(get_icon("scrcpy", 14, color="#FFFFFF"))
         self._mirror_btn.setObjectName("mirror_btn")
         self._mirror_btn.setToolTip("Open low-latency screen mirror & remote control (scrcpy)")
         self._mirror_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -241,7 +256,8 @@ class PhoneControlPanel(QFrame):
         sep3.setProperty("cssClass", "separator")
         root.addWidget(sep3)
 
-        btn_guide = QPushButton("📱  Hardware Key Guide")
+        btn_guide = QPushButton("Hardware Key Guide")
+        btn_guide.setIcon(get_icon("phone", 13))
         btn_guide.setObjectName("btn_key_guide")
         btn_guide.setToolTip("Physical Vol+/Vol-/Power combinations for Recovery, Fastboot & boot menus")
         btn_guide.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -288,23 +304,27 @@ class PhoneControlPanel(QFrame):
 
         if mode == "not_connected":
             self._helper_card.setVisible(True)
-            self._helper_title.setText("💡 Phone Not Detected?")
+            self._helper_icon.setPixmap(get_icon_pixmap("info", 14, color="#C96E00"))
+            self._helper_title.setText("Phone Not Detected?")
             self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #C96E00;")
             self._helper_text.setText(
                 "1. Settings > About Phone > Tap 'Build Number' 7x.\n"
                 "2. Developer options > Turn ON 'USB Debugging'.\n"
                 "3. Use a USB data cable (not charge-only)."
             )
-            self._btn_rescan.setText("🔄 Scan")
+            self._btn_rescan.setText("Scan")
+            self._btn_rescan.setIcon(get_icon("refresh", 12))
         elif mode == "unauthorized":
             self._helper_card.setVisible(True)
-            self._helper_title.setText("⚠️ USB Debugging Unauthorized")
+            self._helper_icon.setPixmap(get_icon_pixmap("warning", 14, color="#FF9500"))
+            self._helper_title.setText("USB Debugging Unauthorized")
             self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #FF9500;")
             self._helper_text.setText(
                 "Unlock your phone screen now!\n"
                 "Tap 'Always allow from this computer' on the RSA popup."
             )
-            self._btn_rescan.setText("🔄 Resend")
+            self._btn_rescan.setText("Resend")
+            self._btn_rescan.setIcon(get_icon("refresh", 12))
         else:
             # Device connected in ready state
             self._helper_card.setVisible(False)

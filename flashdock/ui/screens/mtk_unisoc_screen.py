@@ -47,6 +47,7 @@ from flashdock.core.unisoc import (
     UnisocFlashPipeline,
 )
 from flashdock.logger import get_logger
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger("ui.mtk_unisoc")
 
@@ -75,8 +76,8 @@ class MtkUnisocScreen(QWidget):
 
         # Tabs: Tab 1 = MediaTek BROM, Tab 2 = Unisoc PAC
         self._tabs = QTabWidget()
-        self._tabs.addTab(self._build_mtk_tab(), "⚙️ MediaTek (BROM / Scatter)")
-        self._tabs.addTab(self._build_unisoc_tab(), "⚡ Unisoc (SPD / PAC)")
+        self._tabs.addTab(self._build_mtk_tab(), get_icon("mtk_unisoc", 16), "MediaTek (BROM / Scatter)")
+        self._tabs.addTab(self._build_unisoc_tab(), get_icon("flash", 16), "Unisoc (SPD / PAC)")
         main_layout.addWidget(self._tabs)
 
     # ==================================================================
@@ -96,11 +97,16 @@ class MtkUnisocScreen(QWidget):
 
         # Header
         head_box = QVBoxLayout()
-        title = QLabel("⚙️ MediaTek BROM & Scatter Flasher")
+        title_h = QHBoxLayout()
+        title_h.setSpacing(8)
+        title_h.addWidget(create_icon_label("mtk_unisoc", 20))
+        title = QLabel("MediaTek BROM & Scatter Flasher")
         title.setProperty("cssClass", "heading")
+        title_h.addWidget(title)
+        title_h.addStretch(1)
+        head_box.addLayout(title_h)
         sub = QLabel("Direct BootROM hardware connection, SLA/DAA auth bypass, and scatter partition flashing.")
         sub.setProperty("cssClass", "muted")
-        head_box.addWidget(title)
         head_box.addWidget(sub)
         layout.addLayout(head_box)
 
@@ -110,7 +116,7 @@ class MtkUnisocScreen(QWidget):
         conn_layout.setSpacing(10)
 
         status_row = QHBoxLayout()
-        self._mtk_status_lbl = QLabel("🔴 Disconnected (Hold Vol+ & Vol- while plugging in USB cable)")
+        self._mtk_status_lbl = QLabel("Disconnected (Hold Vol+ & Vol- while plugging in USB cable)")
         self._mtk_status_lbl.setProperty("cssClass", "muted")
         status_row.addWidget(self._mtk_status_lbl, 1)
 
@@ -120,18 +126,21 @@ class MtkUnisocScreen(QWidget):
         conn_layout.addLayout(status_row)
 
         btn_row = QHBoxLayout()
-        self._btn_mtk_connect = QPushButton("⚡ Connect BROM Handshake")
+        self._btn_mtk_connect = QPushButton("Connect BROM Handshake")
+        self._btn_mtk_connect.setIcon(get_icon("flash", 14))
         self._btn_mtk_connect.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_mtk_connect.clicked.connect(self._on_mtk_connect)
         btn_row.addWidget(self._btn_mtk_connect)
 
-        self._btn_mtk_bypass = QPushButton("🔓 SLA / DAA Auth Bypass")
+        self._btn_mtk_bypass = QPushButton("SLA / DAA Auth Bypass")
+        self._btn_mtk_bypass.setIcon(get_icon("unlock", 14))
         self._btn_mtk_bypass.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_mtk_bypass.setEnabled(False)
         self._btn_mtk_bypass.clicked.connect(self._on_mtk_bypass)
         btn_row.addWidget(self._btn_mtk_bypass)
 
-        self._btn_mtk_reboot = QPushButton("🔄 Reboot Phone")
+        self._btn_mtk_reboot = QPushButton("Reboot Phone")
+        self._btn_mtk_reboot.setIcon(get_icon("power", 14))
         self._btn_mtk_reboot.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_mtk_reboot.setEnabled(False)
         self._btn_mtk_reboot.clicked.connect(self._on_mtk_reboot)
@@ -174,11 +183,12 @@ class MtkUnisocScreen(QWidget):
 
         # Safety & Flash Button
         action_row = QHBoxLayout()
-        self._chk_protect_preloader = QCheckBox("🛡️ Protect Preloader (Safety Guard: prevent bricking)")
+        self._chk_protect_preloader = QCheckBox("Protect Preloader (Safety Guard: prevent bricking)")
         self._chk_protect_preloader.setChecked(True)
         action_row.addWidget(self._chk_protect_preloader, 1)
 
-        self._btn_mtk_flash = QPushButton("⚡ Flash Partitions via BROM")
+        self._btn_mtk_flash = QPushButton("Flash Partitions via BROM")
+        self._btn_mtk_flash.setIcon(get_icon("flash", 14))
         self._btn_mtk_flash.setProperty("cssClass", "primary")
         self._btn_mtk_flash.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_mtk_flash.setEnabled(False)
@@ -216,11 +226,16 @@ class MtkUnisocScreen(QWidget):
 
         # Header
         head_box = QVBoxLayout()
-        title = QLabel("⚡ Unisoc / Spreadtrum PAC Flasher")
+        title_h = QHBoxLayout()
+        title_h.setSpacing(8)
+        title_h.addWidget(create_icon_label("flash", 20))
+        title = QLabel("Unisoc / Spreadtrum PAC Flasher")
         title.setProperty("cssClass", "heading")
+        title_h.addWidget(title)
+        title_h.addStretch(1)
+        head_box.addLayout(title_h)
         sub = QLabel("Unisoc Bootloader Serial Link (BSL), two-stage FDL1/FDL2 loading, and PAC flashing.")
         sub.setProperty("cssClass", "muted")
-        head_box.addWidget(title)
         head_box.addWidget(sub)
         layout.addLayout(head_box)
 
@@ -230,11 +245,12 @@ class MtkUnisocScreen(QWidget):
         conn_layout.setSpacing(10)
 
         conn_row = QHBoxLayout()
-        self._unisoc_status_lbl = QLabel("🔴 Disconnected (Hold Vol- while connecting USB cable)")
+        self._unisoc_status_lbl = QLabel("Disconnected (Hold Vol- while connecting USB cable)")
         self._unisoc_status_lbl.setProperty("cssClass", "muted")
         conn_row.addWidget(self._unisoc_status_lbl, 1)
 
-        self._btn_unisoc_connect = QPushButton("⚡ BSL Handshake")
+        self._btn_unisoc_connect = QPushButton("BSL Handshake")
+        self._btn_unisoc_connect.setIcon(get_icon("flash", 14))
         self._btn_unisoc_connect.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_unisoc_connect.clicked.connect(self._on_unisoc_connect)
         conn_row.addWidget(self._btn_unisoc_connect)
@@ -275,13 +291,15 @@ class MtkUnisocScreen(QWidget):
 
         # Action Buttons
         act_row = QHBoxLayout()
-        self._btn_pac_extract = QPushButton("📦 Extract All PAC Images")
+        self._btn_pac_extract = QPushButton("Extract All PAC Images")
+        self._btn_pac_extract.setIcon(get_icon("box", 14))
         self._btn_pac_extract.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_pac_extract.setEnabled(False)
         self._btn_pac_extract.clicked.connect(self._on_extract_pac)
         act_row.addWidget(self._btn_pac_extract)
 
-        self._btn_pac_flash = QPushButton("⚡ Flash Full PAC Firmware")
+        self._btn_pac_flash = QPushButton("Flash Full PAC Firmware")
+        self._btn_pac_flash.setIcon(get_icon("flash", 14))
         self._btn_pac_flash.setProperty("cssClass", "primary")
         self._btn_pac_flash.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_pac_flash.setEnabled(False)
@@ -309,7 +327,7 @@ class MtkUnisocScreen(QWidget):
     def _on_mtk_connect(self) -> None:
         if self._brom_mgr.connect():
             self._mtk_status_lbl.setText(
-                f"🟢 Connected: {self._brom_mgr.hw_name} (HW: 0x{self._brom_mgr.hw_code:04X})"
+                f"Connected: {self._brom_mgr.hw_name} (HW: 0x{self._brom_mgr.hw_code:04X})"
             )
             self._btn_mtk_bypass.setEnabled(True)
             self._btn_mtk_reboot.setEnabled(True)
@@ -332,7 +350,7 @@ class MtkUnisocScreen(QWidget):
 
     def _on_mtk_bypass(self) -> None:
         if self._auth_handler.bypass_sla_daa():
-            self._mtk_auth_lbl.setText("Auth: 🟢 Bypassed (Watchdog Disabled)")
+            self._mtk_auth_lbl.setText("Auth: Bypassed (Watchdog Disabled)")
             self._btn_mtk_bypass.setEnabled(False)
             self._update_mtk_flash_state()
             QMessageBox.information(
@@ -346,7 +364,7 @@ class MtkUnisocScreen(QWidget):
 
     def _on_mtk_reboot(self) -> None:
         if self._brom_mgr.reboot():
-            self._mtk_status_lbl.setText("🔴 Disconnected (Rebooted)")
+            self._mtk_status_lbl.setText("Disconnected (Rebooted)")
             self._btn_mtk_bypass.setEnabled(False)
             self._btn_mtk_reboot.setEnabled(False)
             self._btn_mtk_flash.setEnabled(False)
@@ -438,7 +456,7 @@ class MtkUnisocScreen(QWidget):
 
     def _on_unisoc_connect(self) -> None:
         if self._unisoc_pipeline.connect():
-            self._unisoc_status_lbl.setText("🟢 Connected in SPRD U2S Diag / Download Mode")
+            self._unisoc_status_lbl.setText("Connected in SPRD U2S Diag / Download Mode")
             self._btn_unisoc_connect.setEnabled(False)
             self._update_unisoc_state()
             QMessageBox.information(

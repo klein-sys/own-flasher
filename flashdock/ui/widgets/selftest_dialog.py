@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from flashdock.config import Config
 from flashdock.core.selftest import SystemSelfTester, SelfTestReport, SelfTestResult
 from flashdock.logger import get_logger
+from flashdock.ui.icon_assets import create_icon_label, get_icon, get_icon_pixmap
 
 log = get_logger(__name__)
 
@@ -36,6 +37,7 @@ class SelfTestDialog(QDialog):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("System Health & Toolchain Self-Test")
+        self.setWindowIcon(get_icon("flash", 16))
         self.resize(780, 620)
         self.setMinimumSize(660, 500)
 
@@ -58,10 +60,16 @@ class SelfTestDialog(QDialog):
         header_layout = QVBoxLayout()
         header_layout.setSpacing(4)
 
-        title = QLabel("⚡ System Health & Self-Test")
+        title_box = QHBoxLayout()
+        title_box.setSpacing(8)
+        flash_ico = create_icon_label("flash", 22)
+        title_box.addWidget(flash_ico)
+        title = QLabel("System Health & Self-Test")
         title.setObjectName("titleLabel")
         title.setStyleSheet("font-size: 20px; font-weight: 700;")
-        header_layout.addWidget(title)
+        title_box.addWidget(title)
+        title_box.addStretch()
+        header_layout.addLayout(title_box)
 
         subtitle = QLabel(
             "Verifies runtime prerequisites, ADB/Fastboot toolchains, filesystem permissions, and network readiness."
@@ -79,8 +87,9 @@ class SelfTestDialog(QDialog):
         summary_layout = QHBoxLayout(self.summary_card)
         summary_layout.setContentsMargins(14, 12, 14, 12)
 
-        self.status_icon_label = QLabel("⏳")
-        self.status_icon_label.setStyleSheet("font-size: 28px;")
+        self.status_icon_label = QLabel()
+        self.status_icon_label.setFixedSize(28, 28)
+        self.status_icon_label.setPixmap(get_icon_pixmap("refresh", 28, color="#8E8E93"))
         summary_layout.addWidget(self.status_icon_label)
 
         status_text_layout = QVBoxLayout()
@@ -113,7 +122,8 @@ class SelfTestDialog(QDialog):
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(10)
 
-        self.btn_rerun = QPushButton("🔄 Re-run Self-Test")
+        self.btn_rerun = QPushButton("Re-run Self-Test")
+        self.btn_rerun.setIcon(get_icon("refresh", 14))
         self.btn_rerun.setStyleSheet(
             "QPushButton { background: rgba(255, 255, 255, 0.08); color: #E5E5EA; border-radius: 8px; padding: 8px 16px; font-weight: 600; } "
             "QPushButton:hover { background: rgba(255, 255, 255, 0.15); }"
@@ -121,7 +131,8 @@ class SelfTestDialog(QDialog):
         self.btn_rerun.clicked.connect(self.run_diagnostics)
         footer_layout.addWidget(self.btn_rerun)
 
-        self.btn_copy = QPushButton("📋 Copy Diagnostics Report")
+        self.btn_copy = QPushButton("Copy Diagnostics Report")
+        self.btn_copy.setIcon(get_icon("copy", 14))
         self.btn_copy.setStyleSheet(
             "QPushButton { background: rgba(255, 255, 255, 0.08); color: #E5E5EA; border-radius: 8px; padding: 8px 16px; font-weight: 600; } "
             "QPushButton:hover { background: rgba(255, 255, 255, 0.15); }"
@@ -153,7 +164,7 @@ class SelfTestDialog(QDialog):
 
         # Update Summary Card
         if report.is_healthy:
-            self.status_icon_label.setText("✅")
+            self.status_icon_label.setPixmap(get_icon_pixmap("check", 28, color="#34D399"))
             self.summary_title.setText(f"System Ready — {report.passed_count}/{report.total_count} Checks Passed")
             self.summary_details.setText(f"{report.warn_count} non-critical warnings. Workstation is operational.")
             if dark:
@@ -165,7 +176,7 @@ class SelfTestDialog(QDialog):
                     "QFrame#summaryCard { background: #F0FDF4; border-radius: 12px; border: 1px solid #BBF7D0; padding: 12px; color: #166534; }"
                 )
         else:
-            self.status_icon_label.setText("⚠️")
+            self.status_icon_label.setPixmap(get_icon_pixmap("warning", 28, color="#F87171"))
             self.summary_title.setText(f"Prerequisites Incomplete — {report.fail_count} Failed")
             self.summary_details.setText(f"{report.passed_count} passed, {report.warn_count} warnings. Review failures below.")
             if dark:
@@ -189,7 +200,8 @@ class SelfTestDialog(QDialog):
             self.cards_layout.insertWidget(self.cards_layout.count() - 1, card)
 
         self.btn_rerun.setEnabled(True)
-        self.btn_rerun.setText("🔄 Re-run Self-Test")
+        self.btn_rerun.setText("Re-run Self-Test")
+        self.btn_rerun.setIcon(get_icon("refresh", 14))
 
     def _create_result_card(self, result: SelfTestResult, dark: bool) -> QFrame:
         card = QFrame()
@@ -270,7 +282,7 @@ class SelfTestDialog(QDialog):
 
         # Remediation if available
         if result.remediation:
-            fix_lbl = QLabel(f"💡 Suggestion: {result.remediation}")
+            fix_lbl = QLabel(f"Suggestion: {result.remediation}")
             fix_lbl.setStyleSheet("font-size: 12px; color: #FF9F0A; font-style: italic;")
             fix_lbl.setWordWrap(True)
             layout.addWidget(fix_lbl)
@@ -281,5 +293,6 @@ class SelfTestDialog(QDialog):
         if self.latest_report:
             clipboard = QApplication.clipboard()
             clipboard.setText(self.latest_report.format_text())
-            self.btn_copy.setText("✓ Copied!")
+            self.btn_copy.setText("Copied!")
+            self.btn_copy.setIcon(get_icon("check", 14))
             QApplication.processEvents()

@@ -43,6 +43,7 @@ from flashdock.core.modules import ModuleInfo, ModuleInspectionResult, ModuleMan
 from flashdock.core.repository import RepositoryManager, StoredItem
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 from flashdock.ui.widgets.flash_shield import FlashShieldDialog
 
 log = get_logger(__name__)
@@ -104,7 +105,7 @@ class ModuleInspectorDialog(QDialog):
 
     def __init__(self, inspection: ModuleInspectionResult, zip_path: Path, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.setWindowTitle("⚡ Module Pre-Install Inspection")
+        self.setWindowTitle("Module Pre-Install Inspection")
         self.setMinimumSize(500, 440)
 
         layout = QVBoxLayout(self)
@@ -112,9 +113,14 @@ class ModuleInspectorDialog(QDialog):
         layout.setSpacing(14)
 
         info = inspection.module_info
-        title = QLabel(f"📦  {info.name if info else zip_path.name}")
+        title_row = QHBoxLayout()
+        title_row.setSpacing(10)
+        title_row.addWidget(create_icon_label("modules", 22))
+        title = QLabel(f"{info.name if info else zip_path.name}")
         title.setProperty("cssClass", "heading")
-        layout.addWidget(title)
+        title_row.addWidget(title)
+        title_row.addStretch()
+        layout.addLayout(title_row)
 
         if info:
             meta_frame = QFrame()
@@ -144,9 +150,14 @@ class ModuleInspectorDialog(QDialog):
             wf_layout = QVBoxLayout(warn_frame)
             wf_layout.setSpacing(6)
 
-            wf_title = QLabel("⚠️  POTENTIAL RISKS DETECTED")
+            wf_title_row = QHBoxLayout()
+            wf_title_row.setSpacing(8)
+            wf_title_row.addWidget(create_icon_label("warning", 18))
+            wf_title = QLabel("POTENTIAL RISKS DETECTED")
             wf_title.setProperty("cssClass", "error")
-            wf_layout.addWidget(wf_title)
+            wf_title_row.addWidget(wf_title)
+            wf_title_row.addStretch()
+            wf_layout.addLayout(wf_title_row)
 
             for w in inspection.warnings:
                 item = QLabel(f"• {w}")
@@ -206,10 +217,14 @@ class ModulesScreen(QWidget):
 
         # Main Header
         header_row = QHBoxLayout()
+        header_row.setSpacing(12)
+        header_icon = create_icon_label("modules", 24)
+        header_row.addWidget(header_icon)
+
         header_col = QVBoxLayout()
         header_col.setSpacing(2)
 
-        title = QLabel("📦  Root Modules & Library (Magisk · KernelSU · APatch)")
+        title = QLabel("Root Modules & Library (Magisk · KernelSU · APatch)")
         title.setProperty("cssClass", "heading")
         header_col.addWidget(title)
 
@@ -230,8 +245,8 @@ class ModulesScreen(QWidget):
         self._setup_installed_tab()
         self._setup_library_tab()
 
-        self._tabs.addTab(self._tab_installed, "📱  Installed Modules (Device)")
-        self._tabs.addTab(self._tab_library, "📚  Module Library (Offline & Catalog)")
+        self._tabs.addTab(self._tab_installed, get_icon("phone", 16), "Installed Modules (Device)")
+        self._tabs.addTab(self._tab_library, get_icon("book", 16), "Module Library (Offline & Catalog)")
 
         layout.addWidget(self._tabs, 1)
 
@@ -251,13 +266,15 @@ class ModulesScreen(QWidget):
         bar_layout.setContentsMargins(12, 10, 12, 10)
         bar_layout.setSpacing(10)
 
-        self._btn_install = QPushButton("➕  Install Module ZIP...")
+        self._btn_install = QPushButton("Install Module ZIP...")
+        self._btn_install.setIcon(get_icon("plus", 14))
         self._btn_install.setProperty("cssClass", "primary")
         self._btn_install.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_install.clicked.connect(self._on_install_module_clicked)
         bar_layout.addWidget(self._btn_install)
 
-        refresh_btn = QPushButton("🔄  Refresh")
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.setIcon(get_icon("refresh", 14))
         refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         refresh_btn.clicked.connect(self.refresh_modules)
         bar_layout.addWidget(refresh_btn)
@@ -265,14 +282,16 @@ class ModulesScreen(QWidget):
         bar_layout.addStretch()
 
         # Emergency tools
-        self._btn_emergency_disable = QPushButton("🚨  Disable All Modules")
+        self._btn_emergency_disable = QPushButton("Disable All Modules")
+        self._btn_emergency_disable.setIcon(get_icon("warning", 14))
         self._btn_emergency_disable.setProperty("cssClass", "warning")
         self._btn_emergency_disable.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_emergency_disable.setToolTip("Emergency kill-switch to recover phone from bootlooping modules.")
         self._btn_emergency_disable.clicked.connect(self._on_emergency_disable)
         bar_layout.addWidget(self._btn_emergency_disable)
 
-        self._btn_safe_mode = QPushButton("🛡️  Safe Mode Reboot")
+        self._btn_safe_mode = QPushButton("Safe Mode Reboot")
+        self._btn_safe_mode.setIcon(get_icon("shield", 14))
         self._btn_safe_mode.setProperty("cssClass", "danger")
         self._btn_safe_mode.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_safe_mode.clicked.connect(self._on_safe_mode_clicked)
@@ -311,18 +330,21 @@ class ModulesScreen(QWidget):
         bar_layout.setContentsMargins(12, 10, 12, 10)
         bar_layout.setSpacing(10)
 
-        self._btn_import_lib = QPushButton("➕  Import Module ZIP to Library...")
+        self._btn_import_lib = QPushButton("Import Module ZIP to Library...")
+        self._btn_import_lib.setIcon(get_icon("plus", 14))
         self._btn_import_lib.setProperty("cssClass", "primary")
         self._btn_import_lib.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_import_lib.clicked.connect(self._on_import_to_library)
         bar_layout.addWidget(self._btn_import_lib)
 
-        self._btn_open_lib_folder = QPushButton("📂  Open Modules Folder")
+        self._btn_open_lib_folder = QPushButton("Open Modules Folder")
+        self._btn_open_lib_folder.setIcon(get_icon("folder", 14))
         self._btn_open_lib_folder.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_open_lib_folder.clicked.connect(self._on_open_modules_folder)
         bar_layout.addWidget(self._btn_open_lib_folder)
 
-        self._btn_refresh_lib = QPushButton("🔄  Refresh Library")
+        self._btn_refresh_lib = QPushButton("Refresh Library")
+        self._btn_refresh_lib.setIcon(get_icon("refresh", 14))
         self._btn_refresh_lib.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_refresh_lib.clicked.connect(self.refresh_library)
         bar_layout.addWidget(self._btn_refresh_lib)
@@ -342,7 +364,7 @@ class ModulesScreen(QWidget):
         sc_layout.setContentsMargins(14, 14, 14, 14)
         sc_layout.setSpacing(10)
 
-        sc_title = QLabel("💾  Stored Offline Modules")
+        sc_title = QLabel("Stored Offline Modules")
         sc_title.setProperty("cssClass", "subheading")
         sc_layout.addWidget(sc_title)
 
@@ -367,7 +389,7 @@ class ModulesScreen(QWidget):
         cc_layout.setContentsMargins(14, 14, 14, 14)
         cc_layout.setSpacing(12)
 
-        cc_title = QLabel("🌟  Recommended Root Modules Catalog")
+        cc_title = QLabel("Recommended Root Modules Catalog")
         cc_title.setProperty("cssClass", "subheading")
         cc_layout.addWidget(cc_title)
 
@@ -406,7 +428,8 @@ class ModulesScreen(QWidget):
 
             rf_layout.addLayout(info_col, 1)
 
-            btn_dl = QPushButton("🌐  Download Release")
+            btn_dl = QPushButton("Download Release")
+            btn_dl.setIcon(get_icon("globe", 14))
             btn_dl.setProperty("cssClass", "secondary")
             btn_dl.setCursor(Qt.CursorShape.PointingHandCursor)
             url_to_open = mod["url"]
@@ -461,7 +484,8 @@ class ModulesScreen(QWidget):
             self._table.setItem(row, 2, QTableWidgetItem(mod.author or "Unknown"))
 
             # Status pill
-            status_item = QTableWidgetItem("✅ Enabled" if mod.enabled else "⏸️ Disabled")
+            status_item = QTableWidgetItem("Enabled" if mod.enabled else "Disabled")
+            status_item.setIcon(get_icon("check" if mod.enabled else "cross", 14))
             status_item.setForeground(Qt.GlobalColor.darkGreen if mod.enabled else Qt.GlobalColor.darkYellow)
             self._table.setItem(row, 3, status_item)
 
@@ -517,13 +541,15 @@ class ModulesScreen(QWidget):
             aw_layout.setContentsMargins(4, 2, 4, 2)
             aw_layout.setSpacing(6)
 
-            btn_flash = QPushButton("⚡  Flash to Phone")
+            btn_flash = QPushButton("Flash to Phone")
+            btn_flash.setIcon(get_icon("flash", 14))
             btn_flash.setProperty("cssClass", "primary")
             btn_flash.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_flash.clicked.connect(lambda _, p=item.file_path: self._flash_zip_file(p))
             aw_layout.addWidget(btn_flash)
 
-            btn_del = QPushButton("🗑️  Delete")
+            btn_del = QPushButton("Delete")
+            btn_del.setIcon(get_icon("trash", 14))
             btn_del.setProperty("cssClass", "danger")
             btn_del.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_del.clicked.connect(lambda _, p=item.file_path, n=item.name: self._on_delete_library_item(p, n))
@@ -668,7 +694,7 @@ class ModulesScreen(QWidget):
     def _on_emergency_disable(self) -> None:
         reply = QMessageBox.warning(
             self,
-            "🚨 Emergency: Disable All Modules?",
+            "Emergency: Disable All Modules?",
             "This will create a disable flag on EVERY installed root module on the device.\n\n"
             "Use this if your phone is unstable, lagging, or recovering from a module-induced soft-brick.\n\nProceed?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,

@@ -84,6 +84,7 @@ from flashdock.core.diagnostics_engine import (
     AdbDiagnosticsResult,
     FastbootDiagnosticsResult,
 )
+from flashdock.ui.icon_assets import create_icon_label, get_icon, get_icon_pixmap
 
 log = get_logger(__name__)
 
@@ -105,9 +106,27 @@ CAT_STYLES = {
     },
 }
 
+ACTION_ICON_MAP = {
+    "check_phone": "search",
+    "checklist": "checklist",
+    "unlock_bl": "unlock",
+    "root": "root",
+    "flash_rom": "flash",
+    "modules": "modules",
+    "diagnostics": "diagnostics",
+    "integrity": "integrity",
+    "backup": "backup",
+    "unbrick": "unbrick",
+    "return_stock": "return_stock",
+    "mtk_unisoc": "mtk_unisoc",
+    "scrcpy": "scrcpy",
+    "downloads": "downloads",
+    "logs_help": "logs_help",
+}
+
 
 class ActionCardButton(QPushButton):
-    """Spacious, readable action card with icon, title, category badge, and subtitle."""
+    """Spacious, readable action card with vector image icon, title, category badge, and subtitle."""
 
     def __init__(
         self,
@@ -145,7 +164,13 @@ class ActionCardButton(QPushButton):
         header_row = QHBoxLayout()
         header_row.setSpacing(8)
 
-        self.title_lbl = QLabel(f"{icon}  {label}")
+        # Vector image icon (replaces emoji sticker)
+        self.icon_lbl = QLabel()
+        self.icon_lbl.setFixedSize(22, 22)
+        self.icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        header_row.addWidget(self.icon_lbl)
+
+        self.title_lbl = QLabel(label)
         self.title_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         header_row.addWidget(self.title_lbl, 1)
 
@@ -165,6 +190,11 @@ class ActionCardButton(QPushButton):
             self.category, ("rgba(255, 255, 255, 0.08)", "#8E8E93")
         )
         bg_tint, text_color = cat_info
+
+        # Render high-resolution vector icon image matching category accent
+        icon_name = ACTION_ICON_MAP.get(self.action_id, self.icon_str or "flash")
+        pix = get_icon_pixmap(icon_name, width=22, height=22, color=text_color)
+        self.icon_lbl.setPixmap(pix)
 
         if theme == "light":
             self.title_lbl.setStyleSheet(
@@ -190,7 +220,7 @@ class ActionCardButton(QPushButton):
         if is_offline:
             self.setEnabled(False)
             self.setCursor(Qt.CursorShape.ForbiddenCursor)
-            self.setToolTip("⚠️ [OFFLINE] Internet connection required for this function.")
+            self.setToolTip("[Offline] Internet connection required for this function.")
             if theme.lower() == "light":
                 self.setStyleSheet(
                     "QPushButton { background-color: #F4F4F5; border: 1px dashed #D4D4D8; "
@@ -210,24 +240,24 @@ class ActionCardButton(QPushButton):
 
 
 # ---------------------------------------------------------------------------
-# Main action definitions (id, icon, label, description, category, tags)
+# Main action definitions (id, icon_name, label, description, category, tags)
 # ---------------------------------------------------------------------------
 MAIN_ACTIONS = [
-    ("check_phone",   "🔍", "Check my phone",        "Detect device & show full hardware specs", "Device", ["check", "detect", "specs", "usb", "serial", "model", "phone", "state", "mode", "info"]),
-    ("checklist",     "✅", "Safety Checklist",      "Pre-flash verification & safety prerequisites", "Rescue", ["checklist", "prep", "safe", "battery", "usb debugging", "prerequisites", "safety"]),
-    ("unlock_bl",     "🔓", "Unlock Bootloader",     "Brand-aware bootloader unlock wizard", "Flashing", ["unlock", "bootloader", "fastboot", "oem", "xiaomi", "pixel", "samsung", "motorola", "bl"]),
-    ("root",          "🌱", "Root my phone",          "Magisk, KernelSU & APatch automated rooting", "Root", ["root", "magisk", "kernelsu", "apatch", "su", "superuser", "boot.img", "patch"]),
-    ("flash_rom",     "💾", "Flash ROM / GSI",       "Flash custom ROMs, GSIs, or TWRP/OrangeFox", "Flashing", ["flash", "rom", "gsi", "custom", "lineage", "twrp", "recovery", "fastboot", "payload", "zip"]),
-    ("modules",       "📦", "Manage Modules",        "Install, manage, and toggle root modules", "Root", ["module", "modules", "magisk", "lsposed", "zygisk", "zip", "install", "active"]),
-    ("diagnostics",   "🩺", "Diagnostics & Tweaks",  "Debloat apps, battery health, system tweaks", "Device", ["diagnostics", "debloat", "battery", "tweaks", "apps", "performance", "system", "speed"]),
-    ("integrity",     "🛡️", "Fix Play Integrity",     "Play Integrity diagnosis & fingerprint fixer", "Root", ["integrity", "play integrity", "safetynet", "cts", "banking", "fingerprint", "fix"]),
-    ("backup",        "💼", "Backup / Restore",       "Partition dumps, ADB backups & restore manager", "Rescue", ["backup", "restore", "dump", "partitions", "adb backup", "twrp", "images", "extract"]),
-    ("unbrick",       "🔧", "Fix bricked phone",      "Emergency rescue: bootloop killer, slot rollback", "Rescue", ["unbrick", "bootloop", "brick", "rescue", "edl", "fix bootloop", "safe mode", "slot", "vbmeta", "stuck"]),
-    ("return_stock",  "🏠", "Return to Stock",        "Remove root, relock & reflash stock firmware", "Flashing", ["stock", "return", "relock", "unroot", "factory", "oem", "revert", "clean"]),
-    ("mtk_unisoc",    "⚙️", "MTK / Unisoc mode",     "MediaTek BROM, scatter files & PAC flashing", "Flashing", ["mtk", "mediatek", "unisoc", "brom", "scatter", "pac", "bflash", "preloader"]),
-    ("scrcpy",        "🖥️", "Screen Mirror (scrcpy)", "Ultra-low latency screen mirror, touch control & audio forwarding", "Device", ["scrcpy", "mirror", "screen", "display", "remote", "touch", "record", "audio"]),
-    ("downloads",     "⬇️", "Downloads & Tools",     "Platform-tools, OEM drivers & firmware repos", "Device", ["downloads", "drivers", "platform-tools", "adb", "fastboot", "usb", "firmware", "gsi"]),
-    ("logs_help",     "📋", "Logs & Help",            "View telemetry logs, guides & troubleshooting", "Device", ["logs", "help", "guide", "troubleshooting", "terminal", "support", "docs"]),
+    ("check_phone",   "search",       "Check my phone",        "Detect device & show full hardware specs", "Device", ["check", "detect", "specs", "usb", "serial", "model", "phone", "state", "mode", "info"]),
+    ("checklist",     "checklist",    "Safety Checklist",      "Pre-flash verification & safety prerequisites", "Rescue", ["checklist", "prep", "safe", "battery", "usb debugging", "prerequisites", "safety"]),
+    ("unlock_bl",     "unlock",       "Unlock Bootloader",     "Brand-aware bootloader unlock wizard", "Flashing", ["unlock", "bootloader", "fastboot", "oem", "xiaomi", "pixel", "samsung", "motorola", "bl"]),
+    ("root",          "root",         "Root my phone",          "Magisk, KernelSU & APatch automated rooting", "Root", ["root", "magisk", "kernelsu", "apatch", "su", "superuser", "boot.img", "patch"]),
+    ("flash_rom",     "flash",        "Flash ROM / GSI",       "Flash custom ROMs, GSIs, or TWRP/OrangeFox", "Flashing", ["flash", "rom", "gsi", "custom", "lineage", "twrp", "recovery", "fastboot", "payload", "zip"]),
+    ("modules",       "modules",      "Manage Modules",        "Install, manage, and toggle root modules", "Root", ["module", "modules", "magisk", "lsposed", "zygisk", "zip", "install", "active"]),
+    ("diagnostics",   "diagnostics",  "Diagnostics & Tweaks",  "Debloat apps, battery health, system tweaks", "Device", ["diagnostics", "debloat", "battery", "tweaks", "apps", "performance", "system", "speed"]),
+    ("integrity",     "integrity",    "Fix Play Integrity",     "Play Integrity diagnosis & fingerprint fixer", "Root", ["integrity", "play integrity", "safetynet", "cts", "banking", "fingerprint", "fix"]),
+    ("backup",        "backup",       "Backup / Restore",       "Partition dumps, ADB backups & restore manager", "Rescue", ["backup", "restore", "dump", "partitions", "adb backup", "twrp", "images", "extract"]),
+    ("unbrick",       "unbrick",      "Fix bricked phone",      "Emergency rescue: bootloop killer, slot rollback", "Rescue", ["unbrick", "bootloop", "brick", "rescue", "edl", "fix bootloop", "safe mode", "slot", "vbmeta", "stuck"]),
+    ("return_stock",  "return_stock", "Return to Stock",        "Remove root, relock & reflash stock firmware", "Flashing", ["stock", "return", "relock", "unroot", "factory", "oem", "revert", "clean"]),
+    ("mtk_unisoc",    "mtk_unisoc",   "MTK / Unisoc mode",     "MediaTek BROM, scatter files & PAC flashing", "Flashing", ["mtk", "mediatek", "unisoc", "brom", "scatter", "pac", "bflash", "preloader"]),
+    ("scrcpy",        "scrcpy",       "Screen Mirror (scrcpy)", "Ultra-low latency screen mirror, touch control & audio forwarding", "Device", ["scrcpy", "mirror", "screen", "display", "remote", "touch", "record", "audio"]),
+    ("downloads",     "downloads",    "Downloads & Tools",     "Platform-tools, OEM drivers & firmware repos", "Device", ["downloads", "drivers", "platform-tools", "adb", "fastboot", "usb", "firmware", "gsi"]),
+    ("logs_help",     "logs_help",    "Logs & Help",            "View telemetry logs, guides & troubleshooting", "Device", ["logs", "help", "guide", "troubleshooting", "terminal", "support", "docs"]),
 ]
 
 # Page indices in the stacked widget
@@ -531,9 +561,16 @@ class MainWindow(QMainWindow):
 
         title_col = QVBoxLayout()
         title_col.setSpacing(2)
-        title = QLabel(f"⚡ {__app_name__}")
+
+        title_box = QHBoxLayout()
+        title_box.setSpacing(8)
+        app_logo_lbl = create_icon_label("app_logo", size=24)
+        title_box.addWidget(app_logo_lbl)
+        title = QLabel(__app_name__)
         title.setProperty("cssClass", "heading")
-        title_col.addWidget(title)
+        title_box.addWidget(title)
+        title_box.addStretch()
+        title_col.addLayout(title_box)
 
         subtitle = QLabel("Unified personal workstation for rooting, flashing, and diagnostics.")
         subtitle.setProperty("cssClass", "muted")
@@ -541,28 +578,32 @@ class MainWindow(QMainWindow):
         top_bar.addLayout(title_col, 1)
 
         # Setup Laptop button (User Request)
-        setup_btn = QPushButton("🛠️  Setup Laptop")
+        setup_btn = QPushButton("Setup Laptop")
+        setup_btn.setIcon(get_icon("tools", 14))
         setup_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         setup_btn.setToolTip("Configure laptop prerequisites, install ADB, Fastboot & OEM USB drivers")
         setup_btn.clicked.connect(self._show_setup_wizard)
         top_bar.addWidget(setup_btn)
 
         # Phone Key Guide button (User Request)
-        key_guide_btn = QPushButton("📱  Key Guide")
+        key_guide_btn = QPushButton("Key Guide")
+        key_guide_btn.setIcon(get_icon("phone", 14))
         key_guide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         key_guide_btn.setToolTip("Hardware button combinations (Vol+, Vol-, Power) for boot menus")
         key_guide_btn.clicked.connect(self._show_key_guide)
         top_bar.addWidget(key_guide_btn)
 
         # Guide button (User Addition 7)
-        guide_btn = QPushButton("📖  Workflow Guide")
+        guide_btn = QPushButton("Workflow Guide")
+        guide_btn.setIcon(get_icon("book", 14))
         guide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         guide_btn.setToolTip("View recommended safe workflows and function explanations")
         guide_btn.clicked.connect(self._show_guide)
         top_bar.addWidget(guide_btn)
 
         # Self-Test button (Phase 16)
-        selftest_btn = QPushButton("⚡  Self-Test")
+        selftest_btn = QPushButton("Self-Test")
+        selftest_btn.setIcon(get_icon("flash", 14))
         selftest_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         selftest_btn.setToolTip("Run automated system diagnostics & toolchain integrity checks")
         selftest_btn.clicked.connect(self._show_selftest)
@@ -571,6 +612,7 @@ class MainWindow(QMainWindow):
         # Dark/Light Theme toggle button
         current_theme = self._config.get("theme", "dark")
         self._theme_btn = QPushButton(self._theme_btn_text(current_theme))
+        self._theme_btn.setIcon(get_icon("moon" if current_theme.lower() == "light" else "sun", 14))
         self._theme_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._theme_btn.setToolTip("Toggle between Dark and Light mode")
         self._theme_btn.clicked.connect(self._toggle_theme)
@@ -585,16 +627,24 @@ class MainWindow(QMainWindow):
         if not self._fastboot.available:
             tool_parts.append("Fastboot not found")
         if tool_parts:
+            tool_warn_frame = QFrame()
+            tool_warn_frame.setStyleSheet(
+                "background-color: rgba(255, 149, 0, 0.08); border: 1px solid rgba(255, 149, 0, 0.25); "
+                "border-radius: 8px; padding: 10px 14px;"
+            )
+            warn_lay = QHBoxLayout(tool_warn_frame)
+            warn_lay.setContentsMargins(4, 4, 4, 4)
+            warn_lay.setSpacing(8)
+            warn_icon = create_icon_label("warning", 16, color="#C96E00")
+            warn_lay.addWidget(warn_icon)
             tool_warn = QLabel(
-                "⚠️  " + ", ".join(tool_parts) + ".  "
+                ", ".join(tool_parts) + ". "
                 "Install Android platform-tools or use Downloads & Updates > Tools Manager."
             )
             tool_warn.setWordWrap(True)
-            tool_warn.setStyleSheet(
-                "background-color: rgba(255, 149, 0, 0.08); border: 1px solid rgba(255, 149, 0, 0.25); "
-                "border-radius: 8px; padding: 10px 14px; color: #C96E00; font-size: 12px;"
-            )
-            page_layout.addWidget(tool_warn)
+            tool_warn.setStyleSheet("color: #C96E00; font-size: 12px; border: none; background: transparent;")
+            warn_lay.addWidget(tool_warn, 1)
+            page_layout.addWidget(tool_warn_frame)
 
         # ---- Search Bar & Filter Navigation Hub ----
         nav_hub = QFrame()
@@ -609,7 +659,7 @@ class MainWindow(QMainWindow):
 
         self._search_input = QLineEdit()
         self._search_input.setPlaceholderText(
-            "🔍  Search tools, actions or keywords (e.g. bootloop, root, flash, debloat, drivers, unbrick)..."
+            "Search tools, actions or keywords (e.g. bootloop, root, flash, debloat, drivers, unbrick)..."
         )
         self._search_input.setClearButtonEnabled(True)
         self._search_input.setMinimumHeight(38)
@@ -637,15 +687,16 @@ class MainWindow(QMainWindow):
         dev_count = len([a for a in MAIN_ACTIONS if len(a) > 4 and a[4] == "Device"])
 
         categories = [
-            ("All", f"🌐 All Tools ({all_count})"),
-            ("Root", f"🌱 Root & Modules ({root_count})"),
-            ("Flashing", f"💾 Flashing & ROMs ({flash_count})"),
-            ("Rescue", f"🚑 Rescue & Unbrick ({rescue_count})"),
-            ("Device", f"🩺 Device & Tools ({dev_count})"),
+            ("All", "globe", f"All Tools ({all_count})"),
+            ("Root", "root", f"Root & Modules ({root_count})"),
+            ("Flashing", "flash", f"Flashing & ROMs ({flash_count})"),
+            ("Rescue", "unbrick", f"Rescue & Unbrick ({rescue_count})"),
+            ("Device", "diagnostics", f"Device & Tools ({dev_count})"),
         ]
 
-        for cat_key, cat_label in categories:
+        for cat_key, cat_icon, cat_label in categories:
             c_btn = QPushButton(cat_label)
+            c_btn.setIcon(get_icon(cat_icon, 13))
             c_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             c_btn.clicked.connect(partial(self._on_category_clicked, cat_key))
             filter_row.addWidget(c_btn)
@@ -660,10 +711,10 @@ class MainWindow(QMainWindow):
 
         self._sort_combo = QComboBox()
         self._sort_combo.setMinimumWidth(160)
-        self._sort_combo.addItem("📌 Recommended", "recommended")
-        self._sort_combo.addItem("🔤 Alphabetical (A → Z)", "az")
-        self._sort_combo.addItem("🔤 Alphabetical (Z → A)", "za")
-        self._sort_combo.addItem("🗂️ Group by Category", "category")
+        self._sort_combo.addItem("Recommended", "recommended")
+        self._sort_combo.addItem("Alphabetical (A → Z)", "az")
+        self._sort_combo.addItem("Alphabetical (Z → A)", "za")
+        self._sort_combo.addItem("Group by Category", "category")
         self._sort_combo.setCursor(Qt.CursorShape.PointingHandCursor)
         self._sort_combo.setToolTip("Sort all tools alphabetically, by category, or recommended order")
         self._sort_combo.currentIndexChanged.connect(self._filter_tools)
@@ -714,17 +765,16 @@ class MainWindow(QMainWindow):
         empty_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
         empty_box.setSpacing(8)
 
-        empty_icon = QLabel("🔍")
-        empty_icon.setStyleSheet("font-size: 28px;")
-        empty_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        empty_box.addWidget(empty_icon)
+        empty_icon = create_icon_label("search", size=32, color="#8E8E93")
+        empty_box.addWidget(empty_icon, 0, Qt.AlignmentFlag.AlignCenter)
 
         self._empty_state_msg = QLabel("No tools match your search or filter.")
         self._empty_state_msg.setStyleSheet("font-size: 13px; color: #8E8E93; font-weight: 500;")
         self._empty_state_msg.setAlignment(Qt.AlignmentFlag.AlignCenter)
         empty_box.addWidget(self._empty_state_msg)
 
-        clear_btn = QPushButton("↺ Clear Search & Reset Filters")
+        clear_btn = QPushButton("Clear Search & Reset Filters")
+        clear_btn.setIcon(get_icon("refresh", 14, color="#FFFFFF"))
         clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         clear_btn.setStyleSheet(
             "background-color: #0A84FF; color: #FFFFFF; font-weight: 600; "
@@ -747,18 +797,25 @@ class MainWindow(QMainWindow):
 
         # ---- First-run warning ----
         if self._config.first_run:
+            warn_card = QFrame()
+            warn_card.setStyleSheet(
+                "background-color: #121008; border: 1px solid #332508; "
+                "border-radius: 8px; padding: 10px 14px;"
+            )
+            warn_card_lay = QHBoxLayout(warn_card)
+            warn_card_lay.setContentsMargins(4, 4, 4, 4)
+            warn_card_lay.setSpacing(8)
+            warn_icon_lbl = create_icon_label("warning", 16, color="#eab308")
+            warn_card_lay.addWidget(warn_icon_lbl)
             warn = QLabel(
-                "⚠️  This tool can modify your phone's firmware. "
+                "This tool can modify your phone's firmware. "
                 "Always test on a spare phone first. "
                 "See Logs & Help for the full disclaimer."
             )
             warn.setWordWrap(True)
-            warn.setStyleSheet(
-                "background-color: #121008; border: 1px solid #332508; "
-                "border-radius: 5px; padding: 10px 14px; color: #eab308; "
-                "font-size: 12px;"
-            )
-            page_layout.addWidget(warn)
+            warn.setStyleSheet("color: #eab308; font-size: 12px; border: none; background: transparent;")
+            warn_card_lay.addWidget(warn, 1)
+            page_layout.addWidget(warn_card)
 
         self._stack.addWidget(page)
 
@@ -781,9 +838,15 @@ class MainWindow(QMainWindow):
         page_layout.addWidget(self._make_back_button())
 
         # Title
-        title = QLabel("📱 Device Details")
+        title_box = QHBoxLayout()
+        title_box.setSpacing(8)
+        phone_icon = create_icon_label("phone", size=20)
+        title_box.addWidget(phone_icon)
+        title = QLabel("Device Details")
         title.setProperty("cssClass", "heading")
-        page_layout.addWidget(title)
+        title_box.addWidget(title)
+        title_box.addStretch()
+        page_layout.addLayout(title_box)
 
         # Device card
         self._device_card = DeviceCard()
@@ -1547,7 +1610,7 @@ class MainWindow(QMainWindow):
         QMessageBox.about(
             self,
             f"About {__app_name__}",
-            f"<h2>⚡ {__app_name__} v{__version__}</h2>"
+            f"<h2>{__app_name__} v{__version__}</h2>"
             "<p>Personal, one-click Android service toolbox for Windows.</p>"
             "<p>Handles rooting, bootloader unlocking, ROM flashing, "
             "firmware recovery, backup/restore, and returning to stock.</p>"
@@ -1627,6 +1690,7 @@ class MainWindow(QMainWindow):
             app.setStyleSheet(get_stylesheet(theme_name))
         if hasattr(self, "_theme_btn"):
             self._theme_btn.setText(self._theme_btn_text(theme_name))
+            self._theme_btn.setIcon(get_icon("moon" if theme_name.lower() == "light" else "sun", 14))
 
         # Update action cards and filter widgets
         for btn in self._action_buttons.values():
@@ -1645,7 +1709,7 @@ class MainWindow(QMainWindow):
         log.info("Theme switched to: %s", theme_name)
 
     def _theme_btn_text(self, theme: str) -> str:
-        return "🌙  Dark Mode" if theme.lower() == "light" else "☀️  Light Mode"
+        return "Dark Mode" if theme.lower() == "light" else "Light Mode"
 
     @Slot(bool)
     def _update_network_buttons(self, is_online: bool) -> None:
@@ -1668,7 +1732,7 @@ class MainWindow(QMainWindow):
                 else:
                     btn.setEnabled(False)
                     btn.setCursor(Qt.CursorShape.ForbiddenCursor)
-                    btn.setToolTip("⚠️ [OFFLINE] Internet connection required for this function.")
+                    btn.setToolTip("[OFFLINE] Internet connection required for this function.")
                     if cur_theme == "light":
                         btn.setStyleSheet(
                             "QPushButton {"

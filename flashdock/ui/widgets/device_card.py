@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from flashdock.core.device import DeviceInfo
 from flashdock.logger import get_logger
 from flashdock.ui.brand_assets import get_brand_pixmap
+from flashdock.ui.icon_assets import create_icon_label
 
 log = get_logger(__name__)
 
@@ -137,10 +138,16 @@ class DeviceCard(QScrollArea):
 
         # ---- Detection warnings ----
         for err in info.detection_errors:
-            warn = QLabel(f"⚠️  {err}")
-            warn.setWordWrap(True)
-            warn.setProperty("cssClass", "warn_banner")
-            self._layout.addWidget(warn)
+            warn_frame = QFrame()
+            warn_frame.setProperty("cssClass", "warn_banner")
+            w_layout = QHBoxLayout(warn_frame)
+            w_layout.setContentsMargins(10, 6, 10, 6)
+            w_layout.setSpacing(8)
+            w_layout.addWidget(create_icon_label("warning", 16))
+            warn_lbl = QLabel(err)
+            warn_lbl.setWordWrap(True)
+            w_layout.addWidget(warn_lbl, 1)
+            self._layout.addWidget(warn_frame)
 
         # ---- Identity section ----
         identity = _Section("Identity")

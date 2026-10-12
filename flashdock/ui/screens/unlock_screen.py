@@ -37,6 +37,7 @@ from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
 from flashdock.ui.brand_assets import get_brand_badge
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger(__name__)
 
@@ -103,15 +104,22 @@ class _StepWidget(QFrame):
 
         # Warning
         if step.warning:
-            warn = QLabel(f"⚠️  {step.warning}")
-            warn.setWordWrap(True)
-            warn.setProperty("cssClass", "warn_banner")
-            layout.addWidget(warn)
+            warn_frame = QFrame(self)
+            warn_frame.setProperty("cssClass", "warn_banner")
+            warn_layout = QHBoxLayout(warn_frame)
+            warn_layout.setContentsMargins(8, 4, 8, 4)
+            warn_layout.setSpacing(6)
+            warn_layout.addWidget(create_icon_label("warning", 14, parent=warn_frame))
+            warn_label = QLabel(step.warning, warn_frame)
+            warn_label.setWordWrap(True)
+            warn_layout.addWidget(warn_label, 1)
+            layout.addWidget(warn_frame)
 
         # Action button (for auto steps)
         if step.action == "auto":
             btn_row = QHBoxLayout()
-            self._exec_btn = QPushButton("▶  Execute this step")
+            self._exec_btn = QPushButton("Execute this step", self)
+            self._exec_btn.setIcon(get_icon("play", 14))
             self._exec_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             self._exec_btn.setProperty("cssClass", "primary")
             self._exec_btn.clicked.connect(lambda: self.execute_requested.emit(step.index))
@@ -120,7 +128,7 @@ class _StepWidget(QFrame):
             layout.addLayout(btn_row)
 
         # Result area (hidden until step runs)
-        self._result_label = QLabel("")
+        self._result_label = QLabel("", self)
         self._result_label.setWordWrap(True)
         self._result_label.setProperty("cssClass", "success")
         self._result_label.hide()
@@ -128,7 +136,7 @@ class _StepWidget(QFrame):
 
     def mark_completed(self, result: str = "") -> None:
         self._step.completed = True
-        self._result_label.setText(f"✅  {result or 'Completed'}")
+        self._result_label.setText(result or "Completed")
         self._result_label.setProperty("cssClass", "success")
         self._result_label.show()
         if hasattr(self, "_exec_btn"):
@@ -136,7 +144,7 @@ class _StepWidget(QFrame):
             self._exec_btn.setText("Done")
 
     def mark_failed(self, error: str = "") -> None:
-        self._result_label.setText(f"❌  {error or 'Failed'}")
+        self._result_label.setText(error or "Failed")
         self._result_label.setProperty("cssClass", "error")
         self._result_label.show()
 
@@ -166,9 +174,14 @@ class UnlockScreen(QWidget):
         layout.setSpacing(12)
 
         # Header
-        title = QLabel("🔓  Bootloader Unlock Wizard")
+        title_h = QHBoxLayout()
+        title_h.setSpacing(8)
+        title_h.addWidget(create_icon_label("unlock", 22))
+        title = QLabel("Bootloader Unlock Wizard", self)
         title.setProperty("cssClass", "heading")
-        layout.addWidget(title)
+        title_h.addWidget(title)
+        title_h.addStretch(1)
+        layout.addLayout(title_h)
 
         self._subtitle = QLabel("Connect a device to begin.")
         self._subtitle.setProperty("cssClass", "muted")
@@ -195,20 +208,26 @@ class UnlockScreen(QWidget):
         if not device or device.mode == "not_connected":
             self._subtitle.setText("No device connected. Select your brand below to view guided unlock instructions or plug in your phone.")
 
-            selector_card = QFrame()
+            selector_card = QFrame(self._content)
             selector_card.setProperty("cssClass", "card")
             s_layout = QVBoxLayout(selector_card)
             s_layout.setContentsMargins(18, 16, 18, 16)
             s_layout.setSpacing(12)
 
-            s_title = QLabel("📱 Browse Bootloader Unlock Guides by Brand")
+            s_title_h = QHBoxLayout()
+            s_title_h.setSpacing(8)
+            s_title_h.addWidget(create_icon_label("phone", 18, parent=selector_card))
+            s_title = QLabel("Browse Bootloader Unlock Guides by Brand", selector_card)
             s_title.setProperty("cssClass", "subheading")
-            s_layout.addWidget(s_title)
+            s_title_h.addWidget(s_title)
+            s_title_h.addStretch(1)
+            s_layout.addLayout(s_title_h)
 
             s_desc = QLabel(
                 "No phone is currently connected with active USB Debugging. "
                 "Select your phone brand below to view official prerequisites, OEM unlocking procedures, "
-                "hardware key confirmation steps, and fastboot unlock commands:"
+                "hardware key confirmation steps, and fastboot unlock commands:",
+                selector_card,
             )
             s_desc.setWordWrap(True)
             s_desc.setProperty("cssClass", "muted")
@@ -217,7 +236,7 @@ class UnlockScreen(QWidget):
             brand_row = QHBoxLayout()
             brand_row.setSpacing(10)
 
-            combo = QComboBox()
+            combo = QComboBox(selector_card)
             combo.setMinimumHeight(34)
             brands_list = [
                 ("Tecno Mobile (HiOS)", "tecno"),
@@ -233,7 +252,8 @@ class UnlockScreen(QWidget):
             for label, bid in brands_list:
                 combo.addItem(label, bid)
 
-            load_btn = QPushButton("📖 View Unlock Guide")
+            load_btn = QPushButton("View Unlock Guide", selector_card)
+            load_btn.setIcon(get_icon("book", 14))
             load_btn.setProperty("cssClass", "primary")
             load_btn.setMinimumHeight(34)
             load_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -250,9 +270,10 @@ class UnlockScreen(QWidget):
         if device.bootloader_state == "unlocked":
             self._subtitle.setText(f"{device.summary_line} -- Bootloader is already UNLOCKED")
             info = QLabel(
-                "✅  Your bootloader is already unlocked.\n\n"
+                "Your bootloader is already unlocked.\n\n"
                 "You can proceed to rooting, flashing ROMs, or other tasks.\n"
-                "If you want to RE-LOCK the bootloader, use 'Return to Stock'."
+                "If you want to RE-LOCK the bootloader, use 'Return to Stock'.",
+                self._content,
             )
             info.setWordWrap(True)
             info.setProperty("cssClass", "card")
@@ -328,7 +349,8 @@ class UnlockScreen(QWidget):
         bc_layout.addLayout(info_col, 1)
 
         if is_manual:
-            back_btn = QPushButton("🔄 Change Brand")
+            back_btn = QPushButton("Change Brand", brand_card)
+            back_btn.setIcon(get_icon("refresh", 14))
             back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             back_btn.clicked.connect(lambda: self.load_for_device(None))
             bc_layout.addWidget(back_btn)
@@ -337,24 +359,37 @@ class UnlockScreen(QWidget):
 
         # Warnings banner
         if flow.warnings:
+            warn_card = QFrame(self._content)
+            warn_card.setProperty("cssClass", "danger_banner")
+            w_layout = QHBoxLayout(warn_card)
+            w_layout.setContentsMargins(10, 8, 10, 8)
+            w_layout.setSpacing(8)
+            w_layout.addWidget(create_icon_label("warning", 18, parent=warn_card))
             warn_text = "\n".join(f"  - {w}" for w in flow.warnings)
-            warn = QLabel(f"⚠️  IMPORTANT WARNINGS:\n{warn_text}")
-            warn.setWordWrap(True)
-            warn.setProperty("cssClass", "danger_banner")
-            self._content_layout.insertWidget(self._content_layout.count() - 1, warn)
+            w_lbl = QLabel(f"IMPORTANT WARNINGS:\n{warn_text}", warn_card)
+            w_lbl.setWordWrap(True)
+            w_layout.addWidget(w_lbl, 1)
+            self._content_layout.insertWidget(self._content_layout.count() - 1, warn_card)
 
         # Prerequisites
         if flow.prerequisites:
-            prereq_frame = QFrame()
+            prereq_frame = QFrame(self._content)
             prereq_frame.setProperty("cssClass", "card")
             prereq_layout = QVBoxLayout(prereq_frame)
             prereq_layout.setContentsMargins(12, 8, 12, 8)
-            prereq_layout.setSpacing(4)
-            prereq_title = QLabel("📋  Prerequisites")
+            prereq_layout.setSpacing(6)
+
+            pt_h = QHBoxLayout()
+            pt_h.setSpacing(6)
+            pt_h.addWidget(create_icon_label("checklist", 16, parent=prereq_frame))
+            prereq_title = QLabel("Prerequisites", prereq_frame)
             prereq_title.setProperty("cssClass", "subheading")
-            prereq_layout.addWidget(prereq_title)
+            pt_h.addWidget(prereq_title)
+            pt_h.addStretch(1)
+            prereq_layout.addLayout(pt_h)
+
             for p in flow.prerequisites:
-                item = QLabel(f"  - {p}")
+                item = QLabel(f"  - {p}", prereq_frame)
                 item.setWordWrap(True)
                 item.setProperty("cssClass", "muted")
                 prereq_layout.addWidget(item)
@@ -362,28 +397,40 @@ class UnlockScreen(QWidget):
 
         # Data wipe warning
         if flow.wipes_data:
-            wipe = QLabel(
-                "🗑️  THIS PROCESS WILL ERASE ALL DATA ON YOUR PHONE.\n"
-                "     Back up everything before proceeding."
+            wipe_card = QFrame(self._content)
+            wipe_card.setProperty("cssClass", "warn_banner")
+            wp_layout = QHBoxLayout(wipe_card)
+            wp_layout.setContentsMargins(10, 8, 10, 8)
+            wp_layout.setSpacing(8)
+            wp_layout.addWidget(create_icon_label("trash", 18, parent=wipe_card))
+            wipe_lbl = QLabel(
+                "THIS PROCESS WILL ERASE ALL DATA ON YOUR PHONE.\nBack up everything before proceeding.",
+                wipe_card,
             )
-            wipe.setWordWrap(True)
-            wipe.setProperty("cssClass", "warn_banner")
-            self._content_layout.insertWidget(self._content_layout.count() - 1, wipe)
+            wipe_lbl.setWordWrap(True)
+            wp_layout.addWidget(wipe_lbl, 1)
+            self._content_layout.insertWidget(self._content_layout.count() - 1, wipe_card)
 
         # Waiting period notice
         if flow.waiting_period:
-            wait = QLabel(f"⏳  Waiting period required: {flow.waiting_period}")
-            wait.setProperty("cssClass", "info_banner")
-            self._content_layout.insertWidget(self._content_layout.count() - 1, wait)
+            wait_card = QFrame(self._content)
+            wait_card.setProperty("cssClass", "info_banner")
+            wt_layout = QHBoxLayout(wait_card)
+            wt_layout.setContentsMargins(10, 8, 10, 8)
+            wt_layout.setSpacing(8)
+            wt_layout.addWidget(create_icon_label("info", 16, parent=wait_card))
+            wait_lbl = QLabel(f"Waiting period required: {flow.waiting_period}", wait_card)
+            wt_layout.addWidget(wait_lbl, 1)
+            self._content_layout.insertWidget(self._content_layout.count() - 1, wait_card)
 
         # Steps
-        steps_title = QLabel(f"Steps ({len(flow.steps)} total)")
+        steps_title = QLabel(f"Steps ({len(flow.steps)} total)", self._content)
         steps_title.setProperty("cssClass", "subheading")
         self._content_layout.insertWidget(self._content_layout.count() - 1, steps_title)
 
         self._step_widgets = []
         for step in flow.steps:
-            sw = _StepWidget(step)
+            sw = _StepWidget(step, parent=self._content)
             sw.execute_requested.connect(self._on_step_execute)
             self._step_widgets.append(sw)
             self._content_layout.insertWidget(self._content_layout.count() - 1, sw)
@@ -391,9 +438,10 @@ class UnlockScreen(QWidget):
         # Links
         if flow.firmware_url or flow.guide_url:
             links = QLabel(
-                f"{'📥  Firmware: ' + flow.firmware_url if flow.firmware_url else ''}"
+                f"{'Firmware: ' + flow.firmware_url if flow.firmware_url else ''}"
                 f"{'  |  ' if flow.firmware_url and flow.guide_url else ''}"
-                f"{'📖  Guide: ' + flow.guide_url if flow.guide_url else ''}"
+                f"{'Guide: ' + flow.guide_url if flow.guide_url else ''}",
+                self._content,
             )
             links.setWordWrap(True)
             links.setProperty("cssClass", "muted")

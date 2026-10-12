@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 from flashdock.constants import ROOT_APPS_DIR
 from flashdock.core.rooting import ROOT_DOWNLOAD_URLS, RootingEngine
 from flashdock.logger import get_logger
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger(__name__)
 
@@ -47,7 +48,7 @@ class RootAppsLibraryDialog(QDialog):
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("📦 Root Manager Applications Library")
+        self.setWindowTitle("Root Manager Applications Library")
         self.setMinimumSize(680, 440)
         self._setup_ui()
         self._load_stored_apks()
@@ -58,9 +59,14 @@ class RootAppsLibraryDialog(QDialog):
         layout.setSpacing(14)
 
         # Header
-        header = QLabel("📦  Stored Root Applications (data/root_apps/)")
+        h_box = QHBoxLayout()
+        h_box.setSpacing(10)
+        h_box.addWidget(create_icon_label("root", 22))
+        header = QLabel("Stored Root Applications (data/root_apps/)")
         header.setProperty("cssClass", "heading")
-        layout.addWidget(header)
+        h_box.addWidget(header)
+        h_box.addStretch()
+        layout.addLayout(h_box)
 
         desc = QLabel(
             "Manage your collection of root manager APKs (Magisk, Magisk Alpha, Kitsune Mask, "
@@ -84,13 +90,15 @@ class RootAppsLibraryDialog(QDialog):
         # Bottom buttons
         btn_row = QHBoxLayout()
 
-        btn_add = QPushButton("➕ Add Root APK to Library...")
+        btn_add = QPushButton("Add Root APK to Library...")
+        btn_add.setIcon(get_icon("plus", 16))
         btn_add.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_add.setProperty("cssClass", "primary")
         btn_add.clicked.connect(self._on_add_apk)
         btn_row.addWidget(btn_add)
 
-        btn_open_folder = QPushButton("📁 Open Storage Folder")
+        btn_open_folder = QPushButton("Open Storage Folder")
+        btn_open_folder.setIcon(get_icon("folder", 16))
         btn_open_folder.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_open_folder.setProperty("cssClass", "secondary")
         btn_open_folder.clicked.connect(self._on_open_folder)
@@ -113,7 +121,8 @@ class RootAppsLibraryDialog(QDialog):
 
         for row, apk in enumerate(apks):
             # Name
-            item_name = QTableWidgetItem(f"📱  {apk.stem}")
+            item_name = QTableWidgetItem(f"  {apk.stem}")
+            item_name.setIcon(get_icon("modules", 16))
             item_name.setToolTip(str(apk))
             self._table.setItem(row, 0, item_name)
 
@@ -141,7 +150,8 @@ class RootAppsLibraryDialog(QDialog):
             btn_select.clicked.connect(lambda _, p=apk: self._select_apk(p))
             actions_layout.addWidget(btn_select)
 
-            btn_del = QPushButton("🗑️")
+            btn_del = QPushButton("Delete")
+            btn_del.setIcon(get_icon("trash", 14))
             btn_del.setToolTip("Delete APK from library")
             btn_del.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_del.setProperty("cssClass", "danger")
@@ -199,9 +209,14 @@ class RootDownloadsDialog(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(14)
 
-        header = QLabel("🌐  Official Root Solutions & Releases")
+        h_box = QHBoxLayout()
+        h_box.setSpacing(10)
+        h_box.addWidget(create_icon_label("globe", 22))
+        header = QLabel("Official Root Solutions & Releases")
         header.setProperty("cssClass", "heading")
-        layout.addWidget(header)
+        h_box.addWidget(header)
+        h_box.addStretch()
+        layout.addLayout(h_box)
 
         desc = QLabel(
             "Download official APKs directly from their verified source repositories. "
@@ -222,42 +237,42 @@ class RootDownloadsDialog(QDialog):
 
         solutions_meta = [
             (
-                "🌱 Magisk Official (Stable)",
+                "Magisk Official (Stable)",
                 "Universal systemless root solution with Zygisk, DenyList, and module support by topjohnwu.",
                 ROOT_DOWNLOAD_URLS["magisk"],
             ),
             (
-                "⚡ Magisk Alpha",
+                "Magisk Alpha",
                 "Bleeding-edge Magisk branch by vvb2060 with enhanced isolation and pre-release Zygisk fixes.",
                 ROOT_DOWNLOAD_URLS["magisk_alpha"],
             ),
             (
-                "🦊 Kitsune Mask (Magisk Delta)",
+                "Kitsune Mask (Magisk Delta)",
                 "Renowned Magisk fork by HuskyDG featuring native MagiskHide & SuList for maximum banking bypass.",
                 ROOT_DOWNLOAD_URLS["kitsune"],
             ),
             (
-                "🐤 Magisk Canary Channel",
+                "Magisk Canary Channel",
                 "Official upstream Canary channel of Magisk directly tracking master branch commits.",
                 ROOT_DOWNLOAD_URLS["magisk_canary"],
             ),
             (
-                "🐧 KernelSU Official",
+                "KernelSU Official",
                 "Kernel-space root solution for GKI Linux 5.10+ devices by weishu with userspace invisibility.",
                 ROOT_DOWNLOAD_URLS["kernelsu"],
             ),
             (
-                "🚀 KernelSU Next",
+                "KernelSU Next",
                 "Enhanced community fork of KernelSU with non-GKI backport and advanced module isolation.",
                 ROOT_DOWNLOAD_URLS["kernelsu_next"],
             ),
             (
-                "🛡️ APatch (KernelPatch)",
+                "APatch (KernelPatch)",
                 "KernelPatch-based root by bmax121 without requiring GKI compilation, protected by SuperKey.",
                 ROOT_DOWNLOAD_URLS["apatch"],
             ),
             (
-                "🥷 SukiSU Ultra",
+                "SukiSU Ultra",
                 "KernelSU stealth fork featuring customizable supath and deep anti-detection mechanisms.",
                 ROOT_DOWNLOAD_URLS["sukisu"],
             ),
@@ -268,6 +283,9 @@ class RootDownloadsDialog(QDialog):
             card.setProperty("cssClass", "card")
             card_layout = QHBoxLayout(card)
             card_layout.setContentsMargins(10, 8, 10, 8)
+            card_layout.setSpacing(10)
+
+            card_layout.addWidget(create_icon_label("root", 20), alignment=Qt.AlignmentFlag.AlignTop)
 
             info_layout = QVBoxLayout()
             info_layout.setSpacing(4)
@@ -282,6 +300,7 @@ class RootDownloadsDialog(QDialog):
             card_layout.addLayout(info_layout, 1)
 
             btn_open = QPushButton("Open Release ↗")
+            btn_open.setIcon(get_icon("globe", 14))
             btn_open.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_open.setProperty("cssClass", "secondary")
             btn_open.clicked.connect(lambda _, u=url: QDesktopServices.openUrl(QUrl(u)))

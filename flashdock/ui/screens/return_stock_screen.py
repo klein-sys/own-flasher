@@ -56,6 +56,7 @@ from flashdock.core.return_stock import (
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 from flashdock.ui.widgets.flash_shield import FlashShieldDialog
 
 log = get_logger(__name__)
@@ -125,7 +126,7 @@ class RelockConfirmationDialog(QDialog):
         self._command = command
         self._warnings = warnings
 
-        self.setWindowTitle("⚠️ Relock Bootloader Confirmation")
+        self.setWindowTitle("Relock Bootloader Confirmation")
         self.setModal(True)
         self.setMinimumWidth(520)
         self._setup_ui()
@@ -136,13 +137,19 @@ class RelockConfirmationDialog(QDialog):
         layout.setSpacing(14)
 
         # Danger Banner
+        # Danger Banner
         banner = QFrame()
         banner.setProperty("cssClass", "danger_banner")
         b_lay = QVBoxLayout(banner)
         b_lay.setSpacing(6)
-        b_title = QLabel("⚠️ EXTREME CAUTION: Bootloader Relock")
+        b_title_row = QHBoxLayout()
+        b_title_row.setSpacing(8)
+        b_title_row.addWidget(create_icon_label("warning", 18))
+        b_title = QLabel("EXTREME CAUTION: Bootloader Relock")
         b_title.setProperty("cssClass", "error")
-        b_lay.addWidget(b_title)
+        b_title_row.addWidget(b_title)
+        b_title_row.addStretch()
+        b_lay.addLayout(b_title_row)
 
         b_desc = QLabel(
             "Relocking the bootloader will restore full hardware verification. "
@@ -156,7 +163,7 @@ class RelockConfirmationDialog(QDialog):
 
         # Phone action explanation
         info_label = QLabel(
-            "📱 <b>What happens next on your phone:</b><br>"
+            "<b>What happens next on your phone:</b><br>"
             "1. FlashDock will send the relock command to fastboot.<br>"
             "2. Your phone screen will display a prompt: <i>'Lock the bootloader?'</i><br>"
             "3. Use the <b>Volume buttons</b> to highlight <b>'LOCK THE BOOTLOADER'</b> and press <b>Power</b> to confirm.<br>"
@@ -194,7 +201,8 @@ class RelockConfirmationDialog(QDialog):
         self._cancel_btn.clicked.connect(self.reject)
         btn_box.addWidget(self._cancel_btn)
 
-        self._confirm_btn = QPushButton("🔒 Relock Bootloader Now")
+        self._confirm_btn = QPushButton("Relock Bootloader Now")
+        self._confirm_btn.setIcon(get_icon("lock", 16))
         self._confirm_btn.setEnabled(False)
         self._confirm_btn.setProperty("cssClass", "danger")
         self._confirm_btn.clicked.connect(self.accept)
@@ -240,9 +248,14 @@ class ReturnStockScreen(QWidget):
         layout.setSpacing(12)
 
         # Header
-        title = QLabel("🏠  Return to Stock & Safe Bootloader Relock")
+        t_box = QHBoxLayout()
+        t_box.setSpacing(10)
+        t_box.addWidget(create_icon_label("return_stock", 22))
+        title = QLabel("Return to Stock & Safe Bootloader Relock")
         title.setProperty("cssClass", "heading")
-        layout.addWidget(title)
+        t_box.addWidget(title)
+        t_box.addStretch()
+        layout.addLayout(t_box)
 
         self._subtitle = QLabel(
             "Restore pure OEM factory firmware, wipe custom modifications, and safely relock bootloader."
@@ -261,9 +274,9 @@ class ReturnStockScreen(QWidget):
         self._setup_relock_tab()
         self._setup_guide_tab()
 
-        self._tabs.addTab(self._tab_flash, "⚡ Restore Factory Firmware")
-        self._tabs.addTab(self._tab_relock, "🔒 Safe Bootloader Relock")
-        self._tabs.addTab(self._tab_guide, "📖 Stock Guides & Recovery")
+        self._tabs.addTab(self._tab_flash, get_icon("flash", 16), "Restore Factory Firmware")
+        self._tabs.addTab(self._tab_relock, get_icon("lock", 16), "Safe Bootloader Relock")
+        self._tabs.addTab(self._tab_guide, get_icon("book", 16), "Stock Guides & Recovery")
 
         layout.addWidget(self._tabs, 1)
 
@@ -297,7 +310,8 @@ class ReturnStockScreen(QWidget):
         info_col.addWidget(self._dev_detail_label)
         d_lay.addLayout(info_col, 1)
 
-        self._reboot_fb_btn = QPushButton("⚡ Reboot to Fastboot")
+        self._reboot_fb_btn = QPushButton("Reboot to Fastboot")
+        self._reboot_fb_btn.setIcon(get_icon("refresh", 16))
         self._reboot_fb_btn.setEnabled(False)
         self._reboot_fb_btn.setProperty("cssClass", "secondary")
         self._reboot_fb_btn.clicked.connect(self._reboot_to_fastboot)
@@ -315,12 +329,14 @@ class ReturnStockScreen(QWidget):
         self._pkg_path_edit.setPlaceholderText("Select factory image directory or ZIP archive...")
         path_row.addWidget(self._pkg_path_edit, 1)
 
-        browse_dir_btn = QPushButton("📁 Browse Folder")
+        browse_dir_btn = QPushButton("Browse Folder")
+        browse_dir_btn.setIcon(get_icon("folder", 16))
         browse_dir_btn.setProperty("cssClass", "secondary")
         browse_dir_btn.clicked.connect(self._browse_folder)
         path_row.addWidget(browse_dir_btn)
 
-        browse_zip_btn = QPushButton("📦 Browse ZIP")
+        browse_zip_btn = QPushButton("Browse ZIP")
+        browse_zip_btn.setIcon(get_icon("folder", 16))
         browse_zip_btn.setProperty("cssClass", "secondary")
         browse_zip_btn.clicked.connect(self._browse_zip)
         path_row.addWidget(browse_zip_btn)
@@ -387,7 +403,8 @@ class ReturnStockScreen(QWidget):
 
         # 4. Action Bar & Console
         action_row = QHBoxLayout()
-        self._flash_btn = QPushButton("⚡ Flash Stock Firmware")
+        self._flash_btn = QPushButton("Flash Stock Firmware")
+        self._flash_btn.setIcon(get_icon("flash", 16))
         self._flash_btn.setEnabled(False)
         self._flash_btn.setMinimumHeight(44)
         self._flash_btn.setProperty("cssClass", "primary")
@@ -439,7 +456,7 @@ class ReturnStockScreen(QWidget):
         g_lay = QVBoxLayout(self._gate_card)
         g_lay.setSpacing(8)
 
-        self._gate_status_label = QLabel("🔒  Relock Gate: PROHIBITED")
+        self._gate_status_label = QLabel("Relock Gate: PROHIBITED")
         self._gate_status_label.setProperty("cssClass", "error")
         g_lay.addWidget(self._gate_status_label)
 
@@ -457,16 +474,16 @@ class ReturnStockScreen(QWidget):
         r_lay = QVBoxLayout(rules_box)
         r_lay.setSpacing(8)
 
-        r1 = QLabel("❌ <b>Never relock with modified partitions:</b> Root kernels, TWRP, or custom ROMs will fail Android Verified Boot (AVB) signature checks upon relock, causing an unbootable bootloop or EDL brick.")
+        r1 = QLabel("<b>Never relock with modified partitions:</b> Root kernels, TWRP, or custom ROMs will fail Android Verified Boot (AVB) signature checks upon relock, causing an unbootable bootloop or EDL brick.")
         r1.setWordWrap(True)
         r_lay.addWidget(r1)
 
-        r2 = QLabel("❌ <b>Xiaomi Cross-Region Hazard:</b> Relocking a Chinese phone running Global/EEA ROM results in instant brick ('This MIUI version can't be installed on this device'). Only relock with ROM matching hardware region.")
+        r2 = QLabel("<b>Xiaomi Cross-Region Hazard:</b> Relocking a Chinese phone running Global/EEA ROM results in instant brick ('This MIUI version can\\'t be installed on this device'). Only relock with ROM matching hardware region.")
         r2.setWordWrap(True)
         r2.setProperty("cssClass", "error")
         r_lay.addWidget(r2)
 
-        r3 = QLabel("❌ <b>Samsung Knox Warning:</b> Samsung Knox status is a physical hardware e-fuse. Relocking does NOT restore Knox or Samsung Pay.")
+        r3 = QLabel("<b>Samsung Knox Warning:</b> Samsung Knox status is a physical hardware e-fuse. Relocking does NOT restore Knox or Samsung Pay.")
         r3.setWordWrap(True)
         r3.setProperty("cssClass", "warning")
         r_lay.addWidget(r3)
@@ -483,7 +500,8 @@ class ReturnStockScreen(QWidget):
         self._relock_cmd_label.setProperty("cssClass", "code_text")
         e_lay.addWidget(self._relock_cmd_label)
 
-        self._relock_btn = QPushButton("🔒 Relock Bootloader")
+        self._relock_btn = QPushButton("Relock Bootloader")
+        self._relock_btn.setIcon(get_icon("lock", 16))
         self._relock_btn.setEnabled(False)
         self._relock_btn.setMinimumHeight(42)
         self._relock_btn.setProperty("cssClass", "danger")
@@ -512,7 +530,7 @@ class ReturnStockScreen(QWidget):
         layout.setSpacing(14)
 
         guide_text = QLabel(
-            "<h2>📖 Returning to Stock & OEM Firmware Guide</h2>"
+            "<h2>Returning to Stock & OEM Firmware Guide</h2>"
             "<p>Returning to pure factory firmware is the safest way to restore your device to factory state, "
             "receive official Over-The-Air (OTA) updates, and pass hardware integrity checks.</p>"
             "<h3>1. Where to download authentic factory images:</h3>"
@@ -605,14 +623,14 @@ class ReturnStockScreen(QWidget):
         # Update package summary UI
         if not pkg.is_valid:
             err = "; ".join(pkg.errors)
-            self._pkg_summary_title.setText(f"❌ Invalid package: {err}")
+            self._pkg_summary_title.setText(f"Invalid package: {err}")
             self._pkg_summary_title.setProperty("cssClass", "error")
             self._part_table.setVisible(False)
             self._flash_btn.setEnabled(False)
             return
 
         sum_text = (
-            f"✅ <b>Valid Factory Package:</b> {pkg.partition_count} partitions detected "
+            f"<b>Valid Factory Package:</b> {pkg.partition_count} partitions detected "
             f"({pkg.total_size_mb} MB total)"
         )
         if pkg.target_codename:
@@ -648,10 +666,10 @@ class ReturnStockScreen(QWidget):
 
         res = self._engine.check_firmware_compatibility(self._current_device, self._current_pkg)
         if res.is_blocked:
-            self._console_edit.append(f"⚠️ Compatibility warning: {res.message}")
+            self._console_edit.append(f"Compatibility warning: {res.message}")
             self._flash_btn.setEnabled(False)
         else:
-            self._console_edit.append(f"✅ Firmware verified compatible with {self._current_device.model or self._current_device.device}.")
+            self._console_edit.append(f"Firmware verified compatible with {self._current_device.model or self._current_device.device}.")
             self._flash_btn.setEnabled(True)
 
     # -----------------------------------------------------------------------
@@ -668,7 +686,7 @@ class ReturnStockScreen(QWidget):
 
         if res.can_relock:
             self._gate_card.setProperty("cssClass", "card")
-            self._gate_status_label.setText("🔓  Relock Gate: READY TO RELOCK")
+            self._gate_status_label.setText("Relock Gate: READY TO RELOCK")
             self._gate_status_label.setProperty("cssClass", "success")
             self._gate_reason_label.setText(
                 "Pure stock partitions were successfully flashed. You can safely relock your bootloader."
@@ -677,7 +695,7 @@ class ReturnStockScreen(QWidget):
             self._relock_btn.setEnabled(True)
         else:
             self._gate_card.setProperty("cssClass", "danger_banner")
-            self._gate_status_label.setText("🔒  Relock Gate: PROHIBITED")
+            self._gate_status_label.setText("Relock Gate: PROHIBITED")
             self._gate_status_label.setProperty("cssClass", "error")
             self._gate_reason_label.setText(
                 " • " + "\n • ".join(res.reasons) if res.reasons else "Relocking conditions not met."
@@ -741,7 +759,7 @@ class ReturnStockScreen(QWidget):
 
         # Show FlashShield modal lock
         self._shield = FlashShieldDialog(self)
-        self._shield.set_title("⚡ Restoring Stock Firmware")
+        self._shield.set_title("Restoring Stock Firmware")
         self._shield.set_status("Preparing partitions...")
         self._shield.set_progress(0)
 
@@ -763,7 +781,7 @@ class ReturnStockScreen(QWidget):
 
     def _prompt_typed_confirmation(self) -> tuple[str, bool]:
         dlg = QDialog(self)
-        dlg.setWindowTitle("⚠️ Confirm Return to Stock Flashing")
+        dlg.setWindowTitle("Confirm Return to Stock Flashing")
         dlg.setModal(True)
         dlg.setMinimumWidth(440)
         lay = QVBoxLayout(dlg)
@@ -819,13 +837,13 @@ class ReturnStockScreen(QWidget):
 
         if result.success:
             self._console_edit.append(
-                f"🎉 Return-to-Stock completed successfully! ({result.successful_steps} steps succeeded)"
+                f"Return-to-Stock completed successfully! ({result.successful_steps} steps succeeded)"
             )
             if self._shield:
                 self._shield.finish(True, "All factory partitions flashed successfully!")
         else:
             self._console_edit.append(
-                f"❌ Return-to-Stock failed: {result.error_message}"
+                f"Return-to-Stock failed: {result.error_message}"
             )
             if self._shield:
                 self._shield.finish(False, f"Flashing failed: {result.error_message}")
@@ -870,7 +888,7 @@ class ReturnStockScreen(QWidget):
         )
 
         if lock_res.success:
-            self._console_edit.append("✅ Relock command executed successfully!")
+            self._console_edit.append("Relock command executed successfully!")
             QMessageBox.information(
                 self,
                 "Relock Initiated",
@@ -879,7 +897,7 @@ class ReturnStockScreen(QWidget):
                 "Use the Volume keys to select 'LOCK THE BOOTLOADER' and press the Power key to confirm.",
             )
         else:
-            self._console_edit.append(f"❌ Relock command failed: {lock_res.stderr}")
+            self._console_edit.append(f"Relock command failed: {lock_res.stderr}")
             QMessageBox.critical(
                 self,
                 "Relock Failed",

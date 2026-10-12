@@ -37,6 +37,7 @@ from flashdock.core.tools_manager import DriverManager, PlatformToolsManager
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger(__name__)
 
@@ -67,7 +68,7 @@ class SetupWizardDialog(QDialog):
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
-        self.setWindowTitle("🛠️ Laptop & Workstation Setup Wizard")
+        self.setWindowTitle("Laptop & Workstation Setup Wizard")
         self.resize(760, 600)
         self.setMinimumSize(640, 480)
 
@@ -90,9 +91,14 @@ class SetupWizardDialog(QDialog):
         # Header with Step Indicator
         header = QVBoxLayout()
         header.setSpacing(4)
-        title = QLabel("🛠️ Laptop & Workstation Setup Wizard")
+        t_row = QHBoxLayout()
+        t_row.setSpacing(8)
+        t_row.addWidget(create_icon_label("tools", 22))
+        title = QLabel("Laptop & Workstation Setup Wizard")
         title.setStyleSheet("font-size: 20px; font-weight: 700; color: #1D1D1F;")
-        header.addWidget(title)
+        t_row.addWidget(title)
+        t_row.addStretch()
+        header.addLayout(t_row)
 
         self._subtitle = QLabel("Prepare your Windows laptop for safe, reliable Android flashing.")
         self._subtitle.setStyleSheet("font-size: 13px; color: #8E8E93;")
@@ -130,7 +136,7 @@ class SetupWizardDialog(QDialog):
 
         # Navigation Footer
         footer = QHBoxLayout()
-        self._btn_prev = QPushButton("◀ Back")
+        self._btn_prev = QPushButton("Back")
         self._btn_prev.setStyleSheet(
             "QPushButton { background: #E5E7EB; color: #374151; border-radius: 8px; padding: 8px 18px; font-weight: 600; } "
             "QPushButton:hover { background: #D1D5DB; }"
@@ -140,7 +146,7 @@ class SetupWizardDialog(QDialog):
 
         footer.addStretch()
 
-        self._btn_next = QPushButton("Next ▶")
+        self._btn_next = QPushButton("Next")
         self._btn_next.setStyleSheet(
             "QPushButton { background: #007AFF; color: #FFFFFF; border-radius: 8px; padding: 8px 24px; font-weight: 600; } "
             "QPushButton:hover { background: #0062CC; }"
@@ -154,9 +160,9 @@ class SetupWizardDialog(QDialog):
         self._stack.setCurrentIndex(self._current_step)
         self._btn_prev.setEnabled(self._current_step > 0)
         if self._current_step == len(self._step_labels) - 1:
-            self._btn_next.setText("Finish Setup ✓")
+            self._btn_next.setText("Finish Setup")
         else:
-            self._btn_next.setText("Next ▶")
+            self._btn_next.setText("Next")
 
         for idx, lbl in enumerate(self._step_widgets):
             if idx == self._current_step:
@@ -198,9 +204,14 @@ class SetupWizardDialog(QDialog):
         c_lay = QVBoxLayout(card)
         c_lay.setSpacing(10)
 
-        t_lbl = QLabel("📦 Android Platform-Tools (ADB & Fastboot)")
+        t_row = QHBoxLayout()
+        t_row.setSpacing(8)
+        t_row.addWidget(create_icon_label("tools", 18))
+        t_lbl = QLabel("Android Platform-Tools (ADB & Fastboot)")
         t_lbl.setStyleSheet("font-size: 16px; font-weight: 700; color: #111827;")
-        c_lay.addWidget(t_lbl)
+        t_row.addWidget(t_lbl)
+        t_row.addStretch()
+        c_lay.addLayout(t_row)
 
         d_lbl = QLabel(
             "ADB and Fastboot are the primary communication tools between your laptop and your phone. "
@@ -219,7 +230,8 @@ class SetupWizardDialog(QDialog):
         c_lay.addWidget(self._tools_prog)
 
         btn_row = QHBoxLayout()
-        self._btn_dl_tools = QPushButton("⬇️ Download & Install Platform-Tools")
+        self._btn_dl_tools = QPushButton("Download & Install Platform-Tools")
+        self._btn_dl_tools.setIcon(get_icon("downloads", 16))
         self._btn_dl_tools.setStyleSheet(
             "QPushButton { background: #10B981; color: #FFFFFF; font-weight: 700; border-radius: 8px; padding: 10px 18px; } "
             "QPushButton:hover { background: #059669; }"
@@ -238,12 +250,15 @@ class SetupWizardDialog(QDialog):
         adb_ok = self._adb.available
         fb_ok = self._fastboot.available
         if adb_ok and fb_ok:
-            self._tools_status_lbl.setText("✅ Platform-Tools are installed and ready to use!")
+            self._tools_status_lbl.setText("Platform-Tools are installed and ready to use.")
             self._tools_status_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #059669;")
-            self._btn_dl_tools.setText("🔄 Re-install / Update Platform-Tools")
+            self._btn_dl_tools.setText("Re-install / Update Platform-Tools")
+            self._btn_dl_tools.setIcon(get_icon("refresh", 16))
         else:
-            self._tools_status_lbl.setText("⚠️ Platform-Tools are missing or not detected.")
+            self._tools_status_lbl.setText("Platform-Tools are missing or not detected.")
             self._tools_status_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #D97706;")
+            self._btn_dl_tools.setText("Download & Install Platform-Tools")
+            self._btn_dl_tools.setIcon(get_icon("downloads", 16))
 
     def _download_tools(self) -> None:
         self._btn_dl_tools.setEnabled(False)
@@ -266,7 +281,7 @@ class SetupWizardDialog(QDialog):
         if ok:
             self._refresh_step1_status()
         else:
-            self._tools_status_lbl.setText(f"❌ Installation failed: {msg}")
+            self._tools_status_lbl.setText(f"Installation failed: {msg}")
 
     # ---- Step 2: Drivers ----
     def _create_step2_drivers(self) -> QWidget:
@@ -331,23 +346,28 @@ class SetupWizardDialog(QDialog):
         lay.setSpacing(12)
 
         items = [
-            ("🔌 Connect Directly to Laptop", "Do NOT use unpowered USB hubs or keyboard passthrough ports. Fastboot transfers high-speed sparse chunk images up to 4GB; unpowered hubs frequently drop packets and can corrupt system partitions."),
-            ("⚡ Prefer USB 2.0 / USB-A Ports", "Some older fastboot bootloaders (especially Xiaomi and Motorola) have handshake bugs with USB 3.2 Gen 2 ports. If fastboot hangs on '<waiting for any device>', switch to a standard USB 2.0 port or use a USB 2.0 cable."),
-            ("🔋 Laptop Power & Sleep Settings", "Disable laptop sleep or USB selective suspend in Windows Power Options. If your laptop enters standby during a 5-minute Super partition flash, the write stream is severed and bricks the phone."),
-            ("📱 Battery Level ≥ 50%", "Never start flashing with a low battery. If flashing fails and the phone is left in a bootloop without OS charging drivers, recovering battery charge requires disassembly or battery replacement."),
+            ("usb", "Connect Directly to Laptop", "Do NOT use unpowered USB hubs or keyboard passthrough ports. Fastboot transfers high-speed sparse chunk images up to 4GB; unpowered hubs frequently drop packets and can corrupt system partitions."),
+            ("flash", "Prefer USB 2.0 / USB-A Ports", "Some older fastboot bootloaders (especially Xiaomi and Motorola) have handshake bugs with USB 3.2 Gen 2 ports. If fastboot hangs on '<waiting for any device>', switch to a standard USB 2.0 port or use a USB 2.0 cable."),
+            ("battery", "Laptop Power & Sleep Settings", "Disable laptop sleep or USB selective suspend in Windows Power Options. If your laptop enters standby during a 5-minute Super partition flash, the write stream is severed and bricks the phone."),
+            ("phone", "Battery Level ≥ 50%", "Never start flashing with a low battery. If flashing fails and the phone is left in a bootloop without OS charging drivers, recovering battery charge requires disassembly or battery replacement."),
         ]
 
-        for title, body in items:
+        for icon_name, title, body in items:
             card = QFrame()
             card.setStyleSheet("background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px;")
             c_lay = QVBoxLayout(card)
             c_lay.setSpacing(4)
+            t_row = QHBoxLayout()
+            t_row.setSpacing(8)
+            t_row.addWidget(create_icon_label(icon_name, 16))
             t = QLabel(f"<b>{title}</b>")
             t.setStyleSheet("font-size: 14px; color: #1F2937;")
+            t_row.addWidget(t)
+            t_row.addStretch()
+            c_lay.addLayout(t_row)
             b = QLabel(body)
             b.setStyleSheet("font-size: 12px; color: #4B5563;")
             b.setWordWrap(True)
-            c_lay.addWidget(t)
             c_lay.addWidget(b)
             lay.addWidget(card)
 
@@ -365,9 +385,14 @@ class SetupWizardDialog(QDialog):
         c_lay = QVBoxLayout(card)
         c_lay.setSpacing(8)
 
-        t = QLabel("🎉 Workstation Setup Complete!")
+        t_row = QHBoxLayout()
+        t_row.setSpacing(8)
+        t_row.addWidget(create_icon_label("check", 20))
+        t = QLabel("Workstation Setup Complete!")
         t.setStyleSheet("font-size: 16px; font-weight: 700; color: #166534;")
-        c_lay.addWidget(t)
+        t_row.addWidget(t)
+        t_row.addStretch()
+        c_lay.addLayout(t_row)
 
         d = QLabel(
             "Your laptop is now configured with the proper tools and guidelines. "
@@ -384,15 +409,21 @@ class SetupWizardDialog(QDialog):
         t_lay = QVBoxLayout(test_card)
         t_lay.setSpacing(10)
 
-        test_title = QLabel("🔍 Test Phone Connection Now:")
+        test_title_row = QHBoxLayout()
+        test_title_row.setSpacing(8)
+        test_title_row.addWidget(create_icon_label("search", 16))
+        test_title = QLabel("Test Phone Connection Now:")
         test_title.setStyleSheet("font-size: 14px; font-weight: 600; color: #111827;")
-        t_lay.addWidget(test_title)
+        test_title_row.addWidget(test_title)
+        test_title_row.addStretch()
+        t_lay.addLayout(test_title_row)
 
         self._test_status_lbl = QLabel("Plug your phone in via USB and click 'Test Connection'.")
         self._test_status_lbl.setStyleSheet("font-size: 12px; color: #4B5563;")
         t_lay.addWidget(self._test_status_lbl)
 
-        btn_test = QPushButton("🔄 Test Connection (ADB & Fastboot)")
+        btn_test = QPushButton("Test Connection (ADB & Fastboot)")
+        btn_test.setIcon(get_icon("refresh", 16))
         btn_test.setStyleSheet(
             "QPushButton { background: #007AFF; color: #FFFFFF; font-weight: 600; border-radius: 6px; padding: 8px 18px; } "
             "QPushButton:hover { background: #0062CC; }"
@@ -414,8 +445,8 @@ class SetupWizardDialog(QDialog):
                 found_devices.append(f"Fastboot: {dev.serial} ({dev.mode})")
 
         if found_devices:
-            self._test_status_lbl.setText("✅ Detected device(s):\n" + "\n".join(found_devices))
+            self._test_status_lbl.setText("Detected device(s):\n" + "\n".join(found_devices))
             self._test_status_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #059669;")
         else:
-            self._test_status_lbl.setText("⚠️ No devices detected yet. Ensure USB debugging is ON and cable is firmly connected.")
+            self._test_status_lbl.setText("No devices detected yet. Ensure USB debugging is ON and cable is firmly connected.")
             self._test_status_lbl.setStyleSheet("font-size: 12px; color: #D97706;")

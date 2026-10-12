@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 
 from flashdock import __app_name__, __version__
 from flashdock.constants import LOGS_DIR
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 
 class CrashDialog(QDialog):
@@ -63,8 +64,7 @@ class CrashDialog(QDialog):
         h_layout.setContentsMargins(8, 8, 8, 8)
         h_layout.setSpacing(12)
 
-        icon_lbl = QLabel("⚠️")
-        icon_lbl.setStyleSheet("font-size: 32px;")
+        icon_lbl = create_icon_label("warning", 32, color="#DC2626")
         h_layout.addWidget(icon_lbl)
 
         v_head = QVBoxLayout()
@@ -101,7 +101,8 @@ class CrashDialog(QDialog):
         footer = QHBoxLayout()
         footer.setSpacing(10)
 
-        self.btn_copy = QPushButton("📋 Copy Error Report")
+        self.btn_copy = QPushButton("Copy Error Report")
+        self.btn_copy.setIcon(get_icon("copy", 14))
         self.btn_copy.setStyleSheet(
             "QPushButton { background: #E5E5EA; color: #1D1D1F; border-radius: 8px; padding: 8px 14px; font-weight: 600; } "
             "QPushButton:hover { background: #D1D1D6; }"
@@ -109,7 +110,8 @@ class CrashDialog(QDialog):
         self.btn_copy.clicked.connect(self._copy_error)
         footer.addWidget(self.btn_copy)
 
-        self.btn_open_folder = QPushButton("📁 Open Logs Folder")
+        self.btn_open_folder = QPushButton("Open Logs Folder")
+        self.btn_open_folder.setIcon(get_icon("folder", 14))
         self.btn_open_folder.setStyleSheet(
             "QPushButton { background: #E5E5EA; color: #1D1D1F; border-radius: 8px; padding: 8px 14px; font-weight: 600; } "
             "QPushButton:hover { background: #D1D1D6; }"
@@ -119,7 +121,8 @@ class CrashDialog(QDialog):
 
         footer.addStretch()
 
-        self.btn_restart = QPushButton("🔄 Restart FlashDock")
+        self.btn_restart = QPushButton("Restart FlashDock")
+        self.btn_restart.setIcon(get_icon("refresh", 14, color="#FFFFFF"))
         self.btn_restart.setStyleSheet(
             "QPushButton { background: #007AFF; color: #FFFFFF; border-radius: 8px; padding: 8px 18px; font-weight: 600; } "
             "QPushButton:hover { background: #0062CC; }"
@@ -140,7 +143,8 @@ class CrashDialog(QDialog):
     def _copy_error(self) -> None:
         clipboard = QApplication.clipboard()
         clipboard.setText(self.report_text)
-        self.btn_copy.setText("✓ Copied!")
+        self.btn_copy.setText("Copied!")
+        self.btn_copy.setIcon(get_icon("check", 14))
 
     def _open_logs_folder(self) -> None:
         try:

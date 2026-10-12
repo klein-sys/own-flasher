@@ -210,3 +210,7 @@ class BrandBadgeWidget(QFrame):
         if model_name:
             display_text += f" — {model_name}"
         self._text_lbl.setText(display_text)
+
+
+# Re-export vector icon methods for unified image asset access
+from flashdock.ui.icon_assets import create_icon_label, get_icon, get_icon_pixmap

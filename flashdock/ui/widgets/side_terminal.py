@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from flashdock.ui.icon_assets import get_icon
+
 
 class SideTerminalHandler(logging.Handler):
     """Logging handler that emits formatted records to the side terminal."""
@@ -99,7 +101,8 @@ class SideTerminalWidget(QWidget):
         h_lay.addStretch()
 
         # Routine Polling Filter toggle button (silences spam every 2s)
-        self._poll_toggle_btn = QPushButton("🔇 Quiet")
+        self._poll_toggle_btn = QPushButton("Quiet")
+        self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#0A84FF"))
         self._poll_toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._poll_toggle_btn.setToolTip("Quiet mode: Hides repetitive background device polls when idle")
         self._poll_toggle_btn.setStyleSheet(
@@ -134,7 +137,7 @@ class SideTerminalWidget(QWidget):
         layout.addWidget(self._text_edit, 1)
 
         # Initial greeting banner
-        self.append_line("⚡ FlashDock live activity telemetry initialized.", level="info")
+        self.append_line("FlashDock live activity telemetry initialized.", level="info")
         self.append_line("Quiet mode active (routine background polls muted when idle).\n", level="info")
 
     def _toggle_poll_filtering(self) -> None:
@@ -143,21 +146,23 @@ class SideTerminalWidget(QWidget):
             self._handler_ref.filter_routine_polls = self._filter_polls
 
         if self._filter_polls:
-            self._poll_toggle_btn.setText("🔇 Quiet")
+            self._poll_toggle_btn.setText("Quiet")
+            self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#0A84FF"))
             self._poll_toggle_btn.setToolTip("Quiet mode: Hides repetitive background device polls when idle")
             self._poll_toggle_btn.setStyleSheet(
                 "padding: 2px 7px; font-size: 10px; min-height: 18px; border-radius: 4px; "
                 "background: rgba(10, 132, 255, 0.15); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3);"
             )
-            self.append_line("🔇 Routine background polling filtered.", level="info")
+            self.append_line("Routine background polling filtered.", level="info")
         else:
-            self._poll_toggle_btn.setText("🔊 Verbose")
+            self._poll_toggle_btn.setText("Verbose")
+            self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#FF9F0A"))
             self._poll_toggle_btn.setToolTip("Verbose mode: Shows all background health checks and raw device polls")
             self._poll_toggle_btn.setStyleSheet(
                 "padding: 2px 7px; font-size: 10px; min-height: 18px; border-radius: 4px; "
                 "background: rgba(255, 159, 10, 0.15); color: #FF9F0A; border: 1px solid rgba(255, 159, 10, 0.3);"
             )
-            self.append_line("🔊 Verbose mode enabled (showing all background device polls).", level="info")
+            self.append_line("Verbose mode enabled (showing all background device polls).", level="info")
 
     def _connect_signals(self) -> None:
         self.log_signal.connect(self._append_formatted)
@@ -168,7 +173,7 @@ class SideTerminalWidget(QWidget):
             self.setFixedWidth(40)
             self._text_edit.setVisible(False)
             self._clear_btn.setVisible(False)
-            self._title_label.setText("📟")
+            self._title_label.setText("LOG")
             self._toggle_btn.setText("«")
         else:
             self.setFixedWidth(320)

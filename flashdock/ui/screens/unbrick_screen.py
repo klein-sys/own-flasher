@@ -37,6 +37,7 @@ from flashdock.core.device_manager import DeviceManager
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger(__name__)
 
@@ -77,10 +78,13 @@ class UnbrickScreen(QWidget):
         header_row = QHBoxLayout()
         header_row.setSpacing(12)
 
+        header_icon = create_icon_label("unbrick", 24)
+        header_row.addWidget(header_icon)
+
         title_col = QVBoxLayout()
         title_col.setSpacing(2)
 
-        title = QLabel("🔧 Fix Bricked Phone & Bootloop Rescue")
+        title = QLabel("Fix Bricked Phone & Bootloop Rescue")
         title.setProperty("cssClass", "heading")
         title_col.addWidget(title)
 
@@ -103,9 +107,9 @@ class UnbrickScreen(QWidget):
 
         # 3-Tab Widget
         self._tabs = QTabWidget()
-        self._tabs.addTab(self._build_bootloop_tab(), "⚡ Fix Bootloop")
-        self._tabs.addTab(self._build_partition_repair_tab(), "🔧 Boot Partition Restorer")
-        self._tabs.addTab(self._build_guides_tab(), "🚑 Hardware & Unbrick Guides")
+        self._tabs.addTab(self._build_bootloop_tab(), get_icon("flash", 16), "Fix Bootloop")
+        self._tabs.addTab(self._build_partition_repair_tab(), get_icon("tools", 16), "Boot Partition Restorer")
+        self._tabs.addTab(self._build_guides_tab(), get_icon("book", 16), "Hardware & Unbrick Guides")
         root_layout.addWidget(self._tabs, 1)
 
         # Bottom Status Label
@@ -132,7 +136,7 @@ class UnbrickScreen(QWidget):
         banner = QFrame()
         banner.setProperty("cssClass", "card_subtle")
         b_box = QVBoxLayout(banner)
-        b_title = QLabel("💡 Bootloop Troubleshooting & Triage Guide")
+        b_title = QLabel("Bootloop Troubleshooting & Triage Guide")
         b_title.setStyleSheet("font-weight: 600; font-size: 13px; color: #FF9F0A;")
         b_desc = QLabel(
             "• <b>90% of bootloops after rooting</b> are caused by incompatible Magisk / KernelSU / APatch modules.\n"
@@ -158,7 +162,8 @@ class UnbrickScreen(QWidget):
         btn_row_m = QHBoxLayout()
         btn_row_m.setSpacing(10)
 
-        btn_disable_mods = QPushButton("🧹 Disable All Root Modules (Kill-Switch)")
+        btn_disable_mods = QPushButton("Disable All Root Modules (Kill-Switch)")
+        btn_disable_mods.setIcon(get_icon("trash", 14))
         btn_disable_mods.setProperty("cssClass", "primary")
         btn_disable_mods.setMinimumHeight(36)
         btn_disable_mods.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -166,7 +171,8 @@ class UnbrickScreen(QWidget):
         btn_disable_mods.clicked.connect(self._on_disable_modules)
         btn_row_m.addWidget(btn_disable_mods)
 
-        btn_remove_mods = QPushButton("🗑️ Remove All Root Modules")
+        btn_remove_mods = QPushButton("Remove All Root Modules")
+        btn_remove_mods.setIcon(get_icon("trash", 14))
         btn_remove_mods.setMinimumHeight(36)
         btn_remove_mods.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_remove_mods.setToolTip("Deletes all module folders from /data/adb/modules/ to ensure clean boot.")
@@ -184,14 +190,16 @@ class UnbrickScreen(QWidget):
         btn_row_b = QHBoxLayout()
         btn_row_b.setSpacing(10)
 
-        btn_safemode = QPushButton("🛡️ Reboot to Safe Mode (ADB)")
+        btn_safemode = QPushButton("Reboot to Safe Mode (ADB)")
+        btn_safemode.setIcon(get_icon("shield", 14))
         btn_safemode.setMinimumHeight(36)
         btn_safemode.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_safemode.setToolTip("Boots Android OS with 3rd-party apps and services disabled.")
         btn_safemode.clicked.connect(self._on_reboot_safemode)
         btn_row_b.addWidget(btn_safemode)
 
-        btn_rec = QPushButton("⚡ Reboot to Recovery Mode")
+        btn_rec = QPushButton("Reboot to Recovery Mode")
+        btn_rec.setIcon(get_icon("flash", 14))
         btn_rec.setMinimumHeight(36)
         btn_rec.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_rec.clicked.connect(self._on_reboot_recovery)
@@ -212,19 +220,22 @@ class UnbrickScreen(QWidget):
         btn_row_s = QHBoxLayout()
         btn_row_s.setSpacing(10)
 
-        btn_query_slot = QPushButton("🔍 Check Active Slot")
+        btn_query_slot = QPushButton("Check Active Slot")
+        btn_query_slot.setIcon(get_icon("search", 14))
         btn_query_slot.setMinimumHeight(36)
         btn_query_slot.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_query_slot.clicked.connect(self._on_check_slot)
         btn_row_s.addWidget(btn_query_slot)
 
-        btn_switch_a = QPushButton("🔄 Switch Active Slot to 'A'")
+        btn_switch_a = QPushButton("Switch Active Slot to 'A'")
+        btn_switch_a.setIcon(get_icon("refresh", 14))
         btn_switch_a.setMinimumHeight(36)
         btn_switch_a.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_switch_a.clicked.connect(lambda: self._on_switch_slot("a"))
         btn_row_s.addWidget(btn_switch_a)
 
-        btn_switch_b = QPushButton("🔄 Switch Active Slot to 'B'")
+        btn_switch_b = QPushButton("Switch Active Slot to 'B'")
+        btn_switch_b.setIcon(get_icon("refresh", 14))
         btn_switch_b.setMinimumHeight(36)
         btn_switch_b.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_switch_b.clicked.connect(lambda: self._on_switch_slot("b"))
@@ -235,13 +246,15 @@ class UnbrickScreen(QWidget):
         btn_row_cache = QHBoxLayout()
         btn_row_cache.setSpacing(10)
 
-        btn_erase_cache = QPushButton("🧹 Wipe Fastboot Cache Partition")
+        btn_erase_cache = QPushButton("Wipe Fastboot Cache Partition")
+        btn_erase_cache.setIcon(get_icon("trash", 14))
         btn_erase_cache.setMinimumHeight(36)
         btn_erase_cache.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_erase_cache.clicked.connect(self._on_erase_cache)
         btn_row_cache.addWidget(btn_erase_cache)
 
-        btn_continue = QPushButton("🚀 Resume Normal Boot (fastboot continue)")
+        btn_continue = QPushButton("Resume Normal Boot (fastboot continue)")
+        btn_continue.setIcon(get_icon("play", 14))
         btn_continue.setMinimumHeight(36)
         btn_continue.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_continue.clicked.connect(self._on_continue_boot)
@@ -273,7 +286,7 @@ class UnbrickScreen(QWidget):
         c_box = QVBoxLayout(card)
         c_box.setSpacing(10)
 
-        c_title = QLabel("🛠️ Restore Clean Stock Boot / VBMeta Image")
+        c_title = QLabel("Restore Clean Stock Boot / VBMeta Image")
         c_title.setProperty("cssClass", "subheading")
         c_box.addWidget(c_title)
 
@@ -290,7 +303,8 @@ class UnbrickScreen(QWidget):
         self._boot_img_input.setPlaceholderText("Select stock boot.img or init_boot.img...")
         pick_row.addWidget(self._boot_img_input, 1)
 
-        btn_browse = QPushButton("📁 Browse...")
+        btn_browse = QPushButton("Browse...")
+        btn_browse.setIcon(get_icon("folder", 14))
         btn_browse.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_browse.clicked.connect(self._on_browse_boot_image)
         pick_row.addWidget(btn_browse)
@@ -300,20 +314,23 @@ class UnbrickScreen(QWidget):
         part_row = QHBoxLayout()
         part_row.setSpacing(10)
 
-        btn_flash_boot = QPushButton("⚡ Flash to 'boot' Partition")
+        btn_flash_boot = QPushButton("Flash to 'boot' Partition")
+        btn_flash_boot.setIcon(get_icon("flash", 14))
         btn_flash_boot.setProperty("cssClass", "primary")
         btn_flash_boot.setMinimumHeight(36)
         btn_flash_boot.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_flash_boot.clicked.connect(lambda: self._on_flash_partition("boot"))
         part_row.addWidget(btn_flash_boot)
 
-        btn_flash_init_boot = QPushButton("⚡ Flash to 'init_boot' Partition")
+        btn_flash_init_boot = QPushButton("Flash to 'init_boot' Partition")
+        btn_flash_init_boot.setIcon(get_icon("flash", 14))
         btn_flash_init_boot.setMinimumHeight(36)
         btn_flash_init_boot.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_flash_init_boot.clicked.connect(lambda: self._on_flash_partition("init_boot"))
         part_row.addWidget(btn_flash_init_boot)
 
-        btn_flash_vbmeta = QPushButton("🛡️ Flash vbmeta (Disable Verity)")
+        btn_flash_vbmeta = QPushButton("Flash vbmeta (Disable Verity)")
+        btn_flash_vbmeta.setIcon(get_icon("shield", 14))
         btn_flash_vbmeta.setMinimumHeight(36)
         btn_flash_vbmeta.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_flash_vbmeta.clicked.connect(self._on_flash_vbmeta_disabled)
@@ -334,7 +351,8 @@ class UnbrickScreen(QWidget):
         cta_text.setProperty("cssClass", "muted")
         cta_box.addWidget(cta_text, 1)
 
-        btn_go_return_stock = QPushButton("🏠 Open Return to Stock")
+        btn_go_return_stock = QPushButton("Open Return to Stock")
+        btn_go_return_stock.setIcon(get_icon("return_stock", 14))
         btn_go_return_stock.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_go_return_stock.clicked.connect(lambda: self.navigate_to_page.emit(7))  # PAGE_RETURN_STOCK = 7
         cta_box.addWidget(btn_go_return_stock)
@@ -362,7 +380,7 @@ class UnbrickScreen(QWidget):
         card_soft = QFrame()
         card_soft.setProperty("cssClass", "card")
         s_box = QVBoxLayout(card_soft)
-        s_box.addWidget(QLabel("📱 <b>Soft Brick (Phone turns on, boots to Fastboot or Recovery)</b>"))
+        s_box.addWidget(QLabel("<b>Soft Brick (Phone turns on, boots to Fastboot or Recovery)</b>"))
         s_desc = QLabel(
             "1. If device reboots repeatedly to recovery: Wipe dalvik/cache or factory reset userdata in recovery.\n"
             "2. If stuck in Fastboot mode: Check active slot or flash clean stock boot.img.\n"
@@ -376,7 +394,7 @@ class UnbrickScreen(QWidget):
         card_edl = QFrame()
         card_edl.setProperty("cssClass", "card")
         e_box = QVBoxLayout(card_edl)
-        e_box.addWidget(QLabel("⚡ <b>Qualcomm Emergency Download (EDL 9008 Mode)</b>"))
+        e_box.addWidget(QLabel("<b>Qualcomm Emergency Download (EDL 9008 Mode)</b>"))
         e_desc = QLabel(
             "• Applicable for Snapdragon devices that show a completely black screen or are recognized as 'Qualcomm HS-USB QDLoader 9008' (VID 05C6 PID 9008).\n"
             "• Recovery Method: Requires manufacturer-specific unbrick firehose tool (e.g. OnePlus MSM Download Tool, Xiaomi MiFlash Auth, Lenovo LMSA)."
@@ -390,8 +408,9 @@ class UnbrickScreen(QWidget):
         card_brom.setProperty("cssClass", "card")
         b_box = QVBoxLayout(card_brom)
         b_title_row = QHBoxLayout()
-        b_title_row.addWidget(QLabel("⚙️ <b>MediaTek BootROM (BROM / Preloader Mode)</b>"), 1)
-        btn_open_mtk = QPushButton("⚙️ Open MTK / Unisoc Flasher")
+        b_title_row.addWidget(QLabel("<b>MediaTek BootROM (BROM / Preloader Mode)</b>"), 1)
+        btn_open_mtk = QPushButton("Open MTK / Unisoc Flasher")
+        btn_open_mtk.setIcon(get_icon("mtk_unisoc", 14))
         btn_open_mtk.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_open_mtk.clicked.connect(lambda: self.navigate_to_page.emit(10))  # PAGE_MTK_UNISOC = 10
         b_title_row.addWidget(btn_open_mtk)
@@ -593,7 +612,7 @@ class UnbrickScreen(QWidget):
         if device and device.mode != "not_connected":
             brand = (device.brand or "").strip()
             model = (device.model or "").strip()
-            dev_text = f"📱 {brand} {model} [{device.mode.upper()}]"
+            dev_text = f"{brand} {model} [{device.mode.upper()}]"
             self._device_badge.setText(dev_text)
 
             if device.mode in ("bootloader", "fastboot", "fastbootd"):
