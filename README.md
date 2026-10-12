@@ -278,10 +278,26 @@ FlashDock Workstation
 ### Option A: Standalone Windows Binary (Recommended)
 Download the standalone precompiled release from `dist/`:
 1. Extract `FlashDock-v1.1.0-windows-x64.zip`.
-2. Run `FlashDock.exe` (2.83 MB, embedded high-res squircle icon). No Python installation required!
+2. Launch `FlashDock.exe` (or double-click `Run-FlashDock.bat`). No Python installation required!
 3. Verify integrity against `dist/SHA256SUMS.txt`:
-   - `FlashDock.exe`: `edaaa63c4257c1a65dbcab30e91871afc2011f1feb8429b8f174e052c13c6d5d`
-   - `FlashDock-v1.1.0-windows-x64.zip`: `9ba4ed080ba2a53e602626e79aea51b70ace57dbe27368d4af25b701abd90530`
+   - `FlashDock.exe`: `d205bbf204e968cde08daf40c0eff62f55a6a7b6021e608de8d948b7875a1de9`
+   - `FlashDock-v1.1.0-windows-x64.zip`: `e947cf2bd96cc7135764bcc5fe8c4cea2c143d8f85876cf44bb395a6bf4cec2c`
+
+---
+
+### Windows Smart App Control & Defender SmartScreen Resolution
+
+When downloading open-source binaries on Windows 11 or Windows 10, **Smart App Control (SAC)** or **Microsoft Defender SmartScreen** may show a warning banner (*"Smart App Control blocked an app that may be unsafe"* or *"Windows protected your PC: SmartScreen prevented an unrecognized app from starting"*). This occurs because Microsoft's cloud requires hundreds of thousands of corporate downloads to build automatic reputation for newly compiled binaries.
+
+FlashDock includes built-in 1-click tools and an Authenticode digital signature to resolve this instantly:
+
+| Method | Resolution Workflow | When to Use |
+| :--- | :--- | :--- |
+| **1. 1-Click Launcher (Recommended)** | Double-click **`Run-FlashDock.bat`** | Automatically strips the web download flag (`Zone.Identifier`) and launches `FlashDock.exe`. |
+| **2. Install Security Certificate** | Double-click **`Install-Certificate.bat`** | Installs FlashDock's code-signing certificate (`FlashDock-Security-Certificate.cer`) into your local *Trusted Publishers* store so Smart App Control verifies the digital signature. |
+| **3. SmartScreen "More Info"** | Click **More info** → **Run anyway** | Standard Windows Defender SmartScreen bypass for downloaded files. |
+| **4. Manual File Unblock** | Right-click `FlashDock.exe` → **Properties** → check **Unblock** → **OK** | Permanently unblocks the executable in Windows Explorer (or double-click `Unblock-FlashDock.bat`). |
+| **5. Direct Python Runner** | Double-click **`Run-Via-Python.bat`** (or `python main.py`) | Runs FlashDock from source. The Python interpreter is pre-signed by Microsoft / Python Software Foundation with universal reputation, completely bypassing Smart App Control. |
 
 ### Option B: Run from Source
 ```powershell

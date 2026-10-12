@@ -107,7 +107,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,  # UPX disabled: prevents Smart App Control & Defender SmartScreen false-positive heuristic flags
     console=False,  # No console window — it's a GUI app
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -115,6 +115,9 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon='flashdock/resources/icon.ico',
+    version='scripts/version_info.txt',
+    uac_admin=False,
+    uac_uiaccess=False,
 )
 
 coll = COLLECT(
@@ -122,7 +125,7 @@ coll = COLLECT(
     a.binaries,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     name='FlashDock_Dist',
 )

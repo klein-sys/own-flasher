@@ -92,10 +92,42 @@ def main() -> int:
     exe_size_mb = exe_path.stat().st_size / (1024 * 1024)
     print(f"  [OK] Compiled: {exe_path.name} ({exe_size_mb:.2f} MB)")
 
-    # 3. Create release zip archive
+    # 3. Digital code-signing & Smart App Control helpers
+    print("\n[3/5] Applying Authenticode digital signature & Smart App Control guards...")
+    sign_script = ROOT_DIR / "scripts" / "sign_app.ps1"
+    if sign_script.exists():
+        ps_res = subprocess.run(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(sign_script)],
+            cwd=ROOT_DIR,
+            capture_output=True,
+            text=True,
+        )
+        if ps_res.returncode == 0:
+            print("  [OK] Successfully signed FlashDock.exe with Authenticode SHA-256 certificate.")
+        else:
+            print(f"  [!] Note: PowerShell signing output: {ps_res.stderr or ps_res.stdout}")
+
+    # Copy distribution helper scripts
+    helpers_dir = ROOT_DIR / "scripts" / "dist_helpers"
+    if helpers_dir.exists():
+        for helper in helpers_dir.glob("*.bat"):
+            shutil.copy2(helper, APP_DIR / helper.name)
+            # Also keep root copy for workspace users
+            shutil.copy2(helper, ROOT_DIR / helper.name)
+        print("  [OK] Bundled Smart App launcher and unblocker scripts:")
+        print("       - Run-FlashDock.bat (auto-unblocks Mark-of-the-Web & launches)")
+        print("       - Install-Certificate.bat (trusts Authenticode cert for Smart App Control)")
+        print("       - Unblock-FlashDock.bat (clears NTFS Zone.Identifier stream)")
+        print("       - Run-Via-Python.bat (direct Python fallback launcher)")
+
+    cert_path = APP_DIR / "FlashDock-Security-Certificate.cer"
+    if not cert_path.exists() and (DIST_DIR / "FlashDock-Security-Certificate.cer").exists():
+        shutil.copy2(DIST_DIR / "FlashDock-Security-Certificate.cer", cert_path)
+
+    # 4. Create release zip archive
     zip_name = f"FlashDock-v{__version__}-windows-x64.zip"
     zip_path = DIST_DIR / zip_name
-    print(f"\n[3/4] Creating distribution archive: {zip_name}...")
+    print(f"\n[4/5] Creating distribution archive: {zip_name}...")
 
     if zip_path.exists():
         zip_path.unlink()
@@ -110,8 +142,8 @@ def main() -> int:
     zip_size_mb = zip_path.stat().st_size / (1024 * 1024)
     print(f"  [OK] Created archive: {zip_path.name} ({zip_size_mb:.2f} MB)")
 
-    # 4. Generate SHA256 checksums
-    print("\n[4/4] Calculating SHA-256 integrity checksums...")
+    # 5. Generate SHA256 checksums
+    print("\n[5/5] Calculating SHA-256 integrity checksums...")
     sums_file = DIST_DIR / "SHA256SUMS.txt"
     exe_hash = compute_sha256(exe_path)
     zip_hash = compute_sha256(zip_path)

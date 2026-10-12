@@ -311,6 +311,20 @@ stateDiagram-v2
   - Form controls with recessed squircle inputs (`QLineEdit`, `QTextEdit`, `QPlainTextEdit`), clear button enabled, monospace file paths, and elevated "Browse" pill buttons (`border-radius: 12px; font-weight: 500;`).
   - Primary action triggers upgraded to gradient pill buttons (`border-radius: 20px;`) with hover glow and pressed feedback.
 
+### Phase 21: Windows Smart App Control (SAC) & Authenticode Code-Signing Pipeline
+- **UPX Compression Deactivation (`flashdock.spec`)**:
+  - Disabled UPX (`upx=False`) across PyInstaller `EXE` and `COLLECT` configurations. Eliminates the #1 trigger for Windows Defender SmartScreen and Smart App Control heuristic false-positives.
+- **Embedded Windows PE Version Information Resource (`scripts/version_info.txt`)**:
+  - Added full `VS_VERSION_INFO` resource metadata into `FlashDock.exe`: CompanyName (*Klein Systems*), FileDescription (*FlashDock - Android Flashing & GSM Suite Workstation*), FileVersion (*1.1.0.0*), LegalCopyright (*Copyright (C) 2024-2026 Klein Systems*), and OriginalFilename.
+- **Automated Authenticode Digital Signing (`scripts/sign_app.ps1`)**:
+  - Generates dedicated local Code-Signing Certificate (`CN=FlashDock Workstation Authority, O=Klein Systems, C=US`) with SHA-256 hash algorithm and official DigiCert timestamp responder (`http://timestamp.digicert.com`).
+  - Automatically exports public `.cer` certificate (`dist/FlashDock_Dist/FlashDock-Security-Certificate.cer`).
+- **1-Click Distribution Launchers & Unblockers (`scripts/dist_helpers/`)**:
+  - `Run-FlashDock.bat`: Automatically strips NTFS Mark-of-the-Web (`Zone.Identifier`) and launches `FlashDock.exe`.
+  - `Install-Certificate.bat`: 1-click installer adding `FlashDock-Security-Certificate.cer` to the user's *Trusted Publishers* store via `certutil` and PowerShell so Windows 11 Smart App Control validates the digital signature.
+  - `Unblock-FlashDock.bat`: Strips download blocks from all files in the directory.
+  - `Run-Via-Python.bat`: Direct Python runner from source bypassing Windows PE checks entirely.
+
 ---
 
 ## 3. Workstation Navigation Index (All Tools & Modals)
@@ -340,13 +354,13 @@ stateDiagram-v2
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **442 passed in 80.13s** (100% pass rate).
+- **Unit & Integration Tests**: **442 passed in 31.21s** (100% pass rate).
 - **Test Modules**: 43 individual test files in `tests/`.
-- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.83 MB, Exit code 0, custom high-res squircle icon embedded).
-- **Release Archive**: `dist/FlashDock-v1.1.0-windows-x64.zip` (59.62 MB).
+- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.84 MB, Exit code 0, custom high-res squircle icon, PE version resource, Authenticode signed).
+- **Release Archive**: `dist/FlashDock-v1.1.0-windows-x64.zip` (59.63 MB, bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
 - **Integrity Hashes (`dist/SHA256SUMS.txt`)**:
-  - `FlashDock.exe`: `edaaa63c4257c1a65dbcab30e91871afc2011f1feb8429b8f174e052c13c6d5d`
-  - `Release ZIP`: `9ba4ed080ba2a53e602626e79aea51b70ace57dbe27368d4af25b701abd90530`
+  - `FlashDock.exe`: `d205bbf204e968cde08daf40c0eff62f55a6a7b6021e608de8d948b7875a1de9`
+  - `Release ZIP`: `e947cf2bd96cc7135764bcc5fe8c4cea2c143d8f85876cf44bb395a6bf4cec2c`
 
 ---
 
