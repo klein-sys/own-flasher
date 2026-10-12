@@ -249,7 +249,7 @@ class PhoneControlPanel(QFrame):
         brand_text_box.setSpacing(2)
         brand_title = QLabel("FlashDock")
         brand_title.setStyleSheet("font-size: 14px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.1; margin: 0; padding: 0;")
-        brand_sub = QLabel("v1.3.1 Service Suite")
+        brand_sub = QLabel("v1.3.2 Service Suite")
         brand_sub.setStyleSheet("font-size: 11px; color: #8E8E93; line-height: 1.1; margin: 0; padding: 0;")
         brand_text_box.addWidget(brand_title)
         brand_text_box.addWidget(brand_sub)

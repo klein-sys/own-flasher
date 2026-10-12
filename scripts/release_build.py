@@ -67,10 +67,12 @@ def main() -> int:
     else:
         print("  [OK] All test suites passed.")
 
-    # 2. Terminate any running FlashDock processes and invoke PyInstaller
+    # 2. Terminate any running FlashDock/ADB processes and invoke PyInstaller
     if sys.platform == "win32":
         try:
             subprocess.run(["taskkill", "/F", "/IM", "FlashDock.exe"], capture_output=True)
+            subprocess.run(["taskkill", "/F", "/IM", "adb.exe"], capture_output=True)
+            subprocess.run(["taskkill", "/F", "/IM", "fastboot.exe"], capture_output=True)
         except Exception:
             pass
 

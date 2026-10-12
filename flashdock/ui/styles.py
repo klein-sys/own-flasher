@@ -646,14 +646,15 @@ PhoneControlPanel QPushButton#refresh_btn:hover {
 }
 
 DeviceSelector {
-    background-color: #131822;
-    border-bottom: 1px solid #252D38;
-    padding: 4px;
+    background-color: transparent;
+    border: none;
+    padding: 0px;
 }
 
 StatusBarWidget {
-    background-color: #131822;
-    border-top: 1px solid #252D38;
+    background-color: #0D1117;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: none;
     padding: 0 10px;
 }
 
@@ -1348,14 +1349,15 @@ PhoneControlPanel QPushButton#refresh_btn:hover {
 }
 
 DeviceSelector {
-    background-color: #D8DCE4;
-    border-bottom: 1px solid #CBD1DC;
-    padding: 4px;
+    background-color: transparent;
+    border: none;
+    padding: 0px;
 }
 
 StatusBarWidget {
-    background-color: #D8DCE4;
-    border-top: 1px solid #CBD1DC;
+    background-color: #ECEFF4;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: none;
     padding: 0 10px;
 }
 

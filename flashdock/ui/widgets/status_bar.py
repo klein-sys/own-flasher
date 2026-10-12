@@ -42,20 +42,24 @@ class StatusDot(QLabel):
 class StatusBarWidget(QFrame):
     """Custom status bar displayed at the bottom of the main window.
 
-    Rather than using the built-in ``QMainWindow.statusBar()`` (which
-    is clunky), this is a styled ``QFrame`` that sits in the main
-    layout and updates through public slots.
+    Unified single-row bottom bar combining Status & Telemetry badges on the left,
+    progress in the middle, and compact Device Controls & Safety on the right.
     """
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        device_selector: Optional[DeviceSelector] = None,
+    ) -> None:
         super().__init__(parent)
-        self.setFixedHeight(30)
+        self.setFixedHeight(38)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 0, 12, 0)
-        layout.setSpacing(16)
+        layout.setSpacing(10)
+        self._layout = layout
 
-        # ---- Network indicator ----
+        # ---- Network indicator (Left) ----
         self._net_dot = StatusDot("#86868b")
         self._net_label = QLabel("Checking…")
         self._net_label.setProperty("cssClass", "secondary")
@@ -63,43 +67,33 @@ class StatusBarWidget(QFrame):
         layout.addWidget(self._net_dot)
         layout.addWidget(self._net_label)
 
-        layout.addWidget(self._separator())
-
-        # ---- Device indicator ----
-        self._dev_dot = StatusDot("#86868b")
-        self._dev_label = QLabel("No device")
-        self._dev_label.setProperty("cssClass", "secondary")
-        self._dev_label.setStyleSheet("font-size: 11px;")
-        layout.addWidget(self._dev_dot)
-        layout.addWidget(self._dev_label)
-
-        layout.addWidget(self._separator())
-
-        # ---- Mode label ----
-        self._mode_label = QLabel("Simple mode")
-        self._mode_label.setProperty("cssClass", "subheading")
-        self._mode_label.setStyleSheet("font-size: 11px; font-weight: 600;")
-        layout.addWidget(self._mode_label)
-
-        layout.addWidget(self._separator())
-
-        # ---- Cache age ----
-        self._cache_label = QLabel("Cache: —")
-        self._cache_label.setProperty("cssClass", "secondary")
-        self._cache_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace;")
-        layout.addWidget(self._cache_label)
-
-        # ---- Connection Badge (GSM Suite Persistent Badge) ----
-        self._connection_badge = QLabel("USB: Disconnected")
+        # ---- Active Connection Mode Badge ----
+        self._connection_badge = QLabel("• Disconnected")
         self._connection_badge.setStyleSheet(
             "background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); "
             "border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #8E8E93;"
         )
         layout.addWidget(self._connection_badge)
 
-        layout.addStretch()
+        layout.addWidget(self._separator())
 
-        # ---- Smooth QProgressBar ----
+        # ---- Quick operational mode indicator ----
+        self._mode_label = QLabel("Simple mode")
+        self._mode_label.setProperty("cssClass", "subheading")
+        self._mode_label.setStyleSheet("font-size: 11px; font-weight: 600;")
+        layout.addWidget(self._mode_label)
+
+        # Retained hidden attributes for full backward compatibility
+        self._dev_dot = StatusDot("#86868b")
+        self._dev_dot.setVisible(False)
+        self._dev_label = QLabel("No device")
+        self._dev_label.setVisible(False)
+        self._cache_label = QLabel("Cache: —")
+        self._cache_label.setVisible(False)
+
+        layout.addStretch(1)
+
+        # ---- Smooth QProgressBar (Center) ----
         from PySide6.QtWidgets import QProgressBar
         self._progress_bar = QProgressBar()
         self._progress_bar.setFixedWidth(160)
@@ -112,12 +106,27 @@ class StatusBarWidget(QFrame):
         )
         layout.addWidget(self._progress_bar)
 
-        # ---- Version ----
+        # ---- Device Controls & Safety (Right) ----
+        from flashdock.ui.widgets.device_selector import DeviceSelector
+        self._device_selector = device_selector if device_selector is not None else DeviceSelector(self)
+        layout.addWidget(self._device_selector)
+
+        # ---- Subtle Version Tag ----
         from flashdock import __version__
         self._version_label = QLabel(f"v{__version__}")
         self._version_label.setProperty("cssClass", "secondary")
-        self._version_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace;")
+        self._version_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; color: #6E7681;")
         layout.addWidget(self._version_label)
+
+        self.apply_theme("dark")
+
+    def add_right_widget(self, widget: QWidget) -> None:
+        """Insert an action widget on the right side before the version tag."""
+        idx = self._layout.indexOf(self._version_label)
+        if idx >= 0:
+            self._layout.insertWidget(idx, widget)
+        else:
+            self._layout.addWidget(widget)
 
     # ---- Helpers -----------------------------------------------------------
 
@@ -127,7 +136,25 @@ class StatusBarWidget(QFrame):
         sep.setFixedHeight(12)
         sep.setFixedWidth(1)
         sep.setProperty("cssClass", "separator")
+        sep.setStyleSheet("background-color: rgba(255, 255, 255, 0.12); border: none;")
         return sep
+
+    def apply_theme(self, theme: str = "dark") -> None:
+        """Apply unified theme canvas to the single bottom bar."""
+        if theme == "light":
+            self.setStyleSheet(
+                "StatusBarWidget { background-color: #ECEFF4; border-top: 1px solid rgba(0, 0, 0, 0.08); border-bottom: none; }"
+            )
+            self._mode_label.setStyleSheet("font-size: 11px; font-weight: 600; color: #4C566A;")
+            self._version_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; color: #4C566A;")
+        else:
+            self.setStyleSheet(
+                "StatusBarWidget { background-color: #0D1117; border-top: 1px solid rgba(255, 255, 255, 0.08); border-bottom: none; }"
+            )
+            self._mode_label.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+            self._version_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; color: #6E7681;")
+        if hasattr(self, "_device_selector") and self._device_selector:
+            self._device_selector.apply_theme(theme)
 
     # ---- Public update slots -----------------------------------------------
 
@@ -171,7 +198,7 @@ class StatusBarWidget(QFrame):
     def update_connection_badge(self, mode: str, port_or_serial: str, details: Optional[dict] = None) -> None:
         """Update persistent GSM Suite USB connection badge (e.g. 'MTK BROM (COM4) Connected')."""
         if mode in ("disconnected", "not_connected") or not port_or_serial:
-            self._connection_badge.setText("USB: Disconnected")
+            self._connection_badge.setText("• Disconnected")
             self._connection_badge.setStyleSheet(
                 "background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); "
                 "border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #8E8E93;"
@@ -179,7 +206,7 @@ class StatusBarWidget(QFrame):
             return
 
         mode_upper = mode.upper().replace("_", " ")
-        display_text = f"{mode_upper} ({port_or_serial}) Connected"
+        display_text = f"• {mode_upper} ({port_or_serial}) Connected"
 
         # Color badges by mode
         if "BROM" in mode_upper or "EDL" in mode_upper or "SPRD" in mode_upper:

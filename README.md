@@ -2,8 +2,8 @@
 title: "FlashDock — Personal Android Service Workstation"
 type: documentation
 status: completed
-version: 1.3.1
-phase: Phase 23
+version: 1.3.2
+phase: Phase 23 (v1.3.2)
 updated: 2026-10-13
 tags:
   - flashdock
@@ -28,10 +28,10 @@ tags:
 
 # FlashDock — Personal Android Service Workstation
 
-[![Version](https://img.shields.io/badge/version-1.3.1-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
+[![Version](https://img.shields.io/badge/version-1.3.2-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-1D1D1F.svg)](https://github.com/klein-sys/own-flasher)
 [![License](https://img.shields.io/badge/license-MIT-30D158.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-466%20%2F%20466%20passing-30D158.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-467%20%2F%20467%20passing-30D158.svg)](tests/)
 [![Architecture](https://img.shields.io/badge/architecture-HyperOS%202.0%20%2B%20macOS%20Sequoia-BF5AF2.svg)](flashdock/ui/styles.py)
 [![App Icon](https://img.shields.io/badge/icon-macOS%20Squircle%20(1024x1024)-00F2FE.svg)](flashdock/resources/icon.png)
 [![UI Assets](https://img.shields.io/badge/vector%20graphics-100%25%20SVG%20%7C%20Apple%20HIG-FF9500.svg)](flashdock/ui/icon_assets.py)
@@ -282,11 +282,11 @@ FlashDock Workstation
 
 ### Option A: Standalone Windows Binary (Recommended)
 Download the standalone precompiled release from `dist/`:
-1. Extract `FlashDock-v1.3.1-windows-x64.zip`.
+1. Extract `FlashDock-v1.3.2-windows-x64.zip`.
 2. Launch `FlashDock.exe` (or double-click `Run-FlashDock.bat`). No Python installation required!
 3. Verify integrity against `dist/SHA256SUMS.txt`:
-   - `FlashDock.exe`: `09f23e6293c0e9c663b954780d51135e2d80b56f8889ad1232e0e5ff5bfa48a9`
-   - `FlashDock-v1.3.1-windows-x64.zip`: `af611258b479061328a54e969d7b38d2cdb75302f2be26d170b84d9dd586dab2`
+   - `FlashDock.exe`: `2fe8c3d7270933787ad792d1332fb82d64f1f1c704cfbc4e983ae076c7789317`
+   - `FlashDock-v1.3.2-windows-x64.zip`: `69703224c7dcdb8ba796354eda39d4dc2f838c84ff43ae6955662efa4444eb6a`
 
 ---
 
@@ -324,7 +324,7 @@ python main.py
 ### Running Tests
 ```powershell
 python scripts/release_build.py
-# 466 passed in 85.88s (100% success rate)
+# 467 passed in 95.72s (100% success rate)
 ```
 
 ---

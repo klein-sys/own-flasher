@@ -590,10 +590,10 @@ class MainWindow(QMainWindow):
 
         root_layout.addLayout(body, 1)
 
-        # ---- Device selector footer bar (Fix 16: moved to bottom bar above status bar) ----
+        # ---- Unified bottom footer bar (Device Selector + Status Bar in single row) ----
         self._device_selector = DeviceSelector(self)
 
-        # Action widgets on the right side of the device footer bar
+        # Action widgets on the device bar
         self._btn_driver_fix = QPushButton("Fix OEM Driver / COM Port")
         self._btn_driver_fix.setIcon(get_icon("tools", 12))
         self._btn_driver_fix.setToolTip("Install missing OEM USB drivers, fix MTK VCOM code 10, or fix Qualcomm 9008 COM port errors")
@@ -605,7 +605,7 @@ class MainWindow(QMainWindow):
                 color: #FF9F0A;
                 border: 1px solid rgba(255, 159, 10, 0.4);
                 border-radius: 7px;
-                padding: 3px 12px;
+                padding: 2px 10px;
                 font-size: 11px;
                 font-weight: 600;
             }
@@ -614,9 +614,8 @@ class MainWindow(QMainWindow):
             }
         """)
         self._btn_driver_fix.clicked.connect(lambda: self._on_action("downloads"))
-        self._device_selector.add_action_widget(self._btn_driver_fix)
 
-        # Terminal Toggle Button (Fix 18)
+        # Terminal Toggle Button
         self._btn_terminal_toggle = QPushButton("Hide Terminal")
         self._btn_terminal_toggle.setIcon(get_icon("chevron_right", 12))
         self._btn_terminal_toggle.setToolTip("Hide Live Telemetry Terminal to maximize workspace canvas")
@@ -628,7 +627,7 @@ class MainWindow(QMainWindow):
                 color: #0A84FF;
                 border: 1px solid rgba(10, 132, 255, 0.35);
                 border-radius: 7px;
-                padding: 3px 12px;
+                padding: 2px 10px;
                 font-size: 11px;
                 font-weight: 600;
             }
@@ -639,10 +638,8 @@ class MainWindow(QMainWindow):
         self._btn_terminal_toggle.clicked.connect(self._toggle_terminal_visibility)
         self._device_selector.add_action_widget(self._btn_terminal_toggle)
 
-        root_layout.addWidget(self._device_selector)
-
-        # ---- Status bar (bottom) ----
-        self._status_bar = StatusBarWidget(self)
+        # Unified single bottom bar hosting telemetry and device controls
+        self._status_bar = StatusBarWidget(self, device_selector=self._device_selector)
         root_layout.addWidget(self._status_bar)
 
     def _build_top_brand_bar(self) -> QWidget:
@@ -2062,6 +2059,8 @@ class MainWindow(QMainWindow):
             self._sideload_screen.apply_theme(theme_name)
         if hasattr(self, "_device_selector"):
             self._device_selector.apply_theme(theme_name)
+        if hasattr(self, "_status_bar"):
+            self._status_bar.apply_theme(theme_name)
         if hasattr(self, "_side_terminal"):
             self._update_terminal_toggle_ui(self._side_terminal.isVisible())
 

@@ -2,8 +2,8 @@
 title: "FlashDock — Agent Handoff Document"
 type: handoff
 status: completed
-version: 1.3.1
-phase: Phase 23 (Patch v1.3.1)
+version: 1.3.2
+phase: Phase 23 (v1.3.2)
 updated: 2026-10-13
 tags:
   - flashdock
@@ -26,12 +26,12 @@ tags:
 # FlashDock — Agent Handoff Document
 
 **Date:** 2026-10-13  
-**Current Phase:** **Phase 23 (Patch v1.3.1): Defect Remediation, Header/Footer Ergonomics & Terminal Glitch Resolution (v1.3.1 — 100% Completed)**  
+**Current Phase:** **Phase 23 (v1.3.2): Unified Single-Row Bottom Bar Refactoring & Workstation Canvas Optimization (v1.3.2 — 100% Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
-**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.3.1-windows-x64.zip`)  
-**Test Suite:** **466 Passed Unit & Integration Tests across 45 test modules (`python scripts/release_build.py`, 100% success rate)**  
+**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.3.2-windows-x64.zip`)  
+**Test Suite:** **467 Passed Unit & Integration Tests across 45 test modules (`python scripts/release_build.py`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
 ---
@@ -432,13 +432,13 @@ stateDiagram-v2
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **466 passed in 80s** across 45 test modules (`python scripts/release_build.py`, 100% pass rate).
+- **Unit & Integration Tests**: **467 passed in 95.72s** across 45 test modules (`python scripts/release_build.py`, 100% pass rate).
 - **Test Modules**: 45 individual test files in `tests/`, including `tests/test_main_window.py` and `tests/test_side_terminal.py`.
-- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (Exit code 0, custom high-res squircle icon, PE version resource 1.3.1.0, Authenticode signed).
-- **Release Archive**: `dist/FlashDock-v1.3.1-windows-x64.zip` (bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
+- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (Exit code 0, custom high-res squircle icon, PE version resource 1.3.2.0, Authenticode signed).
+- **Release Archive**: `dist/FlashDock-v1.3.2-windows-x64.zip` (bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
 - **Integrity Hashes (`dist/SHA256SUMS.txt`)**:
-  - `FlashDock.exe`: `09f23e6293c0e9c663b954780d51135e2d80b56f8889ad1232e0e5ff5bfa48a9`
-  - `Release ZIP`: `af611258b479061328a54e969d7b38d2cdb75302f2be26d170b84d9dd586dab2`
+  - `FlashDock.exe`: `2fe8c3d7270933787ad792d1332fb82d64f1f1c704cfbc4e983ae076c7789317`
+  - `Release ZIP`: `69703224c7dcdb8ba796354eda39d4dc2f838c84ff43ae6955662efa4444eb6a`
 
 ---
 
@@ -462,5 +462,36 @@ stateDiagram-v2
 5. **Phase 23 Core Capabilities**:
    - Universal Sideloading Engine (`flashdock/tools/sideload.py`) with APK, Split App Bundle (`.xapk`), Android 14+ low-SDK bypass, and Recovery OTA sideloading.
    - 100% test pass rate across 466 tests.
+
+---
+
+## 6. Phase 23 (v1.3.2): Unified Single-Row Bottom Bar Refactoring
+
+1. **Defect Remediation (`images/fix 18.png`)**:
+   - **Problem**: In previous iterations, `DeviceSelector` (device dropdown, Refresh, Pin Serial) and `StatusBarWidget` (`Online`, `No device`, `Simple mode`, `Cache`, `ADB Connected`) rendered as two stacked vertical rows, wasting vertical canvas height.
+   - **Resolution**: Merged both components into a single, unified horizontal bottom bar (`QHBoxLayout`, fixed height `38px`):
+     ```
+     [ • Online  • ADB (10944373AP103209) Connected  |  Simple mode ]  <--- STRETCH --->  [ 🔍 [Device Dropdown (max-w: 280px)]  🔄 Refresh  🔒 Pin Serial  [Hide Terminal]  v1.3.2 ]
+     ```
+2. **Ergonomic Sub-Sections**:
+   - **Left Section (Status & Telemetry)**:
+     - Network status badge (`• Online` / `• Offline` with dynamic color dot).
+     - Active connection mode badge (`• ADB (...) Connected` / `• Fastboot` / `• BROM` / `• Disconnected`).
+     - Subtle divider line (`|`).
+     - Quick operational mode indicator (`Simple mode` / `Advanced`).
+   - **Center Section**: Smooth `QProgressBar` with flexible layout stretch.
+   - **Right Section (Device Controls & Safety)**:
+     - Search vector icon (`13px`, `#0A84FF`).
+     - Compact Device Dropdown combobox (`max-width: 280px; min-width: 200px; height: 28px; font-size: 11.5px;`).
+     - Compact **Refresh** pill button with rotating vector icon (`height: 28px; padding: 2px 10px; font-size: 11px;`).
+     - Compact **Pin Serial** pill button with lock vector icon (`height: 28px; padding: 2px 10px; font-size: 11px;`).
+     - Live Terminal Toggle pill button (`Hide Terminal` / `Show Terminal`).
+     - Subtle monospace version tag (`v1.3.2`).
+3. **Styling & Theme Canvas**:
+   - Fixed height: `38px`.
+   - Top border: `1px solid rgba(255, 255, 255, 0.08)` in Dark mode; `1px solid rgba(0, 0, 0, 0.08)` in Light mode.
+   - Background canvas: `#0D1117` in Dark mode; `#ECEFF4` in Light mode.
+   - `DeviceSelector` container set to `background: transparent; border: none; padding: 0;`.
+
 
 

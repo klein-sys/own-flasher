@@ -260,3 +260,17 @@ class TestMainWindow:
         assert win._side_terminal.maximumWidth() == 320
         assert "Hide Terminal" in win._btn_terminal_toggle.text()
 
+    def test_unified_single_row_bottom_bar(self, qapp, mock_main_window):
+        """Fix 18 & v1.3.2: Bottom bar unifies Status badges and Device Controls into single horizontal row."""
+        win = mock_main_window
+        assert hasattr(win, "_status_bar")
+        assert hasattr(win, "_device_selector")
+        # Ensure DeviceSelector is hosted inside status bar
+        assert win._status_bar._device_selector is win._device_selector
+        assert win._status_bar.height() == 38 or win._status_bar.maximumHeight() == 38
+        assert not win._status_bar._net_label.isHidden()
+        assert not win._status_bar._connection_badge.isHidden()
+        assert not win._status_bar._mode_label.isHidden()
+        assert not win._status_bar._version_label.isHidden()
+        assert "1.3.2" in win._status_bar._version_label.text()
+
