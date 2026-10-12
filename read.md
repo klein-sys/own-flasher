@@ -1,6 +1,6 @@
 # FlashDock — Personal Android Service Workstation
 
-[![Version](https://img.shields.io/badge/version-1.0.0-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
+[![Version](https://img.shields.io/badge/version-1.1.0-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-1D1D1F.svg)](https://github.com/klein-sys/own-flasher)
 [![License](https://img.shields.io/badge/license-MIT-30D158.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-413%20%2F%20413%20passing-30D158.svg)](tests/)
@@ -15,7 +15,7 @@ FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing,
 
 ---
 
-## Current Status — GSM Suite Architecture & Vector Asset Overhaul (v1.0.0)
+## Current Status — GSM Suite Architecture & Vector Asset Overhaul (v1.1.0)
 
 FlashDock features a fully modular, thread-safe, and asynchronous **GSM Suite Core Architecture** inspired by professional multi-chipset repair platforms:
 
@@ -119,7 +119,7 @@ FlashDock is built with a refined Apple HIG aesthetic:
 
 ### Option A: Standalone Windows Binary (Recommended)
 Download the standalone precompiled release from `dist/`:
-1. Extract `FlashDock-v1.0.0-windows-x64.zip`.
+1. Extract `FlashDock-v1.1.0-windows-x64.zip`.
 2. Run `FlashDock.exe`. No Python installation required!
 3. Verify integrity against `dist/SHA256SUMS.txt`.
 
@@ -143,7 +143,7 @@ python main.py
 ### Running Tests
 ```powershell
 python scripts/release_build.py
-# 413 passed in 27.07s (100% success rate)
+# 413 passed in 39.02s (100% success rate)
 ```
 
 ---

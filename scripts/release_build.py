@@ -16,9 +16,14 @@ import zipfile
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from flashdock import __version__
+
 DIST_DIR = ROOT_DIR / "dist"
 BUILD_DIR = ROOT_DIR / "build"
-APP_DIR = DIST_DIR / "FlashDock_App"
+APP_DIR = DIST_DIR / "FlashDock_Dist"
 
 
 def compute_sha256(file_path: Path) -> str:
@@ -38,7 +43,7 @@ def main() -> int:
             pass
 
     print("=" * 70)
-    print("  [FlashDock v1.0.0] Production Release Build Pipeline")
+    print(f"  [FlashDock v{__version__}] Production Release Build Pipeline")
     print("=" * 70)
 
     # 1. Verify tests
@@ -88,7 +93,7 @@ def main() -> int:
     print(f"  [OK] Compiled: {exe_path.name} ({exe_size_mb:.2f} MB)")
 
     # 3. Create release zip archive
-    zip_name = "FlashDock-v1.0.0-windows-x64.zip"
+    zip_name = f"FlashDock-v{__version__}-windows-x64.zip"
     zip_path = DIST_DIR / zip_name
     print(f"\n[3/4] Creating distribution archive: {zip_name}...")
 
@@ -121,7 +126,7 @@ def main() -> int:
     print(f"       Release ZIP:   {zip_hash}")
 
     print("\n" + "=" * 70)
-    print("  [SUCCESS] FlashDock v1.0.0 Release Build Complete!")
+    print(f"  [SUCCESS] FlashDock v{__version__} Release Build Complete!")
     print("=" * 70)
     return 0
 

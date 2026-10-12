@@ -5,7 +5,7 @@
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
-**Distribution:** Standalone Windows Executable (`dist/FlashDock_App/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.0.0-windows-x64.zip`)  
+**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.1.0-windows-x64.zip`)  
 **Test Suite:** **413 Passed Unit & Integration Tests across 42 test modules (`python scripts/release_build.py`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
@@ -143,13 +143,13 @@ FlashDock is a macOS Big Sur-inspired desktop Android flashing and service works
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **413 passed in 27.07s** (100% pass rate).
+- **Unit & Integration Tests**: **413 passed in 39.02s** (100% pass rate).
 - **Test Modules**: 42 individual test files in `tests/`.
-- **Standalone Binary**: `dist/FlashDock_App/FlashDock.exe` (2.77 MB, Exit code 0).
-- **Release Archive**: `dist/FlashDock-v1.0.0-windows-x64.zip` (56.30 MB).
+- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (2.77 MB, Exit code 0).
+- **Release Archive**: `dist/FlashDock-v1.1.0-windows-x64.zip` (56.30 MB).
 - **Integrity Hashes (`dist/SHA256SUMS.txt`)**:
-  - `FlashDock.exe`: `52349273b9a8327a1aeb35d136dd666a5a0c746705b6db378fa3502ebe5d4931`
-  - `Release ZIP`: `ebb6e41d34da7e8980745a797c2c2c29f8d937d5ddcaab5e3fa6bd639368cee0`
+  - `FlashDock.exe`: `3d6dfa3289f5fd4159656a3d00afae21ba80169b0794b99b5a0c1f1e9e0360e4`
+  - `Release ZIP`: `18ac0be4aa02cf6aa2c2e5c58e7c3d2cb9226ef5a1f11d642fce7bdef072e87b`
 
 ---
 

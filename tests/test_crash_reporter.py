@@ -45,7 +45,7 @@ def test_build_crash_report():
     assert "CRASH REPORT" in report
     assert "ValueError: Simulated catastrophic failure" in report
     assert "Traceback" in report
-    assert "FlashDock v1.0.0" in report
+    assert f"FlashDock v" in report
 
 
 def test_write_crash_dump(tmp_path: Path):

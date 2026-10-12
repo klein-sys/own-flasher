@@ -115,7 +115,8 @@ def test_run_all_checks():
     tester = SystemSelfTester()
     report = tester.run_all_checks()
     assert report.total_count >= 8
-    assert report.app_version == "1.0.0"
+    from flashdock import __version__
+    assert report.app_version == __version__
 
 
 def test_selftest_dialog(qapp):
