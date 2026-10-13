@@ -2,13 +2,17 @@
 title: "FlashDock — Agent Handoff Document"
 type: handoff
 status: completed
-version: 1.3.2
-phase: Phase 23 (v1.3.2)
+version: 1.3.3
+phase: Phase 24 (v1.3.3)
 updated: 2026-10-13
 tags:
   - flashdock
   - android-workstation
   - gsm-suite
+  - non-scrolling-home-canvas
+  - interactive-workflow-guide
+  - virtual-keypad-fix
+  - terminal-splitter
   - universal-sideloading
   - xapk-installer
   - android-14-bypass
@@ -26,12 +30,12 @@ tags:
 # FlashDock — Agent Handoff Document
 
 **Date:** 2026-10-13  
-**Current Phase:** **Phase 23 (v1.3.2): Unified Single-Row Bottom Bar Refactoring & Workstation Canvas Optimization (v1.3.2 — 100% Completed)**  
+**Current Phase:** **Phase 24 (v1.3.3): Non-Scrolling Home Tools Canvas, Resizable Terminal Splitter, Virtual Keypad Fix & Interactive Workflow Guide (v1.3.3 — 100% Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
-**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.3.2-windows-x64.zip`)  
-**Test Suite:** **467 Passed Unit & Integration Tests across 45 test modules (`python scripts/release_build.py`, 100% success rate)**  
+**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.3.3-windows-x64.zip`)  
+**Test Suite:** **472 Passed Unit & Integration Tests across 45 test modules (`python scripts/release_build.py`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
 ---
@@ -432,13 +436,13 @@ stateDiagram-v2
 
 ## 4. Test Suite & Verification Results
 
-- **Unit & Integration Tests**: **467 passed in 95.72s** across 45 test modules (`python scripts/release_build.py`, 100% pass rate).
-- **Test Modules**: 45 individual test files in `tests/`, including `tests/test_main_window.py` and `tests/test_side_terminal.py`.
-- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (Exit code 0, custom high-res squircle icon, PE version resource 1.3.2.0, Authenticode signed).
-- **Release Archive**: `dist/FlashDock-v1.3.2-windows-x64.zip` (bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
+- **Unit & Integration Tests**: **472 passed in 86.97s** across 45 test modules (`python scripts/release_build.py`, 100% pass rate).
+- **Test Modules**: 45 individual test files in `tests/`, including `tests/test_main_window.py`, `tests/test_key_guide.py`, and `tests/test_workflow_guide.py`.
+- **Standalone Binary**: `dist/FlashDock_Dist/FlashDock.exe` (Exit code 0, custom high-res squircle icon, PE version resource 1.3.3.0, Authenticode signed).
+- **Release Archive**: `dist/FlashDock-v1.3.3-windows-x64.zip` (bundled with `Run-FlashDock.bat`, `Install-Certificate.bat`, `Unblock-FlashDock.bat`, and `FlashDock-Security-Certificate.cer`).
 - **Integrity Hashes (`dist/SHA256SUMS.txt`)**:
-  - `FlashDock.exe`: `2fe8c3d7270933787ad792d1332fb82d64f1f1c704cfbc4e983ae076c7789317`
-  - `Release ZIP`: `69703224c7dcdb8ba796354eda39d4dc2f838c84ff43ae6955662efa4444eb6a`
+  - `FlashDock.exe`: `c9e9c61ee3f5ff44a3b75a52379c4fb78f63860d3621ce0f9eca8dde74db1f91`
+  - `Release ZIP`: `89b4dbe233378519bb58312b3b98d7fe9c492e5f18a5c5928691f0571a001bcb`
 
 ---
 
@@ -493,5 +497,35 @@ stateDiagram-v2
    - Background canvas: `#0D1117` in Dark mode; `#ECEFF4` in Light mode.
    - `DeviceSelector` container set to `background: transparent; border: none; padding: 0;`.
 
+---
 
+## 7. Phase 24 (v1.3.3): Non-Scrolling Home Tools Canvas, Resizable Terminal Splitter, Virtual Keypad Fix & Interactive Workflow Guide
 
+1. **Virtual Keypad ADB Fix (`HardwareKeyGuideDialog` & `MainWindow`)**:
+   - **Root Cause Remediation**: Resolved `ADB.shell()` parameter mismatch where passing command as a list `["input", "keyevent", "24"]` coerced the execution string into `"['input', 'keyevent', '24']"`. Formatted as string `input keyevent {keycode}` and routed with explicit device target `serial=self._serial`.
+   - **Dynamic Safety Banner**: Added real-time device connection state indicators inside the dialog. Displays emerald green pill banner when target is connected in normal ADB mode, or amber warning if disconnected or unauthorized.
+
+2. **100% Non-Scrollable Main Home Tools Canvas**:
+   - **Removal of Outer ScrollArea**: Completely eliminated outer `QScrollArea` on the central Home screen, placing `_tools_grid` directly into the page layout with `spacing(8)`.
+   - **4-Column Compact Grid**: Re-architected action tools into a 4-column layout (`cols = 4`), allowing all 15 service cards to fit in a clean 4x4 matrix without vertical or horizontal scrolling.
+   - **Compact 54px Action Card Buttons**: Standardized `ActionCardButton` height to `54px`, positioned title (`11.5px; font-weight: 600`) and category badge inline, and shifted verbose descriptions to rich native tooltips (`setToolTip`).
+   - **Header & Search Row Consolidation**: Relocated auxiliary buttons (`Setup Laptop`, `Key Guide`, `Workflow Guide`, `Self-Test`) onto the Search & Filter row. Tightened Live Device HUD banner margins to `(14, 6, 14, 6)` at fixed `82px` height.
+
+3. **Smooth Scrollable Left Navigation Sidebar (`PhoneControlPanel`)**:
+   - Preserved slim, responsive vertical scroll container on the left panel so all category filters, tools, and reboot switchboard triggers remain comfortably accessible on 1366x768 and 1920x1080 displays.
+   - Adjusted button padding to `(6, 4, 8, 4)` with `11.5px` typography to eliminate label clipping.
+
+4. **Live Activity Terminal Resizable Splitter**:
+   - Enabled interactive dragging on `_main_splitter` with a visible 5px handle grip line featuring `#0A84FF` hover highlights.
+   - Bound terminal bounds to `min-width: 240px; max-width: 600px` with collapsible protection (`setChildrenCollapsible(False)`).
+   - Synchronized with bottom bar `[Hide Terminal]` / `[Show Terminal]` pill button.
+
+5. **Interactive Workflow & Function Guide Overhaul (`WorkflowGuideDialog`)**:
+   - **1-Click Direct Launch Signal**: Integrated `action_requested = Signal(str)` signal wired to `MainWindow._on_action`, allowing operators to read the guide and instantly launch the selected tool (`self.action_requested.emit(aid); self.accept()`).
+   - **16 Interactive Function Cards**: Structured every tool with circular vector icon chips, category badges, "How It Works (Under the Hood)", "Step-by-Step Guide", "Safety Checklist / Pro-Tips", and a prominent **"Launch This Tool ➔"** action button.
+   - Added real-time interactive search filter across all cards and categories.
+
+6. **Release Verification & Artifact Generation**:
+   - Semantic version bumped across `flashdock/__init__.py`, `flashdock/constants.py`, and `scripts/version_info.txt` to `1.3.3.0`.
+   - 472 test cases passing (100% pass rate in 86.97s).
+   - Windows executable compiled (`dist/FlashDock_Dist/FlashDock.exe`, 2.93 MB) and packaged into `dist/FlashDock-v1.3.3-windows-x64.zip` (59.72 MB).

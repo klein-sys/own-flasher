@@ -64,7 +64,7 @@ class LiveDeviceHud(QFrame):
         super().__init__(parent)
         self.setObjectName("liveDeviceHud")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.setFixedHeight(88)
+        self.setFixedHeight(82)
 
         self._current_device: Optional[DeviceInfo] = None
         self._current_theme = "dark"
@@ -72,7 +72,7 @@ class LiveDeviceHud(QFrame):
 
         # Main Layout
         root_lay = QVBoxLayout(self)
-        root_lay.setContentsMargins(14, 8, 14, 8)
+        root_lay.setContentsMargins(14, 6, 14, 6)
         root_lay.setSpacing(6)
 
         # Top Row: Mode Capsule + Telemetry Metrics

@@ -28,6 +28,27 @@ class TestHardwareKeyGuideDialog:
         assert tabs is not None
         assert tabs.count() == 3  # Bootloader Nav, Key Combos, Remote Control
 
+    def test_virtual_keypad_send_keyevent(self, qapp):
+        mock_adb = MagicMock()
+        mock_adb.available = True
+        mock_adb.shell.return_value = MagicMock(success=True)
+
+        dlg = HardwareKeyGuideDialog(adb=mock_adb, serial="TEST_SERIAL_123")
+        assert dlg._serial == "TEST_SERIAL_123"
+        dlg._send_keyevent(24)  # Vol Up
+
+        mock_adb.shell.assert_called_once_with("input keyevent 24", serial="TEST_SERIAL_123")
+        assert "Sent keyevent 24 successfully" in dlg._status_lbl.text()
+
+    def test_virtual_keypad_disconnected_guard(self, qapp):
+        mock_adb = MagicMock()
+        mock_adb.available = True
+        dlg = HardwareKeyGuideDialog(adb=mock_adb, serial="")
+        dlg._send_keyevent(26)  # Power
+
+        mock_adb.shell.assert_not_called()
+        assert "Please connect a device" in dlg._status_lbl.text()
+
     def test_phone_panel_key_signals(self, qapp):
         panel = PhoneControlPanel()
         received_keys = []

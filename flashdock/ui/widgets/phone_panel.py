@@ -103,8 +103,8 @@ class _NavPillButton(QPushButton):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 4, 10, 4)
-        layout.setSpacing(10)
+        layout.setContentsMargins(6, 4, 8, 4)
+        layout.setSpacing(8)
 
         # Circular Chip Container (28x28px, radius 14px)
         self.chip = QFrame()
@@ -126,6 +126,7 @@ class _NavPillButton(QPushButton):
 
         # Title Label
         self.title_lbl = QLabel(label)
+        self.title_lbl.setStyleSheet("font-size: 11.5px; font-weight: 600;")
         self.title_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         layout.addWidget(self.title_lbl, 1)
 
@@ -145,7 +146,7 @@ class _NavPillButton(QPushButton):
                         font-weight: 700;
                     }
                 """)
-                self.title_lbl.setStyleSheet("color: #FFFFFF; font-size: 12px; font-weight: 700; background: transparent;")
+                self.title_lbl.setStyleSheet("color: #FFFFFF; font-size: 11.5px; font-weight: 700; background: transparent;")
             else:
                 self.setStyleSheet("""
                     QPushButton {
@@ -156,7 +157,7 @@ class _NavPillButton(QPushButton):
                         font-weight: 700;
                     }
                 """)
-                self.title_lbl.setStyleSheet("color: #FFFFFF; font-size: 12px; font-weight: 700; background: transparent;")
+                self.title_lbl.setStyleSheet("color: #FFFFFF; font-size: 11.5px; font-weight: 700; background: transparent;")
         else:
             if theme == "light":
                 self.setStyleSheet("""
@@ -173,7 +174,7 @@ class _NavPillButton(QPushButton):
                         color: #1C2024;
                     }
                 """)
-                self.title_lbl.setStyleSheet("color: #1C2024; font-size: 12px; font-weight: 600; background: transparent;")
+                self.title_lbl.setStyleSheet("color: #1C2024; font-size: 11.5px; font-weight: 600; background: transparent;")
             else:
                 self.setStyleSheet("""
                     QPushButton {
@@ -189,7 +190,7 @@ class _NavPillButton(QPushButton):
                         color: #FFFFFF;
                     }
                 """)
-                self.title_lbl.setStyleSheet("color: #E6EDF3; font-size: 12px; font-weight: 600; background: transparent;")
+                self.title_lbl.setStyleSheet("color: #E6EDF3; font-size: 11.5px; font-weight: 600; background: transparent;")
 
 
 class PhoneControlPanel(QFrame):
@@ -249,7 +250,7 @@ class PhoneControlPanel(QFrame):
         brand_text_box.setSpacing(2)
         brand_title = QLabel("FlashDock")
         brand_title.setStyleSheet("font-size: 14px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.1; margin: 0; padding: 0;")
-        brand_sub = QLabel("v1.3.2 Service Suite")
+        brand_sub = QLabel("v1.3.3 Service Suite")
         brand_sub.setStyleSheet("font-size: 11px; color: #8E8E93; line-height: 1.1; margin: 0; padding: 0;")
         brand_text_box.addWidget(brand_title)
         brand_text_box.addWidget(brand_sub)

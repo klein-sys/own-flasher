@@ -35,7 +35,7 @@ log = get_logger(__name__)
 class HardwareKeyGuideDialog(QDialog):
     """Interactive hardware key navigation guide and virtual keypad."""
 
-    def __init__(self, adb: Optional[ADB] = None, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, adb: Optional[ADB] = None, serial: str = "", parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Phone Hardware Keys & Navigation Guide")
         self.setWindowIcon(get_icon("phone", 16))
@@ -43,6 +43,7 @@ class HardwareKeyGuideDialog(QDialog):
         self.setMinimumSize(620, 480)
         self.setStyleSheet("background-color: #0F141C; color: #E6EDF3;")
         self._adb = adb
+        self._serial = serial
 
         self._setup_ui()
 
@@ -245,6 +246,32 @@ class HardwareKeyGuideDialog(QDialog):
         desc.setWordWrap(True)
         lay.addWidget(desc)
 
+        # Connection status banner
+        self._conn_banner = QFrame()
+        b_lay = QHBoxLayout(self._conn_banner)
+        b_lay.setContentsMargins(10, 6, 10, 6)
+        b_lay.setSpacing(8)
+
+        if self._serial:
+            self._conn_banner.setStyleSheet(
+                "background: rgba(52, 199, 89, 0.12); border: 1px solid rgba(52, 199, 89, 0.35); border-radius: 8px;"
+            )
+            b_icon = create_icon_label("check", 14, color="#34C759")
+            b_text = QLabel(f"Target Device Connected via ADB: <b>{self._serial}</b>")
+            b_text.setStyleSheet("font-size: 11.5px; color: #34C759;")
+        else:
+            self._conn_banner.setStyleSheet(
+                "background: rgba(255, 149, 0, 0.12); border: 1px solid rgba(255, 149, 0, 0.35); border-radius: 8px;"
+            )
+            b_icon = create_icon_label("warning", 14, color="#FF9F0A")
+            b_text = QLabel("Please connect a device via USB debugging in normal System mode to use the virtual keypad.")
+            b_text.setStyleSheet("font-size: 11.5px; color: #FF9F0A;")
+            b_text.setWordWrap(True)
+
+        b_lay.addWidget(b_icon)
+        b_lay.addWidget(b_text, 1)
+        lay.addWidget(self._conn_banner)
+
         keypad_frame = QFrame()
         keypad_frame.setStyleSheet(
             "background: #181E26; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px;"
@@ -292,10 +319,15 @@ class HardwareKeyGuideDialog(QDialog):
             self._status_lbl.setStyleSheet("font-size: 12px; color: #DC2626;")
             return
 
+        if not self._serial:
+            self._status_lbl.setText("Please connect a device via USB debugging in normal System mode to use the virtual keypad.")
+            self._status_lbl.setStyleSheet("font-size: 12px; color: #D97706;")
+            return
+
         try:
-            res = self._adb.shell(["input", "keyevent", str(keycode)])
+            res = self._adb.shell(f"input keyevent {keycode}", serial=self._serial)
             if res.success:
-                self._status_lbl.setText(f"Sent keyevent {keycode} successfully.")
+                self._status_lbl.setText(f"Sent keyevent {keycode} successfully to {self._serial}.")
                 self._status_lbl.setStyleSheet("font-size: 12px; color: #059669;")
             else:
                 self._status_lbl.setText(f"Failed to send keyevent: {res.stderr or 'device error'}")

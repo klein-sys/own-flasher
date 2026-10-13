@@ -172,7 +172,7 @@ ACTION_ICON_MAP = {
 
 
 class ActionCardButton(QPushButton):
-    """Next-Gen HyperOS / iOS 18 Action Card with 30x30px vibrant circular badge, continuous squircle curvature and smooth drop shadow."""
+    """Next-Gen HyperOS / iOS 18 Action Card with compact height, vibrant circular badge, and rich tooltip."""
 
     def __init__(
         self,
@@ -190,44 +190,42 @@ class ActionCardButton(QPushButton):
         self.desc_str = desc
         self.category = category
         self.setProperty("cssClass", "action")
-        self.setToolTip(desc)
+        self.setToolTip(f"<b>{label}</b> ({category.upper()})<br>{desc}")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self.setMinimumHeight(82)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setFixedHeight(54)
 
-        # Smooth macOS Sequoia Drop Shadow (offset: 0, 4; blur: 16)
+        # Smooth macOS Sequoia Drop Shadow (offset: 0, 2; blur: 10)
         self._shadow = QGraphicsDropShadowEffect(self)
-        self._shadow.setBlurRadius(16)
+        self._shadow.setBlurRadius(10)
         self._shadow.setXOffset(0)
-        self._shadow.setYOffset(4)
+        self._shadow.setYOffset(2)
         self._shadow.setColor(QColor(0, 0, 0, 35))
         self.setGraphicsEffect(self._shadow)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(14, 12, 16, 12)
-        layout.setSpacing(12)
+        layout.setContentsMargins(10, 6, 12, 6)
+        layout.setSpacing(10)
 
-        # Left Circular Badge Container (30x30px circular chip, border-radius: 15px)
+        # Left Circular Badge Container (28x28px circular chip, border-radius: 14px)
         self.chip_frame = QFrame()
-        self.chip_frame.setFixedSize(30, 30)
+        self.chip_frame.setFixedSize(28, 28)
         self.chip_frame.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         chip_layout = QHBoxLayout(self.chip_frame)
         chip_layout.setContentsMargins(0, 0, 0, 0)
         chip_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.icon_lbl = QLabel()
-        self.icon_lbl.setFixedSize(16, 16)
+        self.icon_lbl.setFixedSize(14, 14)
         self.icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         chip_layout.addWidget(self.icon_lbl)
         layout.addWidget(self.chip_frame, 0, Qt.AlignmentFlag.AlignVCenter)
 
-        content_layout = QVBoxLayout()
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setSpacing(3)
-
+        # Content Layout: Title and Category badge inline
         header_row = QHBoxLayout()
-        header_row.setSpacing(8)
+        header_row.setContentsMargins(0, 0, 0, 0)
+        header_row.setSpacing(6)
 
         self.title_lbl = QLabel(label)
         self.title_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
@@ -235,14 +233,13 @@ class ActionCardButton(QPushButton):
 
         self.badge_lbl = QLabel(category.upper())
         self.badge_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        header_row.addWidget(self.badge_lbl)
-        content_layout.addLayout(header_row)
+        header_row.addWidget(self.badge_lbl, 0)
+        layout.addLayout(header_row, 1)
 
+        # Retain self.desc_lbl for backward-compatibility with tests, hidden in layout
         self.desc_lbl = QLabel(desc)
-        self.desc_lbl.setWordWrap(True)
         self.desc_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        content_layout.addWidget(self.desc_lbl)
-        layout.addLayout(content_layout, 1)
+        self.desc_lbl.setVisible(False)
 
     def apply_theme(self, theme: str) -> None:
         theme = theme.lower()
@@ -260,43 +257,43 @@ class ActionCardButton(QPushButton):
             ),
         )
         self.chip_frame.setStyleSheet(
-            f"background: {grad}; border-radius: 15px; border: none;"
+            f"background: {grad}; border-radius: 14px; border: none;"
         )
 
         # High-res vector SVG icon rendered in crisp white inside the badge
         icon_name = ACTION_ICON_MAP.get(self.action_id, self.icon_str or "flash")
-        pix = get_icon_pixmap(icon_name, width=16, height=16, color="#FFFFFF")
+        pix = get_icon_pixmap(icon_name, width=14, height=14, color="#FFFFFF")
         self.icon_lbl.setPixmap(pix)
 
         if theme == "light":
             self.setStyleSheet(
-                "QPushButton { background-color: #ECEFF4; border: 1px solid #CBD1DC; border-radius: 16px; }"
+                "QPushButton { background-color: #ECEFF4; border: 1px solid #CBD1DC; border-radius: 12px; }"
                 "QPushButton:hover { background-color: #F4F6F9; border-color: #007AFF; }"
                 "QPushButton:pressed { background-color: #D8DCE4; }"
             )
             self._shadow.setColor(QColor(0, 0, 0, 15))
             self.title_lbl.setStyleSheet(
-                "font-size: 13px; font-weight: 600; color: #1C2024; background: transparent;"
+                "font-size: 11.5px; font-weight: 600; color: #1C2024; background: transparent;"
             )
             self.desc_lbl.setStyleSheet(
                 "font-size: 11px; color: #5A6572; background: transparent;"
             )
         else:
             self.setStyleSheet(
-                "QPushButton { background-color: #1A212E; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; }"
+                "QPushButton { background-color: #1A212E; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; }"
                 "QPushButton:hover { background-color: #222C3D; border-color: #0A84FF; }"
                 "QPushButton:pressed { background-color: #161D28; }"
             )
             self._shadow.setColor(QColor(0, 0, 0, 80))
             self.title_lbl.setStyleSheet(
-                "font-size: 13px; font-weight: 600; color: #E6EDF3; background: transparent;"
+                "font-size: 11.5px; font-weight: 600; color: #E6EDF3; background: transparent;"
             )
             self.desc_lbl.setStyleSheet(
                 "font-size: 11px; color: #8B949E; background: transparent;"
             )
 
         self.badge_lbl.setStyleSheet(
-            f"font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; "
+            f"font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; "
             f"background-color: {bg_tint}; color: {text_color};"
         )
 
@@ -539,13 +536,17 @@ class MainWindow(QMainWindow):
         self._live_hud = LiveDeviceHud(self)
         center_lay.addWidget(self._live_hud)
 
-        # 2. Resizable Horizontal Splitter (Section 4.4, Fix 18: locked handle, no glitch)
+        # 2. Resizable Horizontal Splitter (Phase 24: 5px grip line, hover styling, non-collapsible)
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
-        self._main_splitter.setHandleWidth(1)
+        self._main_splitter.setHandleWidth(5)
         self._main_splitter.setChildrenCollapsible(False)
         self._main_splitter.setStyleSheet("""
             QSplitter::handle:horizontal {
                 background: rgba(255, 255, 255, 0.08);
+                border-radius: 2px;
+            }
+            QSplitter::handle:horizontal:hover {
+                background: #0A84FF;
             }
         """)
 
@@ -569,21 +570,17 @@ class MainWindow(QMainWindow):
         self._build_sideload_page()      # PAGE_SIDELOAD = 15
         self._main_splitter.addWidget(self._stack)
 
-        # Persistent Side Activity Terminal (User Addition 4, Fix 18: fixed 320px width & collapse)
+        # Persistent Side Activity Terminal (Phase 24: resizable min 240px, max 600px)
         self._side_terminal = SideTerminalWidget(self)
-        self._side_terminal.setFixedWidth(320)
+        self._side_terminal.setMinimumWidth(240)
+        self._side_terminal.setMaximumWidth(600)
         self._side_terminal.collapse_requested.connect(self._toggle_terminal_visibility)
         self._main_splitter.addWidget(self._side_terminal)
 
-        # Explicit default sizing: workspace expands, telemetry locked at 320px
+        # Explicit default sizing: workspace expands, telemetry default at 320px
         self._main_splitter.setSizes([850, 320])
         self._main_splitter.setStretchFactor(0, 1)
         self._main_splitter.setStretchFactor(1, 0)
-
-        # Lock splitter handle dragging to prevent layout distortion / glitches
-        splitter_handle = self._main_splitter.handle(1)
-        if splitter_handle:
-            splitter_handle.setEnabled(False)
 
         center_lay.addWidget(self._main_splitter, 1)
         body.addWidget(self._center_container, 1)
@@ -741,72 +738,41 @@ class MainWindow(QMainWindow):
             self._search_input.setText(brand_search_term)
 
     def _build_home_page(self) -> None:
-        """Build the home screen with search, category filtering, quick access presets and 14 action cards."""
+        """Build the home screen with search, category filtering, quick access presets and 16 action cards (Phase 24: 100% non-scrollable)."""
         page = QWidget()
         page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(28, 20, 28, 16)
-        page_layout.setSpacing(12)
+        page_layout.setContentsMargins(18, 6, 18, 6)
+        page_layout.setSpacing(6)
 
-        # ---- Title Header Row with Guide Button ----
+        # ---- Title Header Row with Theme Toggle ----
         top_bar = QHBoxLayout()
         top_bar.setContentsMargins(0, 0, 0, 0)
-
-        title_col = QVBoxLayout()
-        title_col.setSpacing(2)
+        top_bar.setSpacing(10)
 
         title_box = QHBoxLayout()
         title_box.setSpacing(8)
-        app_logo_lbl = create_icon_label("app_logo", size=24)
+        app_logo_lbl = create_icon_label("app_logo", size=20)
         title_box.addWidget(app_logo_lbl)
         title = QLabel(__app_name__)
         title.setProperty("cssClass", "heading")
+        title.setStyleSheet("font-size: 16px; font-weight: 700;")
         title_box.addWidget(title)
-        title_box.addStretch()
-        title_col.addLayout(title_box)
 
-        subtitle = QLabel("Unified personal workstation for rooting, flashing, and diagnostics.")
+        subtitle = QLabel("• Unified personal workstation for rooting, flashing, and diagnostics.")
         subtitle.setProperty("cssClass", "muted")
-        title_col.addWidget(subtitle)
-        top_bar.addLayout(title_col, 1)
-
-        # Setup Laptop button (User Request)
-        setup_btn = QPushButton("Setup Laptop")
-        setup_btn.setIcon(get_icon("tools", 14))
-        setup_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        setup_btn.setToolTip("Configure laptop prerequisites, install ADB, Fastboot & OEM USB drivers")
-        setup_btn.clicked.connect(self._show_setup_wizard)
-        top_bar.addWidget(setup_btn)
-
-        # Phone Key Guide button (User Request)
-        key_guide_btn = QPushButton("Key Guide")
-        key_guide_btn.setIcon(get_icon("phone", 14))
-        key_guide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        key_guide_btn.setToolTip("Hardware button combinations (Vol+, Vol-, Power) for boot menus")
-        key_guide_btn.clicked.connect(self._show_key_guide)
-        top_bar.addWidget(key_guide_btn)
-
-        # Guide button (User Addition 7)
-        guide_btn = QPushButton("Workflow Guide")
-        guide_btn.setIcon(get_icon("book", 14))
-        guide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        guide_btn.setToolTip("View recommended safe workflows and function explanations")
-        guide_btn.clicked.connect(self._show_guide)
-        top_bar.addWidget(guide_btn)
-
-        # Self-Test button (Phase 16)
-        selftest_btn = QPushButton("Self-Test")
-        selftest_btn.setIcon(get_icon("flash", 14))
-        selftest_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        selftest_btn.setToolTip("Run automated system diagnostics & toolchain integrity checks")
-        selftest_btn.clicked.connect(self._show_selftest)
-        top_bar.addWidget(selftest_btn)
+        subtitle.setStyleSheet("font-size: 11.5px; color: #8B949E;")
+        title_box.addWidget(subtitle)
+        title_box.addStretch()
+        top_bar.addLayout(title_box, 1)
 
         # Dark/Light Theme toggle button
         current_theme = self._config.get("theme", "dark")
         self._theme_btn = QPushButton(self._theme_btn_text(current_theme))
-        self._theme_btn.setIcon(get_icon("moon" if current_theme.lower() == "light" else "sun", 14))
+        self._theme_btn.setIcon(get_icon("moon" if current_theme.lower() == "light" else "sun", 13))
         self._theme_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._theme_btn.setToolTip("Toggle between Dark and Light mode")
+        self._theme_btn.setFixedHeight(28)
+        self._theme_btn.setStyleSheet("padding: 3px 10px; font-size: 11px;")
         self._theme_btn.clicked.connect(self._toggle_theme)
         top_bar.addWidget(self._theme_btn)
 
@@ -822,19 +788,19 @@ class MainWindow(QMainWindow):
             tool_warn_frame = QFrame()
             tool_warn_frame.setStyleSheet(
                 "background-color: rgba(255, 149, 0, 0.08); border: 1px solid rgba(255, 149, 0, 0.25); "
-                "border-radius: 8px; padding: 10px 14px;"
+                "border-radius: 8px; padding: 6px 12px;"
             )
             warn_lay = QHBoxLayout(tool_warn_frame)
-            warn_lay.setContentsMargins(4, 4, 4, 4)
+            warn_lay.setContentsMargins(2, 2, 2, 2)
             warn_lay.setSpacing(8)
-            warn_icon = create_icon_label("warning", 16, color="#C96E00")
+            warn_icon = create_icon_label("warning", 14, color="#C96E00")
             warn_lay.addWidget(warn_icon)
             tool_warn = QLabel(
                 ", ".join(tool_parts) + ". "
                 "Install Android platform-tools or use Downloads & Updates > Tools Manager."
             )
             tool_warn.setWordWrap(True)
-            tool_warn.setStyleSheet("color: #C96E00; font-size: 12px; border: none; background: transparent;")
+            tool_warn.setStyleSheet("color: #C96E00; font-size: 11.5px; border: none; background: transparent;")
             warn_lay.addWidget(tool_warn, 1)
             page_layout.addWidget(tool_warn_frame)
 
@@ -843,18 +809,18 @@ class MainWindow(QMainWindow):
         nav_hub.setStyleSheet("background: transparent;")
         nav_hub_layout = QVBoxLayout(nav_hub)
         nav_hub_layout.setContentsMargins(0, 0, 0, 0)
-        nav_hub_layout.setSpacing(10)
+        nav_hub_layout.setSpacing(6)
 
-        # 1. Search Bar with Clear Button & Keyboard Shortcut
+        # 1. Search Bar with Clear Button & Keyboard Shortcut & Merged Quick Utility Buttons
         search_row = QHBoxLayout()
-        search_row.setSpacing(10)
+        search_row.setSpacing(8)
 
         self._search_input = QLineEdit()
         self._search_input.setPlaceholderText(
             "Search tools, actions or keywords (e.g. bootloop, root, flash, debloat, drivers, unbrick)..."
         )
         self._search_input.setClearButtonEnabled(True)
-        self._search_input.setMinimumHeight(38)
+        self._search_input.setFixedHeight(32)
         self._search_input.textChanged.connect(self._filter_tools)
         self._search_input.returnPressed.connect(self._on_search_return_pressed)
         search_row.addWidget(self._search_input, 1)
@@ -863,8 +829,48 @@ class MainWindow(QMainWindow):
         search_shortcut = QShortcut(QKeySequence("Ctrl+F"), self)
         search_shortcut.activated.connect(self._search_input.setFocus)
 
+        # Setup Laptop button (User Request)
+        setup_btn = QPushButton("Setup Laptop")
+        setup_btn.setIcon(get_icon("tools", 13))
+        setup_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        setup_btn.setToolTip("Configure laptop prerequisites, install ADB, Fastboot & OEM USB drivers")
+        setup_btn.setFixedHeight(32)
+        setup_btn.setStyleSheet("padding: 4px 10px; font-size: 11.5px; font-weight: 500;")
+        setup_btn.clicked.connect(self._show_setup_wizard)
+        search_row.addWidget(setup_btn)
+
+        # Phone Key Guide button (User Request)
+        key_guide_btn = QPushButton("Key Guide")
+        key_guide_btn.setIcon(get_icon("phone", 13))
+        key_guide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        key_guide_btn.setToolTip("Hardware button combinations (Vol+, Vol-, Power) for boot menus")
+        key_guide_btn.setFixedHeight(32)
+        key_guide_btn.setStyleSheet("padding: 4px 10px; font-size: 11.5px; font-weight: 500;")
+        key_guide_btn.clicked.connect(self._show_key_guide)
+        search_row.addWidget(key_guide_btn)
+
+        # Guide button (User Addition 7)
+        guide_btn = QPushButton("Workflow Guide")
+        guide_btn.setIcon(get_icon("book", 13))
+        guide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        guide_btn.setToolTip("View recommended safe workflows and function explanations")
+        guide_btn.setFixedHeight(32)
+        guide_btn.setStyleSheet("padding: 4px 10px; font-size: 11.5px; font-weight: 500;")
+        guide_btn.clicked.connect(self._show_guide)
+        search_row.addWidget(guide_btn)
+
+        # Self-Test button (Phase 16)
+        selftest_btn = QPushButton("Self-Test")
+        selftest_btn.setIcon(get_icon("flash", 13))
+        selftest_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        selftest_btn.setToolTip("Run automated system diagnostics & toolchain integrity checks")
+        selftest_btn.setFixedHeight(32)
+        selftest_btn.setStyleSheet("padding: 4px 10px; font-size: 11.5px; font-weight: 500;")
+        selftest_btn.clicked.connect(self._show_selftest)
+        search_row.addWidget(selftest_btn)
+
         nav_hub_layout.addLayout(search_row)
-        self._quick_buttons = []
+        self._quick_buttons = [setup_btn, key_guide_btn, guide_btn, selftest_btn]
 
         # 3. Category Filter Pills, Sort Dropdown & Count Badge
         filter_row = QHBoxLayout()
@@ -922,22 +928,11 @@ class MainWindow(QMainWindow):
         nav_hub_layout.addLayout(filter_row)
         page_layout.addWidget(nav_hub)
 
-        # ---- Scrollable dynamic grid of action cards ----
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("background: transparent;")
-
-        grid_container = QWidget()
-        grid_container.setStyleSheet("background: transparent;")
-        grid_layout = QVBoxLayout(grid_container)
-        grid_layout.setContentsMargins(0, 4, 0, 0)
-        grid_layout.setSpacing(12)
-
+        # ---- Direct non-scrollable dynamic grid of action cards (Phase 24) ----
         self._tools_grid = QGridLayout()
-        self._tools_grid.setSpacing(14)
-        self._tools_grid.setContentsMargins(0, 0, 0, 0)
-        grid_layout.addLayout(self._tools_grid)
+        self._tools_grid.setSpacing(8)
+        self._tools_grid.setContentsMargins(0, 2, 0, 0)
+        page_layout.addLayout(self._tools_grid)
 
         # Build each card
         for item in MAIN_ACTIONS:
@@ -952,13 +947,13 @@ class MainWindow(QMainWindow):
         self._empty_state_widget = QFrame()
         self._empty_state_widget.setStyleSheet(
             "background-color: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.15); "
-            "border-radius: 12px; padding: 28px;"
+            "border-radius: 12px; padding: 24px;"
         )
         empty_box = QVBoxLayout(self._empty_state_widget)
         empty_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
         empty_box.setSpacing(8)
 
-        empty_icon = create_icon_label("search", size=32, color="#8E8E93")
+        empty_icon = create_icon_label("search", size=28, color="#8E8E93")
         empty_box.addWidget(empty_icon, 0, Qt.AlignmentFlag.AlignCenter)
 
         self._empty_state_msg = QLabel("No tools match your search or filter.")
@@ -977,10 +972,8 @@ class MainWindow(QMainWindow):
         empty_box.addWidget(clear_btn, 0, Qt.AlignmentFlag.AlignCenter)
 
         self._empty_state_widget.setVisible(False)
-        grid_layout.addWidget(self._empty_state_widget)
-
-        scroll.setWidget(grid_container)
-        page_layout.addWidget(scroll, 1)
+        page_layout.addWidget(self._empty_state_widget)
+        page_layout.addStretch(1)
 
         # Initial layout & style application
         self._update_category_buttons_style()
@@ -1448,7 +1441,7 @@ class MainWindow(QMainWindow):
             else:
                 btn.setVisible(False)
 
-        cols = 3
+        cols = 4
         for idx, act_id in enumerate(visible_actions):
             btn = self._action_buttons[act_id]
             r = idx // cols
@@ -1968,8 +1961,9 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _show_guide(self) -> None:
-        """Open the interactive workflow and function guide (User Addition 7)."""
+        """Open the interactive workflow and function guide (Phase 24: interactive launchable cards)."""
         dlg = WorkflowGuideDialog(self)
+        dlg.action_requested.connect(self._on_action)
         dlg.exec()
 
     @Slot()
@@ -1987,7 +1981,8 @@ class MainWindow(QMainWindow):
     @Slot()
     def _show_key_guide(self) -> None:
         """Open the phone hardware button navigation guide modal."""
-        dlg = HardwareKeyGuideDialog(adb=self._adb, parent=self)
+        dev_serial = self._device_mgr.device.serial if (self._device_mgr.device and self._device_mgr.device.serial) else ""
+        dlg = HardwareKeyGuideDialog(adb=self._adb, serial=dev_serial, parent=self)
         dlg.exec()
 
     @Slot(int)
@@ -2003,7 +1998,7 @@ class MainWindow(QMainWindow):
             return
         log.info("Sending hardware keycode %d via ADB", keycode)
         try:
-            self._adb.shell(["input", "keyevent", str(keycode)], serial=self._device_mgr.device.serial)
+            self._adb.shell(f"input keyevent {keycode}", serial=self._device_mgr.device.serial)
         except Exception as e:
             log.warning("Failed to send keycode %d: %s", keycode, e)
 
@@ -2074,7 +2069,8 @@ class MainWindow(QMainWindow):
         new_state = not is_currently_visible
         self._side_terminal.setVisible(new_state)
         if new_state:
-            self._side_terminal.setFixedWidth(320)
+            self._side_terminal.setMinimumWidth(240)
+            self._side_terminal.setMaximumWidth(600)
             self._main_splitter.setSizes([max(600, self.width() - 320), 320])
         self._update_terminal_toggle_ui(new_state)
 

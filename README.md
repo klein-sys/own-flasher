@@ -2,14 +2,18 @@
 title: "FlashDock — Personal Android Service Workstation"
 type: documentation
 status: completed
-version: 1.3.2
-phase: Phase 23 (v1.3.2)
+version: 1.3.3
+phase: Phase 24 (v1.3.3)
 updated: 2026-10-13
 tags:
   - flashdock
   - android-workstation
   - firmware-flasher
   - gsm-suite
+  - non-scrolling-home-canvas
+  - interactive-workflow-guide
+  - virtual-keypad-fix
+  - terminal-splitter
   - universal-sideloading
   - xapk-installer
   - android-14-bypass
@@ -28,10 +32,10 @@ tags:
 
 # FlashDock — Personal Android Service Workstation
 
-[![Version](https://img.shields.io/badge/version-1.3.2-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
+[![Version](https://img.shields.io/badge/version-1.3.3-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-1D1D1F.svg)](https://github.com/klein-sys/own-flasher)
 [![License](https://img.shields.io/badge/license-MIT-30D158.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-467%20%2F%20467%20passing-30D158.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-472%20%2F%20472%20passing-30D158.svg)](tests/)
 [![Architecture](https://img.shields.io/badge/architecture-HyperOS%202.0%20%2B%20macOS%20Sequoia-BF5AF2.svg)](flashdock/ui/styles.py)
 [![App Icon](https://img.shields.io/badge/icon-macOS%20Squircle%20(1024x1024)-00F2FE.svg)](flashdock/resources/icon.png)
 [![UI Assets](https://img.shields.io/badge/vector%20graphics-100%25%20SVG%20%7C%20Apple%20HIG-FF9500.svg)](flashdock/ui/icon_assets.py)
@@ -44,7 +48,7 @@ FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing,
 
 ---
 
-## Current Status — Universal Sideloading & App Manager Subsystem (v1.3.0 — Phase 23)
+## Current Status — Non-Scrolling Home Canvas & Interactive Workflow Guide (v1.3.3 — Phase 24)
 
 FlashDock features a fully modular, thread-safe, and asynchronous **GSM Suite Core Architecture** elevated with **Xiaomi HyperOS 2.0 fluidity**, **macOS Sequoia glassmorphism**, and **iOS 18 Control Center aesthetics**:
 
@@ -324,7 +328,7 @@ python main.py
 ### Running Tests
 ```powershell
 python scripts/release_build.py
-# 467 passed in 95.72s (100% success rate)
+# 472 passed in 86.97s (100% success rate)
 ```
 
 ---
