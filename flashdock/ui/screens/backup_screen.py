@@ -15,7 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QThread, Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QCheckBox,
     QFrame,
@@ -51,6 +51,61 @@ log = get_logger(__name__)
 # Common partitions users might want to back up
 RECOMMENDED_PARTITIONS = ["boot", "recovery", "vbmeta", "init_boot", "vendor_boot"]
 CRITICAL_RADIO_PARTITIONS = ["efs", "nvram", "nvdata", "modem", "persist"]
+
+
+class BackupWorker(QThread):
+    progress_changed = Signal(str, int)  # message, percent
+    finished = Signal(bool, str)
+
+    def __init__(
+        self,
+        backup_mgr: BackupManager,
+        action: str,
+        device: DeviceInfo,
+        adb: ADB,
+        fastboot: Fastboot,
+        partitions: Optional[list[str]] = None,
+        include_apk: bool = False,
+        include_shared: bool = False,
+        parent: Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self.backup_mgr = backup_mgr
+        self.action = action
+        self.device = device
+        self.adb = adb
+        self.fastboot = fastboot
+        self.partitions = partitions or []
+        self.include_apk = include_apk
+        self.include_shared = include_shared
+
+    def run(self) -> None:
+        try:
+            if self.action == "partition":
+                def cb(part: str, idx: int, total: int):
+                    pct = int((idx / total) * 90) if total > 0 else 0
+                    self.progress_changed.emit(f"Dumping '{part}' partition ({idx}/{total})...", pct)
+
+                info = self.backup_mgr.create_partition_backup(
+                    device=self.device,
+                    partitions=self.partitions,
+                    adb=self.adb,
+                    fastboot=self.fastboot,
+                    dry_run=False,
+                    on_progress=cb,
+                )
+                self.finished.emit(True, f"Partition backup saved ({len(info.items)} partitions).")
+            elif self.action == "adb":
+                info = self.backup_mgr.create_adb_backup(
+                    device=self.device,
+                    adb=self.adb,
+                    include_apk=self.include_apk,
+                    include_shared=self.include_shared,
+                    dry_run=False,
+                )
+                self.finished.emit(True, f"ADB backup complete: {info.backup_id}")
+        except Exception as e:
+            self.finished.emit(False, str(e))
 
 
 class BackupScreen(QWidget):
@@ -363,23 +418,24 @@ class BackupScreen(QWidget):
         shield.show()
         shield.update_progress("Starting partition backup...", 10)
 
-        def progress_cb(part: str, idx: int, total: int):
-            pct = int((idx / total) * 90)
-            shield.update_progress(f"Dumping '{part}' partition ({idx}/{total})...", pct)
+        self._backup_worker = BackupWorker(
+            backup_mgr=self._backup_mgr,
+            action="partition",
+            device=device,
+            adb=self._adb,
+            fastboot=self._fb,
+            partitions=selected,
+            parent=self,
+        )
+        self._backup_worker.progress_changed.connect(shield.update_progress)
 
-        try:
-            info = self._backup_mgr.create_partition_backup(
-                device=device,
-                partitions=selected,
-                adb=self._adb,
-                fastboot=self._fb,
-                dry_run=False,
-                on_progress=progress_cb,
-            )
-            shield.mark_completed(True, f"Partition backup saved ({len(info.items)} partitions).")
-            self.refresh_catalog()
-        except Exception as e:
-            shield.mark_completed(False, f"Backup error: {e}")
+        def _on_part_done(ok: bool, msg: str) -> None:
+            shield.mark_completed(ok, msg)
+            if ok:
+                self.refresh_catalog()
+
+        self._backup_worker.finished.connect(_on_part_done)
+        self._backup_worker.start()
 
     def _on_start_adb_backup(self) -> None:
         device = self._current_device
@@ -394,18 +450,24 @@ class BackupScreen(QWidget):
         shield.show()
         shield.update_progress("Initiating ADB backup. Confirm on your phone screen...", 20)
 
-        try:
-            info = self._backup_mgr.create_adb_backup(
-                device=device,
-                adb=self._adb,
-                include_apk=include_apk,
-                include_shared=include_shared,
-                dry_run=False,
-            )
-            shield.mark_completed(True, f"ADB backup complete: {info.backup_id}")
-            self.refresh_catalog()
-        except Exception as e:
-            shield.mark_completed(False, f"ADB backup error: {e}")
+        self._backup_worker = BackupWorker(
+            backup_mgr=self._backup_mgr,
+            action="adb",
+            device=device,
+            adb=self._adb,
+            fastboot=self._fb,
+            include_apk=include_apk,
+            include_shared=include_shared,
+            parent=self,
+        )
+
+        def _on_adb_done(ok: bool, msg: str) -> None:
+            shield.mark_completed(ok, msg)
+            if ok:
+                self.refresh_catalog()
+
+        self._backup_worker.finished.connect(_on_adb_done)
+        self._backup_worker.start()
 
     # -----------------------------------------------------------------------
     # Restore operations

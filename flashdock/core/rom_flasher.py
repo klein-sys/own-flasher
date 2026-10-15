@@ -226,6 +226,17 @@ class RomFlasher:
                         if m:
                             codename = m.group(1).split(",")[0].strip()
 
+                    # Check for payload.bin if no direct .img found
+                    if not partitions and any(n.lower().endswith("payload.bin") for n in names):
+                        from flashdock.tools.payload_dumper import PayloadDumper
+                        payload_parts = PayloadDumper.list_partitions(p)
+                        for part_name in payload_parts:
+                            partitions.append(FlashPartitionItem(
+                                partition_name=part_name,
+                                image_path=Path(f"payload.bin:{part_name}"),
+                                file_size_bytes=0,
+                            ))
+
                 partitions.sort(key=lambda x: cls._order_key(x.partition_name))
                 info = RomPackageInfo(
                     name=p.name,
@@ -240,6 +251,62 @@ class RomFlasher:
                 return True, info, f"Discovered {len(partitions)} partition images in zip."
             except Exception as e:
                 return False, None, f"Failed to inspect zip archive: {e}"
+
+        # Case 3: Raw payload.bin
+        if p.is_file() and p.name.lower().endswith("payload.bin"):
+            try:
+                from flashdock.tools.payload_dumper import PayloadDumper
+                payload_parts = PayloadDumper.list_partitions(p)
+                for part_name in payload_parts:
+                    partitions.append(FlashPartitionItem(
+                        partition_name=part_name,
+                        image_path=Path(f"{part_name}.img"),
+                        file_size_bytes=0,
+                    ))
+                info = RomPackageInfo(
+                    name=p.name,
+                    package_type="payload_bin",
+                    path=p,
+                    detected_partitions=partitions,
+                    has_flash_script=False,
+                    script_name="",
+                    target_codename="",
+                    total_size_bytes=p.stat().st_size,
+                )
+                return True, info, f"Discovered {len(partitions)} partition images in payload.bin."
+            except Exception as e:
+                return False, None, f"Failed to inspect payload.bin: {e}"
+
+        # Case 4: Tar archive (.tar, .tgz, .tar.gz, .tar.md5)
+        if p.is_file() and any(p.name.lower().endswith(ext) for ext in (".tar", ".tgz", ".tar.gz", ".tar.md5")):
+            try:
+                import tarfile
+                with tarfile.open(p, "r:*") as tf:
+                    for member in tf.getmembers():
+                        name = member.name.lower()
+                        if name.endswith(".img") or name.endswith(".img.lz4"):
+                            clean_stem = Path(name[:-4]).stem if name.endswith(".lz4") else Path(name).stem
+                            part_name = cls._map_partition_name(clean_stem)
+                            total_size += member.size
+                            partitions.append(FlashPartitionItem(
+                                partition_name=part_name,
+                                image_path=Path(member.name),
+                                file_size_bytes=member.size,
+                            ))
+                partitions.sort(key=lambda x: cls._order_key(x.partition_name))
+                info = RomPackageInfo(
+                    name=p.name,
+                    package_type="tar_package",
+                    path=p,
+                    detected_partitions=partitions,
+                    has_flash_script=False,
+                    script_name="",
+                    target_codename="",
+                    total_size_bytes=total_size or p.stat().st_size,
+                )
+                return True, info, f"Discovered {len(partitions)} partition images in tar package."
+            except Exception as e:
+                return False, None, f"Failed to inspect tar archive: {e}"
 
         return False, None, f"Unsupported file format: {p.suffix}"
 

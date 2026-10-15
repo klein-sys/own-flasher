@@ -46,13 +46,14 @@ class RebootSwitchboardDialog(QDialog):
     reboot_mode_selected = Signal(str)
 
     _REBOOT_MODES = [
-        ("system",     "Reboot System",      "Normal Android OS reboot",           "refresh",    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #10B981, stop:1 #059669)"),
-        ("bootloader", "Fastboot (BL)",       "Fastboot Bootloader mode",           "flash",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #007AFF, stop:1 #0056B3)"),
-        ("fastbootd",  "FastbootD (Userspace)", "Fastboot userspace dynamic mode",   "flash",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7)"),
-        ("recovery",   "Recovery Mode",      "Stock, TWRP, or OrangeFox recovery", "tools",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF52DE, stop:1 #7E22CE)"),
-        ("edl",        "Qualcomm EDL 9008",  "Emergency Download Sahara mode",     "usb",        "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EF4444, stop:1 #B91C1C)"),
-        ("download",   "Samsung Odin Mode",  "Samsung Download Mode protocol",     "downloads",  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00B4D8, stop:1 #0077B6)"),
-        ("poweroff",   "Power Off",          "Immediate system shutdown",          "power",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #64748B, stop:1 #334155)"),
+        ("system",      "Reboot System",           "Normal Android OS reboot",           "refresh",    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #10B981, stop:1 #059669)"),
+        ("bootloader",  "Fastboot (BL)",            "Fastboot Bootloader mode",           "flash",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #007AFF, stop:1 #0056B3)"),
+        ("fastbootd",   "FastbootD (Userspace)",    "Fastboot userspace dynamic mode",   "flash",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7)"),
+        ("recovery",    "Recovery Mode",           "Stock, TWRP, or OrangeFox recovery", "tools",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF52DE, stop:1 #7E22CE)"),
+        ("switch_slot", "Switch Active Slot (A/B)", "Rollback / toggle active slot (a <-> b)", "refresh", "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F59E0B, stop:1 #D97706)"),
+        ("edl",         "Qualcomm EDL 9008",       "Emergency Download Sahara mode",     "usb",        "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EF4444, stop:1 #B91C1C)"),
+        ("download",    "Samsung Odin Mode",       "Samsung Download Mode protocol",     "downloads",  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00B4D8, stop:1 #0077B6)"),
+        ("poweroff",    "Power Off",               "Immediate system shutdown",          "power",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #64748B, stop:1 #334155)"),
     ]
 
     def __init__(
@@ -75,7 +76,7 @@ class RebootSwitchboardDialog(QDialog):
         current_mode = dev.mode if dev else actual_mode
 
         self.setWindowTitle("Power & Reboot Switchboard — FlashDock")
-        self.setFixedSize(540, 480)
+        self.setFixedSize(540, 520)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
 
         root = QVBoxLayout(self)

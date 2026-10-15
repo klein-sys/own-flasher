@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import QThread, Qt, QTimer, Signal, Slot
 from PySide6.QtWidgets import (
     QCheckBox,
     QFileDialog,
@@ -50,6 +50,40 @@ from flashdock.logger import get_logger
 from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger("ui.mtk_unisoc")
+
+
+class UnisocWorker(QThread):
+    progress_changed = Signal(int)
+    finished = Signal(bool, str)
+
+    def __init__(
+        self,
+        action: str,
+        pac_path: Path,
+        dest_or_extract_dir: Path,
+        pipeline: Optional[UnisocFlashPipeline] = None,
+        parent: Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self.action = action
+        self.pac_path = pac_path
+        self.dir = dest_or_extract_dir
+        self.pipeline = pipeline
+
+    def run(self) -> None:
+        try:
+            if self.action == "extract":
+                def cb(fid: str, pct: int):
+                    self.progress_changed.emit(pct)
+                files = PACExtractor.extract_all(self.pac_path, self.dir, progress_cb=cb)
+                self.finished.emit(True, f"Successfully extracted {len(files)} partition images to:\n\n{self.dir}")
+            elif self.action == "flash" and self.pipeline:
+                def cb(fid: str, pct: int):
+                    self.progress_changed.emit(pct)
+                ok = self.pipeline.flash_pac(self.pac_path, self.dir, progress_cb=cb)
+                self.finished.emit(ok, "Unisoc PAC firmware flashed successfully!" if ok else "An error occurred during Unisoc PAC flashing.")
+        except Exception as e:
+            self.finished.emit(False, str(e))
 
 
 class MtkUnisocScreen(QWidget):
@@ -529,20 +563,23 @@ class MtkUnisocScreen(QWidget):
         self._unisoc_progress.setVisible(True)
         self._unisoc_progress.setValue(0)
 
-        def _prog(file_id: str, pct: int) -> None:
-            self._unisoc_progress.setValue(pct)
+        self._unisoc_worker = UnisocWorker(
+            action="extract",
+            pac_path=self._pac_path,
+            dest_or_extract_dir=Path(dest_dir),
+            parent=self,
+        )
+        self._unisoc_worker.progress_changed.connect(self._unisoc_progress.setValue)
 
-        try:
-            files = PACExtractor.extract_all(self._pac_path, dest_dir, progress_cb=_prog)
+        def _on_extract_done(ok: bool, msg: str) -> None:
             self._unisoc_progress.setVisible(False)
-            QMessageBox.information(
-                self,
-                "Extraction Finished",
-                f"Successfully extracted {len(files)} partition images to:\n\n{dest_dir}",
-            )
-        except Exception as e:
-            self._unisoc_progress.setVisible(False)
-            QMessageBox.critical(self, "Extraction Error", f"Failed to extract PAC archive:\n\n{e}")
+            if ok:
+                QMessageBox.information(self, "Extraction Finished", msg)
+            else:
+                QMessageBox.critical(self, "Extraction Error", f"Failed to extract PAC archive:\n\n{msg}")
+
+        self._unisoc_worker.finished.connect(_on_extract_done)
+        self._unisoc_worker.start()
 
     def _on_flash_pac(self) -> None:
         if not self._pac_path or not self._current_pac:
@@ -563,19 +600,25 @@ class MtkUnisocScreen(QWidget):
         self._unisoc_progress.setVisible(True)
         self._unisoc_progress.setValue(0)
 
-        def _prog(file_id: str, pct: int) -> None:
-            self._unisoc_progress.setValue(pct)
-
         extract_dir = self._pac_path.parent / "_pac_unpacked"
-        success = self._unisoc_pipeline.flash_pac(
-            self._pac_path, extract_dir, progress_cb=_prog
+        self._unisoc_worker = UnisocWorker(
+            action="flash",
+            pac_path=self._pac_path,
+            dest_or_extract_dir=extract_dir,
+            pipeline=self._unisoc_pipeline,
+            parent=self,
         )
-        self._unisoc_progress.setVisible(False)
+        self._unisoc_worker.progress_changed.connect(self._unisoc_progress.setValue)
 
-        if success:
-            QMessageBox.information(self, "Flashing Complete", "Unisoc PAC firmware flashed successfully!")
-        else:
-            QMessageBox.critical(self, "Flashing Failed", "An error occurred during Unisoc PAC flashing.")
+        def _on_flash_done(ok: bool, msg: str) -> None:
+            self._unisoc_progress.setVisible(False)
+            if ok:
+                QMessageBox.information(self, "Flashing Complete", msg)
+            else:
+                QMessageBox.critical(self, "Flashing Failed", msg)
+
+        self._unisoc_worker.finished.connect(_on_flash_done)
+        self._unisoc_worker.start()
 
     # ==================================================================
     # Public interface

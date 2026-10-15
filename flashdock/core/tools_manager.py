@@ -681,7 +681,23 @@ class DriverManager:
                 timeout=30,
             )
             out = (res.stdout + res.stderr).strip()
-            if (res.returncode == 0 or "successfully" in out.lower() or "added" in out.lower()) and "access is denied" not in out.lower():
+            out_lower = out.lower()
+            failed = (
+                "failed to add" in out_lower
+                or "added driver packages: 0" in out_lower
+                or "access is denied" in out_lower
+                or "0x80070005" in out_lower
+            )
+            if (
+                res.returncode == 0
+                and not failed
+                and (
+                    "successfully" in out_lower
+                    or "driver package added successfully" in out_lower
+                    or "added driver packages: 1" in out_lower
+                    or ("added" in out_lower and "0" not in out_lower)
+                )
+            ):
                 return True, f"Successfully installed driver INF: {inf_file.name}\n{out}"
         except Exception as e:
             out = str(e)

@@ -61,6 +61,7 @@ class DeviceSelector(QFrame):
         self._combo.setMinimumWidth(200)
         self._combo.setMaximumWidth(280)
         self._combo.setFixedHeight(28)
+        self._combo.addItem("No device connected", "")
         self._combo.currentIndexChanged.connect(self._on_combo_changed)
         layout.addWidget(self._combo)
 

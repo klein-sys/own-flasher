@@ -413,6 +413,11 @@ class DeviceDetector:
         else:
             info.slot_scheme = "a_only"
 
+        # FastbootD (userspace fastboot) detection
+        is_userspace = vars_dict.get("is-userspace", "").lower().strip()
+        if is_userspace == "yes":
+            info.mode = "fastbootd"
+
         # Anti-rollback
         info.anti_rollback_index = vars_dict.get(
             "anti-rollback",

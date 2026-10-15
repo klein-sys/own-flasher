@@ -763,12 +763,23 @@ class DownloadsScreen(QWidget):
         self._status_label.setText(f"Downloading driver '{driver_id}'...")
 
     def _on_install_driver(self, driver_id: str) -> None:
-        """Install or launch driver setup."""
-        success, msg = self._driver_mgr.install_driver(driver_id)
+        """Install or launch driver setup asynchronously in a background thread."""
+        self._status_label.setText(f"Installing driver '{driver_id}' (elevating permissions)...")
+
+        def _worker():
+            success, msg = self._driver_mgr.install_driver(driver_id)
+            QTimer.singleShot(0, lambda: self._on_install_driver_done(success, msg))
+
+        self._install_worker = threading.Thread(target=_worker, daemon=True)
+        self._install_worker.start()
+
+    def _on_install_driver_done(self, success: bool, msg: str) -> None:
         if success:
             QMessageBox.information(self, "Driver Installation", msg)
+            self._status_label.setText("Driver installed successfully.")
         else:
             QMessageBox.warning(self, "Driver Installation", msg)
+            self._status_label.setText("Driver installation finished with warnings or error.")
         self._refresh_drivers_table()
 
     @Slot()

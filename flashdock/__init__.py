@@ -10,5 +10,5 @@ Copyright (c) 2026 FlashDock Contributors
 Licensed under the MIT License — see LICENSE for details.
 """
 
-__version__ = "1.3.3"
+__version__ = "1.4.0"
 __app_name__ = "FlashDock"

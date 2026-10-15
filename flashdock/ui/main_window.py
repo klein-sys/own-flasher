@@ -1584,11 +1584,16 @@ class MainWindow(QMainWindow):
             elif mode == "unisoc_sprd" and "unisoc_sprd" in self._gsm_btn_group:
                 self._gsm_btn_group["unisoc_sprd"].setChecked(True)
 
+        # Trigger immediate device manager query to update HUD, Phone Panel, and Device Selector
+        self._refresh_device()
+
     @Slot()
     def _on_hardware_device_disconnected(self) -> None:
         """Handle hardware disconnection from background monitor worker."""
         self._status_bar.update_connection_badge("disconnected", "")
         self._side_terminal.append_colored_stream("WARN", "Device disconnected from USB/COM bus.")
+        self._device_mgr.refresh()
+        self._handle_device_change(None)
 
     @Slot(str)
     def _on_flash_status_changed(self, status: str) -> None:
@@ -1624,6 +1629,64 @@ class MainWindow(QMainWindow):
         dlg = RebootSwitchboardDialog(self._device_mgr.device, self)
         dlg.reboot_mode_selected.connect(self._on_reboot_requested)
         dlg.exec()
+
+    @Slot(str)
+    def _on_reboot_requested(self, mode: str) -> None:
+        """Handle reboot or slot switch requested from the Reboot Switchboard or Phone Panel."""
+        device = self._device_mgr.device
+        serial = device.serial if device else ""
+
+        if mode == "switch_slot":
+            current_slot = getattr(device, "active_slot", "a") if device else "a"
+            target_slot = "b" if current_slot == "a" else "a"
+            log.info("Switching active slot to %s for device %s", target_slot, serial)
+            res = self._fastboot._run([f"--set-active={target_slot}"], serial=serial, action="set_active_slot")
+            if res.success or "finished" in res.stdout.lower() or "ok" in res.stdout.lower():
+                self._side_terminal.append_colored_stream("SUCCESS", f"Switched active slot to '{target_slot}'.")
+                QMessageBox.information(
+                    self,
+                    "Slot Switched",
+                    f"Successfully switched active slot to '{target_slot}'.\n\nDevice will boot into slot {target_slot.upper()} upon reboot."
+                )
+                self._refresh_device()
+            else:
+                self._side_terminal.append_colored_stream("ERROR", f"Slot switch failed: {res.stderr or res.stdout}")
+                QMessageBox.warning(self, "Slot Switch Failed", f"Could not switch slot:\n\n{res.stderr or res.stdout}")
+            return
+
+        if mode == "poweroff":
+            if device and device.mode == "system":
+                self._adb.shell("reboot -p", serial=serial)
+            elif device and device.mode in ("bootloader", "fastbootd"):
+                self._fastboot._run(["oem", "poweroff"], serial=serial)
+            self._side_terminal.append_colored_stream("INFO", "Power off command dispatched.")
+            return
+
+        if device and device.mode == "system":
+            if mode == "bootloader":
+                self._adb.reboot_bootloader(serial=serial)
+            elif mode == "recovery":
+                self._adb.reboot_recovery(serial=serial)
+            elif mode == "edl":
+                self._adb.reboot_edl(serial=serial)
+            elif mode == "fastbootd":
+                self._adb.reboot_fastboot(serial=serial)
+            elif mode == "download":
+                self._adb.reboot_download(serial=serial)
+            else:
+                self._adb.reboot(serial=serial)
+        elif device and device.mode in ("bootloader", "fastbootd"):
+            if mode == "fastbootd":
+                self._fastboot._run(["reboot", "fastboot"], serial=serial)
+            elif mode == "bootloader":
+                self._fastboot._run(["reboot", "bootloader"], serial=serial)
+            elif mode == "recovery":
+                self._fastboot._run(["reboot", "recovery"], serial=serial)
+            elif mode == "edl":
+                self._fastboot._run(["oem", "edl"], serial=serial)
+            else:
+                self._fastboot.reboot(serial=serial)
+        self._side_terminal.append_colored_stream("INFO", f"Reboot to {mode.upper()} dispatched.")
 
     @Slot(str)
     def _on_restore_preflash_requested(self, serial: str) -> None:

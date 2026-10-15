@@ -2,13 +2,18 @@
 title: "FlashDock — Agent Handoff Document"
 type: handoff
 status: completed
-version: 1.3.3
-phase: Phase 24 (v1.3.3)
-updated: 2026-10-13
+version: 1.4.0
+phase: Phase 24 (v1.4.0)
+updated: 2026-10-15
 tags:
   - flashdock
   - android-workstation
   - gsm-suite
+  - unisoc-token-unlocker
+  - payload-dumper
+  - samsung-lz4
+  - boot-patch-engine
+  - device-sync-fix
   - non-scrolling-home-canvas
   - interactive-workflow-guide
   - virtual-keypad-fix
@@ -29,13 +34,13 @@ tags:
 
 # FlashDock — Agent Handoff Document
 
-**Date:** 2026-10-13  
-**Current Phase:** **Phase 24 (v1.3.3): Non-Scrolling Home Tools Canvas, Resizable Terminal Splitter, Virtual Keypad Fix & Interactive Workflow Guide (v1.3.3 — 100% Completed)**  
+**Date:** 2026-10-15  
+**Current Phase:** **Phase 24 (v1.4.0): Unisoc Token Unlocker, Built-in Payload Dumper, Samsung LZ4 Decompressor, Boot Image Patching Engine, Device Sync Fix & Async Flashing Workstation (v1.4.0 — 100% Completed)**  
 **Workspace Root:** `C:\Users\dxzmw\.gemini\antigravity-ide\scratch\FlashDock`  
 **Application:** FlashDock — Multi-Chipset Android Service Workstation & Flashing Suite  
 **Runtime:** Python 3.14.7 + PySide6 (Qt 6.10)  
-**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.3.3-windows-x64.zip`)  
-**Test Suite:** **472 Passed Unit & Integration Tests across 45 test modules (`python scripts/release_build.py`, 100% success rate)**  
+**Distribution:** Standalone Windows Executable (`dist/FlashDock_Dist/FlashDock.exe`) & Release Archive (`dist/FlashDock-v1.4.0-windows-x64.zip`)  
+**Test Suite:** **480 Passed Unit & Integration Tests across 47 test modules (`python scripts/release_build.py`, 100% success rate)**  
 **GitHub Repository:** `https://github.com/klein-sys/own-flasher.git` (synchronized on branch `main`)
 
 ---

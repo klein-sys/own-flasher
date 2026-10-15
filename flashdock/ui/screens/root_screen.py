@@ -17,7 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QThread, Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QButtonGroup,
     QFileDialog,
@@ -47,6 +47,35 @@ from flashdock.ui.widgets.flash_shield import FlashShieldDialog
 from flashdock.ui.widgets.root_library_dialog import RootAppsLibraryDialog, RootDownloadsDialog
 
 log = get_logger(__name__)
+
+
+class RootFlashWorker(QThread):
+    finished = Signal(bool, str)
+
+    def __init__(
+        self,
+        root_engine: RootingEngine,
+        image_path: Path,
+        target_partition: str,
+        fastboot: Fastboot,
+        serial: str,
+        parent: Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self.root_engine = root_engine
+        self.image_path = image_path
+        self.target_partition = target_partition
+        self.fastboot = fastboot
+        self.serial = serial
+
+    def run(self) -> None:
+        res = self.root_engine.flash_patched_image(
+            patched_image_path=self.image_path,
+            target_partition=self.target_partition,
+            fastboot=self.fastboot,
+            serial=self.serial,
+        )
+        self.finished.emit(res.success, res.stderr if not res.success else "")
 
 
 class RootScreen(QWidget):
@@ -251,6 +280,13 @@ class RootScreen(QWidget):
         self._btn_patch.setProperty("cssClass", "primary")
         self._btn_patch.clicked.connect(self._on_patch_image)
         btns_row.addWidget(self._btn_patch)
+
+        self._btn_import_patched = QPushButton("Direct Import Patched")
+        self._btn_import_patched.setIcon(get_icon("folder", 14))
+        self._btn_import_patched.setProperty("cssClass", "secondary")
+        self._btn_import_patched.setToolTip("Directly import an already-patched boot/init_boot image from your computer")
+        self._btn_import_patched.clicked.connect(self._on_direct_import_patched_image)
+        btns_row.addWidget(self._btn_import_patched)
 
         self._btn_flash = QPushButton("2. Flash to Phone")
         self._btn_flash.setIcon(get_icon("fire", 14))
@@ -674,9 +710,34 @@ class RootScreen(QWidget):
             self._status_box.setText(f"{msg}")
             QMessageBox.critical(self, "Patch Failed", msg)
 
+    def _on_direct_import_patched_image(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Pre-Patched Boot Image",
+            "",
+            "Boot Image (*.img *.bin);;All Files (*.*)",
+        )
+        if not path:
+            return
+
+        p = Path(path)
+        valid, msg = RootingEngine.validate_boot_image(p)
+        if not valid:
+            QMessageBox.warning(self, "Invalid Boot Image", f"Selected file failed validation:\n\n{msg}")
+            return
+
+        self._patched_image_path = p
+        self._btn_flash.setEnabled(True)
+        self._status_box.setText(f"Imported pre-patched image: {p.name}. Ready to flash.")
+        QMessageBox.information(
+            self,
+            "Patched Image Imported",
+            f"Successfully validated and imported pre-patched image:\n{p.name}\n\nClick '2. Flash to Phone' to proceed.",
+        )
+
     def _on_flash_patched_image(self) -> None:
         if not self._patched_image_path or not self._patched_image_path.is_file():
-            QMessageBox.warning(self, "No Image", "Please generate the patched image in step 1 first.")
+            QMessageBox.warning(self, "No Image", "Please generate the patched image in step 1 or import a pre-patched image first.")
             return
 
         device = self._current_device
@@ -708,19 +769,25 @@ class RootScreen(QWidget):
         shield.show()
         shield.update_progress(f"Flashing rooted {target_part} image via fastboot...", 50)
 
-        res = self._root_engine.flash_patched_image(
-            patched_image_path=self._patched_image_path,
+        self._root_worker = RootFlashWorker(
+            root_engine=self._root_engine,
+            image_path=self._patched_image_path,
             target_partition=target_part,
             fastboot=self._fb,
             serial=device.serial,
+            parent=self,
         )
 
-        if res.success:
-            shield.mark_completed(True, f"Root image successfully flashed to {target_part}!")
-            self._status_box.setText(f"Flashed to {target_part}. Reboot device and click 'Verify Root'.")
-        else:
-            shield.mark_completed(False, f"Flashing failed: {res.stderr}")
-            self._status_box.setText(f"Fastboot error: {res.stderr}")
+        def _on_root_finished(success: bool, err_msg: str) -> None:
+            if success:
+                shield.mark_completed(True, f"Root image successfully flashed to {target_part}!")
+                self._status_box.setText(f"Flashed to {target_part}. Reboot device and click 'Verify Root'.")
+            else:
+                shield.mark_completed(False, f"Flashing failed: {err_msg}")
+                self._status_box.setText(f"Fastboot error: {err_msg}")
+
+        self._root_worker.finished.connect(_on_root_finished)
+        self._root_worker.start()
 
     def _on_verify_root(self) -> None:
         device = self._current_device

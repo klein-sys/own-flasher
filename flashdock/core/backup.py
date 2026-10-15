@@ -230,14 +230,19 @@ class BackupManager:
             # Real backup flow
             dump_success = False
 
-            # If device is rooted and in system mode: use dd
-            if device.mode == "system" and adb.available:
+            # If device is rooted in system mode or running in custom recovery (TWRP/OrangeFox): use dd
+            if device.mode in ("system", "recovery") and adb.available:
                 remote_tmp = f"/data/local/tmp/{img_filename}"
-                # Try finding partition block path
                 by_name = f"/dev/block/by-name/{part}"
                 by_bootdevice = f"/dev/block/bootdevice/by-name/{part}"
 
-                dd_cmd = f"su -c 'dd if={by_name} of={remote_tmp}' 2>/dev/null || su -c 'dd if={by_bootdevice} of={remote_tmp}'"
+                if device.mode == "recovery":
+                    dd_cmd = f"dd if={by_name} of={remote_tmp} 2>/dev/null || dd if={by_bootdevice} of={remote_tmp}"
+                    clean_cmd = f"rm -f {remote_tmp}"
+                else:
+                    dd_cmd = f"su -c 'dd if={by_name} of={remote_tmp}' 2>/dev/null || su -c 'dd if={by_bootdevice} of={remote_tmp}'"
+                    clean_cmd = f"su -c 'rm -f {remote_tmp}'"
+
                 res = adb.shell(dd_cmd, serial=serial)
 
                 # Pull file
@@ -245,7 +250,7 @@ class BackupManager:
                 if pull_res.success and img_path.is_file() and img_path.stat().st_size > 0:
                     dump_success = True
                     # Clean up temporary remote file
-                    adb.shell(f"su -c 'rm -f {remote_tmp}'", serial=serial)
+                    adb.shell(clean_cmd, serial=serial)
 
             # Do not create a fake .img when a dump cannot be obtained.  Such a
             # file must never be offered to fastboot as a restorable partition.

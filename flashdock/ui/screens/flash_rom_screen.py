@@ -17,7 +17,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QThread, Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
@@ -57,6 +57,88 @@ from flashdock.ui.icon_assets import create_icon_label, get_icon
 from flashdock.ui.widgets.flash_shield import FlashShieldDialog
 
 log = get_logger(__name__)
+
+
+class RomFlashWorker(QThread):
+    progress_changed = Signal(str, int)  # message, percent
+    flash_finished = Signal(bool, str)
+
+    def __init__(
+        self,
+        rom_flasher: RomFlasher,
+        package_info: RomPackageInfo,
+        slot_target: str,
+        wipe_userdata: bool,
+        dry_run: bool,
+        serial: str,
+        parent: Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self._flasher = rom_flasher
+        self._pkg = package_info
+        self._slot = slot_target
+        self._wipe = wipe_userdata
+        self._dry_run = dry_run
+        self._serial = serial
+
+    def run(self) -> None:
+        def cb(cur: int, tot: int, m: str) -> None:
+            pct = int(cur / tot * 100) if tot > 0 else 0
+            self.progress_changed.emit(m, pct)
+
+        ok, msg = self._flasher.flash_custom_rom(
+            package_info=self._pkg,
+            slot_target=self._slot,
+            wipe_userdata=self._wipe,
+            dry_run=self._dry_run,
+            progress_callback=cb,
+            serial=self._serial,
+        )
+        self.flash_finished.emit(ok, msg)
+
+
+class GsiFlashWorker(QThread):
+    progress_changed = Signal(str, int)  # message, percent
+    flash_finished = Signal(bool, str)
+
+    def __init__(
+        self,
+        rom_flasher: RomFlasher,
+        gsi_path: Path,
+        disable_avb: bool,
+        vbmeta_path: Optional[str],
+        wipe_userdata: bool,
+        is_dynamic: bool,
+        dry_run: bool,
+        serial: str,
+        parent: Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self._flasher = rom_flasher
+        self._gsi = gsi_path
+        self._disable_avb = disable_avb
+        self._vbmeta = vbmeta_path
+        self._wipe = wipe_userdata
+        self._dynamic = is_dynamic
+        self._dry_run = dry_run
+        self._serial = serial
+
+    def run(self) -> None:
+        def cb(cur: int, tot: int, m: str) -> None:
+            pct = int(cur / tot * 100) if tot > 0 else 0
+            self.progress_changed.emit(m, pct)
+
+        ok, msg = self._flasher.flash_gsi(
+            gsi_image_path=self._gsi,
+            disable_avb=self._disable_avb,
+            vbmeta_path=self._vbmeta,
+            wipe_userdata=self._wipe,
+            is_dynamic_super=self._dynamic,
+            dry_run=self._dry_run,
+            progress_callback=cb,
+            serial=self._serial,
+        )
+        self.flash_finished.emit(ok, msg)
 
 
 class RomConfirmationDialog(QDialog):
@@ -741,18 +823,24 @@ class FlashRomScreen(QWidget):
         shield.show()
         shield.update_progress("Starting ROM flashing...", 0)
 
-        ok, msg = self._rom_flasher.flash_custom_rom(
+        self._rom_worker = RomFlashWorker(
+            rom_flasher=self._rom_flasher,
             package_info=self._parsed_rom,
             slot_target=target_slot,
             wipe_userdata=wipe_data,
             dry_run=dry_run,
-            progress_callback=lambda cur, tot, m: shield.update_progress(m, int(cur / tot * 100)),
             serial=device.serial,
+            parent=self,
         )
+        self._rom_worker.progress_changed.connect(shield.update_progress)
 
-        shield.mark_completed(ok, msg)
-        if ok and self._chk_reboot.isChecked() and not dry_run:
-            self._fb.reboot(serial=device.serial)
+        def _on_rom_done(ok: bool, msg: str) -> None:
+            shield.mark_completed(ok, msg)
+            if ok and self._chk_reboot.isChecked() and not dry_run:
+                self._fb.reboot(serial=device.serial)
+
+        self._rom_worker.flash_finished.connect(_on_rom_done)
+        self._rom_worker.start()
 
     # -----------------------------------------------------------------------
     # Actions: Treble GSI
@@ -833,17 +921,20 @@ class FlashRomScreen(QWidget):
         shield.show()
         shield.update_progress("Starting GSI flash...", 0)
 
-        ok, msg = self._rom_flasher.flash_gsi(
-            gsi_image_path=self._parsed_gsi.image_path,
+        self._gsi_worker = GsiFlashWorker(
+            rom_flasher=self._rom_flasher,
+            gsi_path=self._parsed_gsi.image_path,
             disable_avb=self._chk_disable_avb.isChecked(),
             vbmeta_path=self._edit_vbmeta_path.text().strip() or None,
             wipe_userdata=self._chk_gsi_wipe.isChecked(),
-            is_dynamic_super=device.has_dynamic_partitions,
+            is_dynamic=device.has_dynamic_partitions,
             dry_run=self._chk_gsi_dry.isChecked(),
-            progress_callback=lambda cur, tot, m: shield.update_progress(m, int(cur / tot * 100)),
             serial=device.serial,
+            parent=self,
         )
-        shield.mark_completed(ok, msg)
+        self._gsi_worker.progress_changed.connect(shield.update_progress)
+        self._gsi_worker.flash_finished.connect(lambda ok, msg: shield.mark_completed(ok, msg))
+        self._gsi_worker.start()
 
     # -----------------------------------------------------------------------
     # Actions: Custom Recovery

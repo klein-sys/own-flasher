@@ -218,7 +218,17 @@ class IntegrityScreen(QWidget):
     # -----------------------------------------------------------------
 
     def _setup_injector_tab(self) -> None:
-        c_layout = QHBoxLayout(self._tab_injector)
+        outer_lay = QVBoxLayout(self._tab_injector)
+        outer_lay.setContentsMargins(0, 0, 0, 0)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setStyleSheet("background: transparent;")
+
+        container = QWidget()
+        c_layout = QHBoxLayout(container)
         c_layout.setContentsMargins(12, 12, 12, 12)
         c_layout.setSpacing(14)
 
@@ -264,7 +274,7 @@ class IntegrityScreen(QWidget):
 
         pb_layout.addLayout(sel_row)
 
-        # Profile Properties Table
+        # Profile Properties Table (constrained height for laptop screens)
         self._props_table = QTableWidget()
         self._props_table.setColumnCount(2)
         self._props_table.setHorizontalHeaderLabels(["Property", "Spoofed Value"])
@@ -272,6 +282,7 @@ class IntegrityScreen(QWidget):
         self._props_table.verticalHeader().setVisible(False)
         self._props_table.setAlternatingRowColors(True)
         self._props_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._props_table.setMaximumHeight(260)
         pb_layout.addWidget(self._props_table, 1)
 
         left_col.addWidget(profile_box, 1)
@@ -357,6 +368,9 @@ class IntegrityScreen(QWidget):
 
         right_col.addWidget(action_box)
         c_layout.addLayout(right_col, 1)
+
+        scroll.setWidget(container)
+        outer_lay.addWidget(scroll)
 
         # Initial populate
         self._populate_profile_table(self._selected_profile)

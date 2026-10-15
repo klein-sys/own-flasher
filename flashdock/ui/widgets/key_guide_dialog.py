@@ -317,7 +317,11 @@ class HardwareKeyGuideDialog(QDialog):
         if not self._adb or not self._adb.available:
             self._status_lbl.setText("ADB binary not available.")
             self._status_lbl.setStyleSheet("font-size: 12px; color: #DC2626;")
-            return
+        if not self._serial and self._adb and self._adb.available:
+            devs = self._adb.devices()
+            ready_devs = [d for d in devs if d.is_ready]
+            if ready_devs:
+                self._serial = ready_devs[0].serial
 
         if not self._serial:
             self._status_lbl.setText("Please connect a device via USB debugging in normal System mode to use the virtual keypad.")

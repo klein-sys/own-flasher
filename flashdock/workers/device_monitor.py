@@ -469,13 +469,16 @@ class DeviceMonitorWorker(QThread):
             fb_devices = self._fastboot.devices()
             if fb_devices:
                 fb_dev = fb_devices[0]
-                fb_mode = "fastbootd" if fb_dev.get("mode") == "fastbootd" else "fastboot"
+                raw_mode = getattr(fb_dev, "mode", "fastboot") if not isinstance(fb_dev, dict) else fb_dev.get("mode", "fastboot")
+                raw_serial = getattr(fb_dev, "serial", "FASTBOOT_DEVICE") if not isinstance(fb_dev, dict) else fb_dev.get("serial", "FASTBOOT_DEVICE")
+                raw_brand = getattr(fb_dev, "brand", "Android") if not isinstance(fb_dev, dict) else fb_dev.get("brand", "Android")
+                fb_mode = "fastbootd" if raw_mode == "fastbootd" else "fastboot"
                 return {
                     "mode": fb_mode,
-                    "identifier": fb_dev.get("serial", "FASTBOOT_DEVICE"),
-                    "display_name": f"{fb_dev.get('brand', 'Android')} (Fastboot)",
+                    "identifier": raw_serial,
+                    "display_name": f"{raw_brand} (Fastboot)",
                     "chipset": "Fastboot / Bootloader",
-                    "details": fb_dev,
+                    "details": {"serial": raw_serial, "mode": fb_mode, "brand": raw_brand},
                 }
         except Exception as exc:
             log.debug("Fastboot device detection non-fatal exception: %s", exc)
@@ -485,13 +488,18 @@ class DeviceMonitorWorker(QThread):
             adb_devices = self._adb.devices()
             if adb_devices:
                 adb_dev = adb_devices[0]
-                mode_str = adb_dev.get("mode", "adb")
+                raw_state = getattr(adb_dev, "state", "device") if not isinstance(adb_dev, dict) else adb_dev.get("state", "device")
+                raw_serial = getattr(adb_dev, "serial", "ADB_DEVICE") if not isinstance(adb_dev, dict) else adb_dev.get("serial", "ADB_DEVICE")
+                raw_model = getattr(adb_dev, "model", "") if not isinstance(adb_dev, dict) else adb_dev.get("model", "")
+                raw_product = getattr(adb_dev, "product", "") if not isinstance(adb_dev, dict) else adb_dev.get("product", "")
+                display_model = raw_model or raw_product or "Android"
+                mode_str = "adb" if raw_state == "device" else raw_state
                 return {
                     "mode": mode_str,
-                    "identifier": adb_dev.get("serial", "ADB_DEVICE"),
-                    "display_name": f"{adb_dev.get('model', adb_dev.get('brand', 'Android'))} ({mode_str.title()})",
+                    "identifier": raw_serial,
+                    "display_name": f"{display_model} ({mode_str.title()})",
                     "chipset": "ADB Daemon",
-                    "details": adb_dev,
+                    "details": {"serial": raw_serial, "state": raw_state, "model": display_model, "mode": mode_str},
                 }
         except Exception as exc:
             log.debug("ADB device detection non-fatal exception: %s", exc)

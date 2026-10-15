@@ -176,10 +176,13 @@ class ScrcpyManager:
         try:
             # Launch detached so FlashDock doesn't block while mirroring
             if sys.platform == "win32":
+                creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+                if hasattr(subprocess, "CREATE_NO_WINDOW"):
+                    creationflags |= subprocess.CREATE_NO_WINDOW
                 subprocess.Popen(
                     cmd,
                     env=env,
-                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                    creationflags=creationflags,
                 )
             else:
                 subprocess.Popen(cmd, env=env)

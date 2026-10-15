@@ -126,6 +126,16 @@ class DeviceManager:
         return self._config.locked_serial is not None
 
     @property
+    def adb(self) -> ADB:
+        """Return the underlying ADB tool instance."""
+        return self._adb
+
+    @property
+    def fastboot(self) -> Fastboot:
+        """Return the underlying Fastboot tool instance."""
+        return self._fb
+
+    @property
     def allowed_reboot_targets(self) -> list[str]:
         """Return which reboot buttons should be enabled."""
         if not self.device:

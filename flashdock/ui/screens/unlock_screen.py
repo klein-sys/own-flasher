@@ -239,6 +239,7 @@ class UnlockScreen(QWidget):
             combo = QComboBox(selector_card)
             combo.setMinimumHeight(34)
             brands_list = [
+                ("Unisoc / Spreadtrum (1-Click Token Unlock)", "unisoc"),
                 ("Tecno Mobile (HiOS)", "tecno"),
                 ("Infinix Mobility (XOS)", "infinix"),
                 ("itel Mobile (itelOS)", "itel"),
@@ -551,6 +552,34 @@ class UnlockScreen(QWidget):
             res = self._fb._run(["oem", "get_unlock_data"], serial=serial, action="oem_get_unlock_data")
             success = res.success
             result_text = res.output if success else res.stderr
+
+        elif "get_identifier_token" in cmd:
+            from flashdock.core.unisoc import UnisocUnlockManager
+            ok, token, raw = UnisocUnlockManager.query_identifier_token(self._fb, serial=serial)
+            success = ok
+            if ok:
+                ok_s, sig_file, msg = UnisocUnlockManager.sign_token(token)
+                result_text = f"Unisoc Token extracted ({token[:16]}...) & signed -> {sig_file.name}"
+            else:
+                result_text = raw or "Failed to query Unisoc identifier token"
+
+        elif "unlock_bootloader" in cmd:
+            from flashdock.core.unisoc import UnisocUnlockManager
+            from flashdock.constants import CACHE_DIR
+            sig_file = CACHE_DIR / "signature.bin"
+            if not sig_file.is_file():
+                ok, token, raw = UnisocUnlockManager.query_identifier_token(self._fb, serial=serial)
+                if ok:
+                    UnisocUnlockManager.sign_token(token, output_path=sig_file)
+            res = UnisocUnlockManager.unlock_bootloader(self._fb, sig_file, serial=serial)
+            success = res.success
+            result_text = "Unisoc bootloader unlocked successfully" if success else res.stderr
+
+        elif "vbmeta" in cmd and ("disable" in cmd or "flash" in cmd):
+            from flashdock.core.unisoc import UnisocUnlockManager
+            res = UnisocUnlockManager.flash_disabled_vbmeta(self._fb, serial=serial)
+            success = res.success
+            result_text = "Flashed disabled vbmeta (Anti-Red State Active)" if success else res.stderr
 
         else:
             result_text = f"Unknown command: {step.command_preview}"

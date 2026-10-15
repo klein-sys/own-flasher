@@ -29,33 +29,90 @@ class TranssionBaseHandler(BrandHandler):
         return self._BRAND_DISPLAY
 
     def get_unlock_flow(self, device: DeviceInfo) -> UnlockFlow:
+        is_unisoc = device.chipset_family == "unisoc"
         chipset_note = ""
         if device.chipset_family == "mediatek":
             chipset_note = " (MediaTek Helio / Dimensity chipset detected — standard fastboot flashing unlock supported)"
-        elif device.chipset_family == "unisoc":
-            chipset_note = " (Unisoc chipset detected — fastboot flashing unlock supported)"
+        elif is_unisoc:
+            chipset_note = " (Unisoc chipset detected — 1-Click Token Unlocker & Anti-Red-State Shield active)"
 
-        return UnlockFlow(
-            brand=self.brand_id,
-            brand_display=self.brand_display,
-            prerequisites=[
-                f"USB debugging enabled in {self._OS_NAME} Developer options",
-                "OEM unlocking toggled ON in Developer options (Settings > System > Developer options)",
-                "Complete backup of personal photos, messages, and files (unlock completely wipes userdata)",
-                "Battery charged to ≥ 50%",
-                "PC connected directly to USB-A / USB 2.0 port with high-quality data cable",
-            ],
-            warnings=[
-                f"Unlocking the bootloader will COMPLETELY ERASE ALL USER DATA on your {self.brand_display} device.",
-                f"Your phone will reboot into factory recovery to format /data.",
-                "Warranty through Carlcare may be affected depending on region.",
-                "Google Play Integrity will require Magisk/KernelSU with Play Integrity Fix module.",
-            ],
-            firmware_url=self._PORTAL_URL,
-            guide_url="https://forum.hovatek.com/forum-89.html",
-            wipes_data=True,
-            supports_relock=True,
-            steps=[
+        if is_unisoc:
+            steps = [
+                UnlockStep(
+                    index=1,
+                    title="Enable Developer Options",
+                    description=(
+                        f"On your {self.brand_display} phone, open Settings > My Phone (or About Phone).\n"
+                        "Locate 'Build Number' and tap it rapidly 7 times until you see 'You are now a developer!'."
+                    ),
+                    action="manual",
+                ),
+                UnlockStep(
+                    index=2,
+                    title="Enable OEM Unlocking & USB Debugging",
+                    description=(
+                        "Go to Settings > System > Developer options.\n"
+                        "1. Turn ON 'OEM unlocking' (enter your lock screen PIN to confirm).\n"
+                        "2. Turn ON 'USB debugging'."
+                    ),
+                    action="manual",
+                ),
+                UnlockStep(
+                    index=3,
+                    title="Reboot to Fastboot / Bootloader",
+                    description=(
+                        f"Reboot the {self.brand_display} phone into fastboot mode via ADB.\n"
+                        "The screen will show 'FASTBOOT...' in small white text."
+                    ),
+                    action="auto",
+                    requires_mode="bootloader",
+                    command_preview="adb reboot bootloader",
+                ),
+                UnlockStep(
+                    index=4,
+                    title="Query Unisoc Identifier Token",
+                    description=(
+                        "Query the 64-character hardware identifier token from bootloader.\n"
+                        "FlashDock automatically signs the token using the community RSA-2048 key."
+                    ),
+                    action="auto",
+                    requires_mode="bootloader",
+                    command_preview="fastboot oem get_identifier_token",
+                ),
+                UnlockStep(
+                    index=5,
+                    title="Unlock with Cryptographic Signature",
+                    description=(
+                        "Transmit the cryptographically signed token (signature.bin) to the bootloader.\n"
+                        "This bypasses 'Unlock bootloader is not allowed' restrictions."
+                    ),
+                    action="auto",
+                    requires_mode="bootloader",
+                    command_preview="fastboot flashing unlock_bootloader signature.bin",
+                    warning="THIS WILL ERASE ALL USERDATA ON CONFIRMATION.",
+                ),
+                UnlockStep(
+                    index=6,
+                    title="Flash Disabled vbmeta (Anti-Red State Shield)",
+                    description=(
+                        "CRITICAL: Disables dm-verity and AVB verification to prevent immediate "
+                        "'Red State: Your device has failed verification' bootloop on reboot."
+                    ),
+                    action="auto",
+                    requires_mode="bootloader",
+                    command_preview="fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img",
+                ),
+                UnlockStep(
+                    index=7,
+                    title="Reboot System",
+                    description="Reboot the phone into system mode. First boot after factory wipe takes 3-5 minutes.",
+                    action="auto",
+                    requires_mode="bootloader",
+                    command_preview="fastboot reboot",
+                ),
+            ]
+        else:
+            steps = [
                 UnlockStep(
                     index=1,
                     title="Enable Developer Options",
@@ -117,7 +174,29 @@ class TranssionBaseHandler(BrandHandler):
                     requires_mode="bootloader",
                     command_preview="fastboot reboot",
                 ),
+            ]
+
+        return UnlockFlow(
+            brand=self.brand_id,
+            brand_display=self.brand_display,
+            prerequisites=[
+                f"USB debugging enabled in {self._OS_NAME} Developer options",
+                "OEM unlocking toggled ON in Developer options (Settings > System > Developer options)",
+                "Complete backup of personal photos, messages, and files (unlock completely wipes userdata)",
+                "Battery charged to ≥ 50%",
+                "PC connected directly to USB-A / USB 2.0 port with high-quality data cable",
             ],
+            warnings=[
+                f"Unlocking the bootloader will COMPLETELY ERASE ALL USER DATA on your {self.brand_display} device.",
+                f"Your phone will reboot into factory recovery to format /data.",
+                "Warranty through Carlcare may be affected depending on region.",
+                "Google Play Integrity will require Magisk/KernelSU with Play Integrity Fix module.",
+            ],
+            firmware_url=self._PORTAL_URL,
+            guide_url="https://forum.hovatek.com/forum-89.html",
+            wipes_data=True,
+            supports_relock=True,
+            steps=steps,
         )
 
     def get_relock_flow(self, device: DeviceInfo) -> UnlockFlow:
@@ -209,8 +288,28 @@ class TranssionGenericHandler(TranssionBaseHandler):
     _PORTAL_URL = "https://www.carlcare.com/"
 
 
-# Register all Transsion brand handlers
+class UnisocBrandHandler(TranssionBaseHandler):
+    """Unisoc / Spreadtrum 1-Click Token Unlock handler."""
+    _BRAND_ID = "unisoc"
+    _BRAND_DISPLAY = "Unisoc / Spreadtrum"
+    _OS_NAME = "Android (Unisoc SoC)"
+    _PORTAL_URL = "https://forum.hovatek.com/forum-89.html"
+
+    def get_unlock_flow(self, device: DeviceInfo) -> UnlockFlow:
+        dev_copy = DeviceInfo(
+            serial=device.serial,
+            brand=device.brand or "unisoc",
+            model=device.model,
+            mode=device.mode,
+            chipset_family="unisoc",
+            bootloader_state=device.bootloader_state,
+        )
+        return super().get_unlock_flow(dev_copy)
+
+
+# Register all Transsion & Unisoc brand handlers
 register_brand(TecnoHandler())
 register_brand(InfinixHandler())
 register_brand(ItelHandler())
 register_brand(TranssionGenericHandler())
+register_brand(UnisocBrandHandler())

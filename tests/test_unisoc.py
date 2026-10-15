@@ -148,3 +148,43 @@ def test_unisoc_pipeline_without_transport_fails_closed():
     pipeline = UnisocFlashPipeline()
     assert pipeline.connect() is False
     assert pipeline.connected is False
+
+
+def test_unisoc_unlock_manager_token_extraction():
+    from flashdock.core.unisoc import UnisocUnlockManager
+
+    sample_output = """
+    (bootloader) Identifier token:
+    (bootloader) 5A34024846460010944373AP1032095A34024846460010944373AP103209
+    OKAY [  0.012s]
+    finished. total time: 0.012s
+    """
+    token = UnisocUnlockManager.extract_token_from_output(sample_output)
+    assert token == "5A34024846460010944373AP1032095A34024846460010944373AP103209"
+
+
+def test_unisoc_unlock_manager_sign_token(tmp_path: Path):
+    from flashdock.core.unisoc import UnisocUnlockManager
+
+    token = "5A34024846460010944373AP1032095A34024846460010944373AP103209"
+    out_sig = tmp_path / "signature.bin"
+    ok, path, msg = UnisocUnlockManager.sign_token(token, output_path=out_sig)
+    assert ok is True
+    assert path.is_file()
+    assert path.stat().st_size == 256  # 2048-bit RSA signature is exactly 256 bytes
+
+
+def test_unisoc_generate_disabled_vbmeta(tmp_path: Path):
+    from flashdock.core.unisoc import generate_disabled_vbmeta
+
+    out_vb = tmp_path / "vbmeta_test.img"
+    res_path = generate_disabled_vbmeta(out_vb)
+    assert res_path.is_file()
+    assert res_path.stat().st_size == 4096
+
+    data = res_path.read_bytes()
+    assert data[:4] == b"AVB0"
+    # flags at offset 120 should be 3
+    flags = struct.unpack(">I", data[120:124])[0]
+    assert flags == 3
+

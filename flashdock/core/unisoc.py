@@ -9,13 +9,18 @@ Provides:
 
 from __future__ import annotations
 
+import hashlib
 import os
+import re
 import struct
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import BinaryIO, Callable, Optional
 
+from flashdock.constants import CACHE_DIR
 from flashdock.logger import get_logger
+from flashdock.tools.fastboot import Fastboot
+from flashdock.tools.runner import CommandResult
 
 log = get_logger("core.unisoc")
 
@@ -486,3 +491,196 @@ class UnisocFlashPipeline:
 
         log.info("Unisoc PAC flashing successfully completed.")
         return True
+
+
+# ---------------------------------------------------------------------------
+# Unisoc 1-Click Token Unlocker & Anti-Red-State Shield
+# ---------------------------------------------------------------------------
+
+UNISOC_RSA_N = 0x5faaa996fdeb577f46c486eab0832c53a16bd60d2c08ecb0e27aa64de8523e452175ea9d2365f03ab81f7c60756067b40727ba8e19fb6bfdad54b85553ffff686266bc5c49de84cbd02afc4a237d92eb289eb84e88535b70569e38428c045b2136e49840d164d8d5e3c5b980a9c1362b6b05a5b22886dcbd3495cbfc97fe6866f584890543e6d37e5e31aff98902bc5cd17cfb791948d3d2e3cf07cb9396a9e11dd95b3f7a410402cbd410c27b16c10d7050911906082d8079f28bfa3d85402f159acba01a3235045fe09b762d990c3483af1c68b3b860837fb6b241d99c80cd53861e8831cea7fe749a5c92b1d04562de452fd8d5a4d52ba6a3ca45202a7465
+UNISOC_RSA_D = 0x3ae19eca09751d807ffd1c113d1d2f5e35ff5a5af71c731a17fb677a922074a536080ea433125dfeb62ee2edb7b0e38341d82911a75a41487cb3a55517837c1f32598b5bbe379042a5d89f39be885eb210694885459110b99f0679183477c5e336971242eade883b759ad02729d47ad3d466406adc58cd6a430063f20f570dc875434d332ebcaef0413cb01d485ee8eada82ba3e366f4c6e576e1450952851378ad56cc5a201e9160e6061b27f222e760f25375ff66399660797d63c72e85f2eab180c13cd227a5c915bcedbffb112535d58e50dab9d93f71981cd7c80bc3177b9dda69a64ba53fdf3e46aa97b1e1f3f5c4d05fe9fc9a75a89431a40e7f75bad
+UNISOC_RSA_E = 65537
+
+
+def generate_disabled_vbmeta(output_path: Path | str) -> Path:
+    """Generate a clean 4KB AVB 2.0 vbmeta image with verity & verification disabled."""
+    dest = Path(output_path)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    buf = bytearray(4096)
+    buf[0:4] = b"AVB0"
+    struct.pack_into(">II", buf, 4, 1, 0)
+    # offset 120: flags (0x03 = HASHTREE_DISABLED | VERIFICATION_DISABLED)
+    struct.pack_into(">I", buf, 120, 3)
+    # release string at offset 128
+    rel_str = b"avbtool 1.2.0 (FlashDock Anti-Red State)\x00"
+    buf[128:128 + len(rel_str)] = rel_str
+    dest.write_bytes(bytes(buf))
+    return dest
+
+
+class UnisocUnlockManager:
+    """
+    Manages Unisoc / Spreadtrum 1-click token bootloader unlock flow:
+    1. Extracts 64-char identifier token from `fastboot oem get_identifier_token`
+    2. Cryptographically signs token via RSA-2048 PKCS#1 v1.5 with SHA-256
+    3. Dispatches `fastboot flashing unlock_bootloader signature.bin`
+    4. Provides 1-click Anti-Red State Shield (`fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img`)
+    """
+
+    @classmethod
+    def extract_token_from_output(cls, raw_text: str) -> Optional[str]:
+        """Extracts 64-character hex identifier token from Fastboot output."""
+        clean = re.sub(r"\(bootloader\)", "", raw_text, flags=re.IGNORECASE)
+        lines = [l.strip() for l in clean.splitlines() if l.strip()]
+        for idx, line in enumerate(lines):
+            if "identifier" in line.lower() and "token" in line.lower() and idx + 1 < len(lines):
+                candidate = lines[idx + 1].strip()
+                if len(candidate) >= 32 and not candidate.startswith("OKAY"):
+                    return candidate
+        # Fallback: look for consecutive hex characters of length 32 to 128
+        matches = re.findall(r"\b([0-9a-fA-F]{32,128})\b", clean)
+        if matches:
+            matches.sort(key=len, reverse=True)
+            return matches[0].strip()
+        return None
+
+    @classmethod
+    def query_identifier_token(
+        cls,
+        fastboot: Fastboot,
+        serial: str = "",
+    ) -> tuple[bool, str, str]:
+        """
+        Executes `fastboot oem get_identifier_token` and extracts the device token.
+        Returns (success, token_hex, raw_output).
+        """
+        res = fastboot._run(["oem", "get_identifier_token"], serial=serial, action="oem_get_identifier_token")
+        raw = f"{res.stdout}\n{res.stderr}".strip()
+        token = cls.extract_token_from_output(raw)
+        if token:
+            log.info("Successfully extracted Unisoc identifier token: %s...", token[:16])
+            return True, token, raw
+        log.warning("Could not parse Unisoc identifier token from fastboot output.")
+        return False, "", raw
+
+    @classmethod
+    def sign_token(
+        cls,
+        token: str,
+        custom_pem: Optional[str] = None,
+        output_path: Optional[Path | str] = None,
+    ) -> tuple[bool, Path, str]:
+        """
+        Signs the Unisoc identifier token with RSA-2048 PKCS#1 v1.5 with SHA-256.
+        Returns (success, signature_path, message).
+        """
+        clean_token = token.strip()
+        if not clean_token:
+            return False, Path(), "Token string is empty."
+
+        n, d = UNISOC_RSA_N, UNISOC_RSA_D
+
+        if custom_pem and custom_pem.strip():
+            try:
+                import base64
+                lines = [l.strip() for l in custom_pem.strip().splitlines() if not l.startswith("-----")]
+                der = base64.b64decode("".join(lines))
+                idx = 0
+                if der[idx] == 0x30:
+                    idx += 1
+                    if der[idx] & 0x80:
+                        idx += 1 + (der[idx] & 0x7F)
+                    else:
+                        idx += 1
+                    integers = []
+                    while idx < len(der) and len(integers) < 4:
+                        if der[idx] != 0x02:
+                            break
+                        idx += 1
+                        length = der[idx]
+                        idx += 1
+                        if length & 0x80:
+                            n_bytes = length & 0x7F
+                            length = int.from_bytes(der[idx:idx + n_bytes], "big")
+                            idx += n_bytes
+                        val = int.from_bytes(der[idx:idx + length], "big")
+                        idx += length
+                        integers.append(val)
+                    if len(integers) >= 4:
+                        n, d = integers[1], integers[3]
+            except Exception as e:
+                log.warning("Could not parse custom RSA PEM (%s), using default community key", e)
+
+        try:
+            token_bytes = clean_token.encode("ascii")
+            h = hashlib.sha256(token_bytes).digest()
+
+            asn1_prefix = b"\x30\x31\x30\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04\x20"
+            t = asn1_prefix + h
+            k = 256
+            pad_len = k - 3 - len(t)
+            if pad_len < 8:
+                return False, Path(), "Token payload size exceeds RSA modulus capacity."
+
+            em = b"\x00\x01" + (b"\xff" * pad_len) + b"\x00" + t
+            m_int = int.from_bytes(em, "big")
+            s_int = pow(m_int, d, n)
+            sig_bytes = s_int.to_bytes(k, "big")
+
+            if output_path:
+                out = Path(output_path)
+            else:
+                out = CACHE_DIR / "signature.bin"
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_bytes(sig_bytes)
+
+            log.info("Successfully signed Unisoc token -> %s (%d bytes)", out, len(sig_bytes))
+            return True, out, f"Successfully cryptographically signed Unisoc token ({len(sig_bytes)} bytes)."
+        except Exception as e:
+            log.error("Failed to sign Unisoc token: %s", e)
+            return False, Path(), f"RSA signing failed: {e}"
+
+    @classmethod
+    def unlock_bootloader(
+        cls,
+        fastboot: Fastboot,
+        signature_path: Path | str,
+        serial: str = "",
+    ) -> CommandResult:
+        """Dispatches `fastboot flashing unlock_bootloader signature.bin`."""
+        sig_file = Path(signature_path)
+        if not sig_file.is_file():
+            return CommandResult(
+                command=["fastboot", "flashing", "unlock_bootloader", str(sig_file)],
+                return_code=1,
+                stdout="",
+                stderr=f"Signature file not found: {sig_file}",
+            )
+        return fastboot._run(
+            ["flashing", "unlock_bootloader", str(sig_file)],
+            serial=serial,
+            action="flashing_unlock_bootloader",
+        )
+
+    @classmethod
+    def flash_disabled_vbmeta(
+        cls,
+        fastboot: Fastboot,
+        vbmeta_path: Optional[Path | str] = None,
+        serial: str = "",
+    ) -> CommandResult:
+        """
+        Flashes vbmeta with `--disable-verity --disable-verification` to prevent Red State bootloops.
+        Generates empty disabled vbmeta if no file path provided.
+        """
+        if vbmeta_path and Path(vbmeta_path).is_file():
+            target_vbmeta = Path(vbmeta_path)
+        else:
+            target_vbmeta = CACHE_DIR / "vbmeta_disabled.img"
+            generate_disabled_vbmeta(target_vbmeta)
+
+        return fastboot._run(
+            ["--disable-verity", "--disable-verification", "flash", "vbmeta", str(target_vbmeta)],
+            serial=serial,
+            action="flash_vbmeta_disabled",
+        )

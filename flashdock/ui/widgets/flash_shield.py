@@ -52,6 +52,7 @@ class FlashShieldDialog(QDialog):
         )
 
         self._is_active = True
+        acquire_flash_lock()
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -167,6 +168,7 @@ class FlashShieldDialog(QDialog):
             )
             event.ignore()
         else:
+            release_flash_lock()
             event.accept()
 
     def reject(self) -> None:

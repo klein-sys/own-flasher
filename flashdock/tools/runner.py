@@ -159,6 +159,8 @@ def run_command(
             cmd,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             cwd=cwd,
             env=full_env,
@@ -179,8 +181,8 @@ def run_command(
         stdout = ""
         stderr = f"Binary not found: {cmd[0]}"
         return_code = -1
-    except OSError as exc:
-        log.error("OS error running %s: %s", cmd[0], exc)
+    except (OSError, ValueError) as exc:
+        log.error("OS/Decode error running %s: %s", cmd[0], exc)
         stdout = ""
         stderr = str(exc)
         return_code = -1

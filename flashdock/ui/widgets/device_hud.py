@@ -49,7 +49,7 @@ class LiveDeviceHud(QFrame):
     _MODE_CONFIGS = {
         "system":       ("ADB Authorized", "#34C759", "phone"),
         "recovery":     ("Recovery Mode", "#AF52DE", "tools"),
-        "bootloader":   ("Fastboot (BL)", "#007AFF", "flash"),
+        "bootloader":   ("Fastboot (Bootloader)", "#007AFF", "flash"),
         "fastbootd":    ("FastbootD (Userspace)", "#00E5FF", "flash"),
         "download":     ("Samsung Odin Mode", "#00B4D8", "downloads"),
         "edl":          ("Qualcomm EDL 9008", "#FF3B30", "usb"),
@@ -401,13 +401,22 @@ class LiveDeviceHud(QFrame):
 
     def _set_mode_ui(self, mode: str) -> None:
         label, color, icon_name = self._MODE_CONFIGS.get(mode, (mode.title(), "#8E8E93", "info"))
-        self._mode_dot.setStyleSheet(f"color: {color}; font-size: 11px;")
+        self._mode_dot.setStyleSheet(f"color: {color}; font-size: 11px; border: none; background: transparent;")
         self._mode_text.setText(label)
-        self._mode_text.setStyleSheet(f"color: {color}; font-size: 11px; font-weight: 700; letter-spacing: 0.3px;")
+        self._mode_text.setStyleSheet(f"color: {color}; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; border: none; background: transparent;")
+        r = int(color[1:3], 16)
+        g = int(color[3:5], 16)
+        b = int(color[5:7], 16)
         self._mode_pill.setStyleSheet(f"""
-            background: rgba({int(color[1:3], 16)}, {int(color[3:5], 16)}, {int(color[5:7], 16)}, 0.15);
-            border: 1px solid {color};
-            border-radius: 14px;
+            QFrame {{
+                background: rgba({r}, {g}, {b}, 0.15);
+                border: 1px solid {color};
+                border-radius: 14px;
+            }}
+            QLabel {{
+                border: none;
+                background: transparent;
+            }}
         """)
 
     def _check_emergency_backup_available(self, serial: str) -> None:

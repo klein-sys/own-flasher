@@ -572,15 +572,9 @@ class UnbrickScreen(QWidget):
 
         self._status_label.setText(f"Flashing {partition}...")
         try:
-            cmd = [str(self._fastboot.binary_path)]
-            if serial:
-                cmd.extend(["-s", serial])
-            cmd.extend(["flash", partition, img_path])
-
-            import subprocess
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-            out = (res.stdout + res.stderr).strip()
-            if res.returncode == 0 or "finished" in out.lower() or "ok" in out.lower():
+            res = self._fastboot.flash(partition=partition, image_path=img_path, serial=serial)
+            out = f"{res.stdout}\n{res.stderr}".strip()
+            if res.success or "finished" in out.lower() or "ok" in out.lower():
                 QMessageBox.information(self, "Flash Succeeded", f"Partition '{partition}' flashed successfully!\n\n{out}")
                 self._status_label.setText(f"Flashed {partition} successfully.")
             else:

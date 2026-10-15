@@ -111,14 +111,16 @@ class BootloopFixer:
 
         try:
             log.info("Sending reboot safemode command...")
+            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
             res = subprocess.run(
                 cmd_base + ["reboot", "safemode"],
                 capture_output=True,
                 text=True,
-                timeout=10,
+                timeout=15,
+                creationflags=flags,
             )
             if res.returncode == 0:
-                return True, "✅ Device commanded to reboot into Safe Mode."
+                return True, "Device commanded to reboot into Safe Mode."
             return False, f"Reboot safe mode failed: {res.stderr.strip()}"
         except Exception as exc:
             return False, f"Error triggering safe mode: {exc}"
@@ -137,13 +139,15 @@ class BootloopFixer:
             cmd_base.extend(["-s", serial])
 
         try:
+            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
             res = subprocess.run(
                 cmd_base + ["getvar", "current-slot"],
                 capture_output=True,
                 text=True,
-                timeout=8,
+                timeout=10,
+                creationflags=flags,
             )
-            out = res.stdout + res.stderr
+            out = f"{res.stdout}\n{res.stderr}"
             match = re.search(r"current-slot:\s*([a-bA-B_]+)", out)
             if match:
                 raw_slot = match.group(1).lower().replace("_", "").strip()
@@ -167,15 +171,17 @@ class BootloopFixer:
 
         try:
             log.info("Switching Fastboot active slot to %s...", slot_clean)
+            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
             res = subprocess.run(
                 cmd_base + [f"--set-active={slot_clean}"],
                 capture_output=True,
                 text=True,
                 timeout=15,
+                creationflags=flags,
             )
-            out = (res.stdout + res.stderr).strip()
+            out = f"{res.stdout}\n{res.stderr}".strip()
             if res.returncode == 0 or "finished" in out.lower() or "ok" in out.lower():
-                return True, f"✅ Successfully switched active slot to '{slot_clean}'.\nReboot device to test."
+                return True, f"Successfully switched active slot to '{slot_clean}'.\nReboot device to test."
             return False, f"Slot switch failed: {out}"
         except Exception as exc:
             return False, f"Error switching slot: {exc}"

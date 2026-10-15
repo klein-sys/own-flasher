@@ -610,7 +610,10 @@ class ReturnStockScreen(QWidget):
 
     def _browse_zip(self) -> None:
         zip_path, _ = QFileDialog.getOpenFileName(
-            self, "Select Stock Firmware ZIP", "", "ZIP Archives (*.zip)"
+            self,
+            "Select Stock Firmware Archive",
+            "",
+            "Firmware Archives (*.zip *.tgz *.tar.gz *.tar.md5 *.tar *.pac payload.bin);;All Files (*.*)",
         )
         if zip_path:
             self._load_package(Path(zip_path))

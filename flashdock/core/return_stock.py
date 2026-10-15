@@ -21,6 +21,7 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Optional
+import tarfile
 import zipfile
 
 from flashdock.constants import MIN_BATTERY_PERCENT
@@ -185,12 +186,23 @@ class ReturnStockEngine:
             pkg.errors.append(f"Specified path does not exist: {path}")
             return pkg
 
+        lower_name = path.name.lower()
         if path.is_dir():
             ReturnStockEngine._parse_directory(path, pkg)
-        elif path.is_file() and path.suffix.lower() == ".zip":
-            ReturnStockEngine._parse_zip(path, pkg)
+        elif path.is_file():
+            if lower_name.endswith(".zip"):
+                ReturnStockEngine._parse_zip(path, pkg)
+            elif any(lower_name.endswith(ext) for ext in (".tar", ".tar.gz", ".tgz", ".tar.md5")):
+                ReturnStockEngine._parse_tar(path, pkg)
+            elif lower_name.endswith(".pac"):
+                ReturnStockEngine._parse_pac(path, pkg)
+            elif lower_name.endswith("payload.bin"):
+                ReturnStockEngine._parse_payload_bin(path, pkg)
+            else:
+                pkg.errors.append("Unsupported file type. Select a directory, .zip, .tgz, .tar.md5, .pac, or payload.bin package.")
+                return pkg
         else:
-            pkg.errors.append("Unsupported file type. Select a directory or a .zip firmware package.")
+            pkg.errors.append("Unsupported file type. Select a directory or a firmware package.")
             return pkg
 
         # Check minimal required partitions
@@ -303,6 +315,85 @@ class ReturnStockEngine:
             pkg.errors.append(f"Failed to inspect ZIP archive: {e}")
 
     @staticmethod
+    def _parse_tar(tar_path: Path, pkg: StockPackageInfo) -> None:
+        """Scan a TAR archive (.tar, .tar.gz, .tgz, .tar.md5) for partition images."""
+        try:
+            with tarfile.open(tar_path, "r:*") as tf:
+                for member in tf.getmembers():
+                    name = member.name
+                    clean_name = name.lower()
+                    if clean_name.endswith(".img.lz4"):
+                        canon = ReturnStockEngine._canonical_partition_name(Path(name[:-4]).stem)
+                        if canon and canon not in pkg.images:
+                            pkg.images[canon] = PartitionImage(
+                                partition=canon,
+                                file_path=tar_path,
+                                size_bytes=member.size,
+                                in_archive=True,
+                                archive_inner_path=name,
+                            )
+                    elif Path(name).suffix.lower() == ".img":
+                        canon = ReturnStockEngine._canonical_partition_name(Path(name).stem)
+                        if canon and canon not in pkg.images:
+                            pkg.images[canon] = PartitionImage(
+                                partition=canon,
+                                file_path=tar_path,
+                                size_bytes=member.size,
+                                in_archive=True,
+                                archive_inner_path=name,
+                            )
+                    elif Path(name).name.lower() == "android-info.txt":
+                        try:
+                            f = tf.extractfile(member)
+                            if f:
+                                ReturnStockEngine._parse_android_info(f.read().decode("utf-8", errors="ignore"), pkg)
+                        except Exception:
+                            pass
+        except Exception as e:
+            pkg.errors.append(f"Failed to inspect TAR archive: {e}")
+
+    @staticmethod
+    def _parse_pac(pac_path: Path, pkg: StockPackageInfo) -> None:
+        """Scan a Unisoc .pac archive for partition entries."""
+        from flashdock.core.unisoc import PACExtractor
+        try:
+            info = PACExtractor.parse_pac(pac_path)
+            pkg.target_product = info.product_name
+            for entry in info.files:
+                if entry.file_size > 0:
+                    clean_name = entry.file_name or entry.file_id
+                    canon = ReturnStockEngine._canonical_partition_name(Path(clean_name).stem)
+                    if canon and canon not in pkg.images:
+                        pkg.images[canon] = PartitionImage(
+                            partition=canon,
+                            file_path=pac_path,
+                            size_bytes=entry.file_size,
+                            in_archive=True,
+                            archive_inner_path=entry.file_id,
+                        )
+        except Exception as e:
+            pkg.errors.append(f"Failed to parse Unisoc PAC archive: {e}")
+
+    @staticmethod
+    def _parse_payload_bin(payload_path: Path, pkg: StockPackageInfo) -> None:
+        """Scan an Android OTA payload.bin file for partition entries."""
+        from flashdock.tools.payload_dumper import PayloadDumper
+        try:
+            parts = PayloadDumper.list_partitions(payload_path)
+            for part_name in parts:
+                canon = ReturnStockEngine._canonical_partition_name(part_name)
+                if canon and canon not in pkg.images:
+                    pkg.images[canon] = PartitionImage(
+                        partition=canon,
+                        file_path=payload_path,
+                        size_bytes=0,
+                        in_archive=True,
+                        archive_inner_path=part_name,
+                    )
+        except Exception as e:
+            pkg.errors.append(f"Failed to parse payload.bin: {e}")
+
+    @staticmethod
     def _parse_android_info(content: str, pkg: StockPackageInfo) -> None:
         """Parse android-info.txt to extract target device metadata."""
         for line in content.splitlines():
@@ -372,8 +463,43 @@ class ReturnStockEngine:
                 return image.file_path, ""
             return None, f"Firmware image is missing: {image.file_path}"
 
+        destination = destination_dir / f"{image.partition}.img"
         try:
-            destination = destination_dir / f"{image.partition}.img"
+            # 1. Payload.bin (raw or inside zip)
+            if image.archive_inner_path.startswith("payload.bin:") or image.file_path.name.lower() == "payload.bin":
+                from flashdock.tools.payload_dumper import PayloadDumper
+                part_target = image.archive_inner_path.split(":", 1)[-1] if ":" in image.archive_inner_path else image.partition
+                extracted = PayloadDumper.extract_partitions(image.file_path, destination_dir, target_partitions=[part_target])
+                if extracted and extracted[0].is_file():
+                    return extracted[0], ""
+                return None, f"Failed to extract {image.partition} from payload.bin"
+
+            # 2. Unisoc PAC archive
+            if image.file_path.name.lower().endswith(".pac"):
+                from flashdock.core.unisoc import PACExtractor
+                extracted_file = PACExtractor.extract_file(image.file_path, image.archive_inner_path, destination_dir)
+                if extracted_file and extracted_file.is_file():
+                    return extracted_file, ""
+                return None, f"Failed to extract {image.partition} from PAC archive"
+
+            # 3. TAR / TAR.GZ / TGZ / TAR.MD5 archive (including Samsung .img.lz4)
+            lower_name = image.file_path.name.lower()
+            if any(lower_name.endswith(ext) for ext in (".tar", ".tgz", ".tar.gz", ".tar.md5")):
+                with tarfile.open(image.file_path, "r:*") as archive:
+                    member = archive.getmember(image.archive_inner_path)
+                    f_in = archive.extractfile(member)
+                    if not f_in:
+                        return None, f"Could not read member {image.archive_inner_path} from TAR"
+                    if image.archive_inner_path.lower().endswith(".lz4"):
+                        from flashdock.tools.lz4_util import decompress_lz4_stream
+                        with destination.open("wb") as target:
+                            decompress_lz4_stream(f_in, target)
+                    else:
+                        with destination.open("wb") as target:
+                            shutil.copyfileobj(f_in, target)
+                return destination, ""
+
+            # 4. Standard ZIP archive
             with zipfile.ZipFile(image.file_path, "r") as archive:
                 if ":" in image.archive_inner_path:
                     nested_name, member = image.archive_inner_path.split(":", 1)
@@ -387,7 +513,7 @@ class ReturnStockEngine:
             if image.size_bytes and destination.stat().st_size != image.size_bytes:
                 return None, f"Extracted image size does not match archive metadata: {image.partition}"
             return destination, ""
-        except (OSError, KeyError, zipfile.BadZipFile) as exc:
+        except Exception as exc:
             return None, f"Could not extract {image.partition} from firmware archive: {exc}"
 
     # -----------------------------------------------------------------------

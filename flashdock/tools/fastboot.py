@@ -181,8 +181,9 @@ class Fastboot:
         # fastboot prints to stderr: "var: value"
         output = res.stderr or res.stdout
         for line in output.splitlines():
-            if line.lower().startswith(var.lower() + ":"):
-                return line.split(":", 1)[1].strip()
+            clean = re.sub(r"^\(bootloader\)\s*", "", line.strip(), flags=re.IGNORECASE)
+            if clean.lower().startswith(var.lower() + ":"):
+                return clean.split(":", 1)[1].strip()
         return None
 
     def get_var(self, var: str, serial: str = "") -> Optional[str]:
@@ -199,12 +200,12 @@ class Fastboot:
         result: dict[str, str] = {}
         output = res.stderr or res.stdout
         for line in output.splitlines():
-            line = line.strip()
-            if ":" in line and not line.startswith("("):
-                key, _, value = line.partition(":")
+            clean = re.sub(r"^\(bootloader\)\s*", "", line.strip(), flags=re.IGNORECASE)
+            if ":" in clean:
+                key, _, value = clean.partition(":")
                 key = key.strip().lower()
                 value = value.strip()
-                if key and value:
+                if key and value and not key.startswith("("):
                     result[key] = value
         return result
 
@@ -229,11 +230,11 @@ class Fastboot:
         slot : str
             Optional slot override ("a", "b", or "").
         """
-        args = ["flash"]
+        args = []
         if slot:
             args += [f"--slot={slot}"]
         target = f"{partition}_{slot}" if slot else partition
-        args += [partition, image_path]
+        args += ["flash", partition, image_path]
         return self._run(
             args,
             serial=serial,

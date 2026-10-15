@@ -296,8 +296,9 @@ class ADB:
             line = line.strip()
             # Format: [key]: [value]
             if line.startswith("[") and "]: [" in line:
-                key = line.split("]: [")[0].lstrip("[")
-                value = line.split("]: [")[1].rstrip("]")
+                parts = line.split("]: [", 1)
+                key = parts[0].lstrip("[")
+                value = parts[1].rstrip("]")
                 props[key] = value
         return props
 
