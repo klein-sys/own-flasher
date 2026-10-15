@@ -1,158 +1,212 @@
 ---
-title: "FlashDock — Tomorrow's Comprehensive Execution Plan & Master Prompt (v1.4.0)"
+title: "FlashDock — Master Architectural Upgrade, Hardening & v1.5.0 Release Plan"
 type: execution-plan
 status: ready
-version: 1.4.0
-date: 2026-10-14
+version: 1.5.0
+date: 2026-10-15
+skills_applied:
+  - flashdock-workstation
+  - engineering/codebase-design
+  - engineering/diagnosing-bugs
+  - engineering/improve-codebase-architecture
+  - engineering/implement-spec
+  - engineering/tdd
+  - engineering/code-review
+  - engineering/pr
+  - productivity/writing-for-agents
+  - productivity/handoff
+  - permissioned-github
+  - readme-gen
 tags:
   - flashdock
-  - execution-prompt
-  - audited-open-items-only
-  - device-sync-fix
-  - boot-patch-engine
-  - driver-elevation-fix
-  - unisoc-token-unlocker
-  - payload-dumper
-  - samsung-lz4-decompressor
-  - fastbootd-hud
-  - slot-switcher
-  - non-scrolling-tools-canvas
-  - interactive-workflow-guide
-  - virtual-keypad-fix
-  - thread-freezing-prevention
-  - unicode-decode-shield
-  - fastboot-bootloader-parser-fix
+  - v1.5.0
+  - codebase-hardening
+  - zero-brick
+  - async-qt6
+  - fuzz-testing
+  - mmap-streaming
+  - win32-hardware-events
+  - github-sync
 ---
 
-# FlashDock — Master Execution Prompt (Phase 24 / v1.4.0)
+# ROLE & OBJECTIVE
+You are a **Principal Systems Architect, Senior Python/Qt6 Desktop Engineer, and Low-Level Android Firmware Security Specialist**. You have full access to the **FlashDock (v1.4.0)** repository (`https://github.com/klein-sys/own-flasher`).
 
-> **Audit Context & Status Verification:**
-> Several earlier visual fixes from `fix 1.png` – `fix 15.png` have **already been resolved** in v1.3.0–v1.3.3:
-> - ✅ `fix 1.png` (Reboot buttons clipped text): Already fixed with 2-row clean grid (`System`, `Recovery`, `Bootloader`, `More...`).
-> - ✅ `fix 2.png` (Classic menu bar): Already hidden with `menu.setVisible(False)`.
-> - ✅ `fix 3.png` (GSM brand bar plain text buttons): Already replaced with full vector SVG brand icons (Tecno, Infinix, itel, Samsung, Xiaomi, Huawei, OPPO, Vivo, Realme, Pixel, OnePlus, Motorola).
-> - ✅ `fix 4.png` (Combobox width stretch): Already constrained with `setMaximumWidth(280)`.
-> - ✅ `fix 7.png` (Unwanted horizontal scrollbar): Already suppressed with `ScrollBarAlwaysOff`.
-> - ✅ `fix 9.png` (Partition checkboxes squashed): Already overhauled into a clean 2-column card grid in `backup_screen.py`.
-> - ✅ `fix 10.png` ("scrcpv" typo & truncated buttons): Already corrected to "scrcpy" with widened layout.
-> - ✅ `fix 11.png` (Logo badge box outline): Already rewritten with squircle gradient chip and borderless labels.
-> - ✅ `fix 15.png` (`DeviceInfo` NameError in `reboot_switchboard.py`): Already imported and verified.
->
-> The `/goal` below has been **deeply audited and enriched** with all runtime exceptions, UI thread freeze vectors, fastboot parser edge cases, and missing workstation superpowers.
+Your mission is to execute an exhaustive, file-by-file **Codebase Audit, Vulnerability & Failure-Mode Analysis, Code Hardening Pass, and v1.5.0 Architectural Upgrade Plan**, and then **immediately implement all fixes and package the complete updated files into a single AI-3 Distribution & GitHub Sync Markdown Bundle**.
+
+FlashDock services physical Android hardware at the bootloader, partition, and emergency boot-ROM levels; therefore, **systems reliability, concurrency safety, and zero-brick guarantees are absolute, non-negotiable laws.**
 
 ---
 
-```markdown
-/goal
+## MANDATORY AGENT SKILLS ACTIVATION & GOVERNING LAWS
 
-Execute the Comprehensive Workstation Superpower, Bugfix & Thread Safety Sprint for FlashDock (Phase 24 / v1.4.0):
+Before auditing or writing any code, you must strictly activate and adhere to the following curated skills discovered and verified in `.agents/skills/engineering/`, `.agents/skills/productivity/`, and `.agents/skills/`:
 
-### 1. Fix Device Synchronization & Blank Dropdown Bug (`fix 16.png`, `fix 17.png`, `fix 18.png`, `fix with 16.png`)
-- **Problem**: Status bar shows `ADB (10944373AP103209) Connected` in green, but the Device Selector combobox at the top is completely blank/empty, and the Live HUD reports `• No Device Connected`.
-- **Root Cause & Fixes**:
-  1. In `flashdock/workers/device_monitor.py:472` & `488`: Fix `AttributeError` caused by calling `.get("mode")` and `.get("serial")` on `FastbootDevice` and `ADBDevice` dataclasses. Replace with direct attribute access (`fb_dev.serial`, `fb_dev.mode`, `adb_dev.serial`, `adb_dev.mode`, `adb_dev.model`).
-  2. In `flashdock/ui/main_window.py:1567`: In `_on_hardware_device_connected()`, automatically trigger `self._refresh_device()` so `DeviceManager` immediately queries the connected device and updates the HUD, Phone Control Panel, and Device Selector combobox.
-  3. In `flashdock/ui/main_window.py:1588`: In `_on_hardware_device_disconnected()`, reset the HUD, Phone Control Panel, and Device Selector cleanly to avoid displaying stale data.
-  4. In `flashdock/ui/widgets/device_selector.py:60`: Initialize the combobox with `"No device connected"` placeholder on startup so it never renders as an empty black box before detection.
+### Primary Hardware & Repository Authority
+1. **`flashdock-workstation` (`.agents/skills/flashdock-workstation/SKILL.md`) — [PRIMARY WORKSTATION LAW]**:
+   - **Zero-Brick Pre-Flight Gates**: Battery $\ge 30\%$, active partition slot confirmed (`_a`/`_b`), and mandatory auto-rescue calibration dumps (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) with SHA-256 validation to `data/backups/emergency_preflash/`.
+   - **Anti-Rollback & Anti-Relock Law**: Never allow bootloader relocking (`fastboot flashing lock`, `oem lock`) if a custom recovery, patched boot image, or cross-region firmware is installed.
+   - **Asynchronous Qt6 Rule**: Zero synchronous subprocesses, heavy disk I/O, or registry polling on the PySide6 main GUI thread. All background routines must inherit from `QThread` and support cooperative cancellation (`requestInterruption()`, `isInterruptionRequested()`).
+   - **Design Token Standard**: 100% vector SVG rendering via `flashdock.ui.icon_assets.get_icon()` dynamically generated on demand. Zero raw unicode emoji stickers.
+   - **Release Pipeline Enforcement**: Bump version to `1.5.0` (`flashdock/__init__.py`, `constants.py`, `version_info.txt`, `README.md`, `read.md`, `handoff.md`), run `python scripts/release_build.py` (ensure 100% test pass), compile `dist/FlashDock-v1.5.0-windows-x64.zip`, and sync to GitHub `main` with release tags.
 
-### 2. Fastboot & ADB Parser Hardening & Windows Unicode Decode Shield (`tools/`)
-- **Problem 1 (Windows Unicode Decode Crash — `runner.py:161`)**: `subprocess.run(..., text=True)` on Windows defaults to the system ANSI code page (e.g. CP1252 or GBK). When Fastboot, ADB, or OEM tools output foreign characters, symbols, or binary progress bytes, Python throws an unhandled `UnicodeDecodeError` (which inherits from `ValueError`, bypassing `except OSError`).
-  - *Fix*: Explicitly specify `encoding="utf-8", errors="replace"` in `runner.py:161` and catch `(OSError, ValueError)`.
-- **Problem 2 (Fastboot `(bootloader) ` Prefix Parsing Bug — `fastboot.py:183, 203`)**: Almost all Android bootloaders prefix variable output with `(bootloader) ` (e.g., `(bootloader) unlocked: yes`, `(bootloader) product: raven`). In `fastboot.py:203`, `getvar_all()` filters out all lines where `line.startswith("(") `, causing it to drop EVERY single variable on real devices! In `fastboot.py:183`, `getvar()` fails `startswith(var + ":")` because of the `(bootloader)` prefix.
-  - *Fix*: Strip `r"^\(bootloader\)\s*"` via regex or prefix strip before parsing in both `getvar()` and `getvar_all()`.
-- **Problem 3 (Fastboot `--slot` Flag Placement — `fastboot.py:233`)**: Placing `--slot=a` after `flash` (`fastboot flash --slot=a boot boot.img`) causes errors on many fastboot CLI versions.
-  - *Fix*: Place `--slot` before `flash` (`fastboot --slot=a flash boot boot.img`) or target the slot partition directly (`boot_a`).
-- **Problem 4 (ADB Props Truncation — `adb.py:299`)**: `line.split("]: [")[1]` truncates props whose values contain `]: [`.
-  - *Fix*: Use `line.split("]: [", 1)`.
-- **Problem 5 (Missing Public Properties — `device_manager.py`)**: `diagnostics_screen.py:74` accesses `device_mgr.adb`.
-  - *Fix*: Expose `@property def adb(self) -> ADB: return self._adb` and `@property def fastboot(self) -> Fastboot: return self._fb`.
+### Engineering Discipline & Architecture Skills (`.agents/skills/engineering/`)
+2. **`engineering/diagnosing-bugs` (`.agents/skills/engineering/diagnosing-bugs/SKILL.md`) — [FAILURE ANALYSIS DISCIPLINE]**:
+   - Build tight, deterministic reproduction loops for all race conditions, pipe deadlocks, and memory allocations before implementing patches.
+   - Treat edge cases (pipe exhaustion, TOCTOU races, process tree termination) with scientific rigor rather than superficial try/except wrapping.
 
-### 3. FlashShield Lock Engagement & Main-Thread Freezing Elimination (`flash_shield.py` & Screens)
-- **Problem 1 (FlashShield Never Engages Global Lock — `flash_shield.py:42`)**: `FlashShieldDialog` calls `release_flash_lock()` upon completion, but never calls `acquire_flash_lock()` upon creation! As a result, `is_flash_locked()` remains `False`, allowing `DeviceMonitor` to continue polling USB/ADB in the background during active partition writes.
-  - *Fix*: Call `acquire_flash_lock()` in `FlashShieldDialog.__init__()` and ensure `release_flash_lock()` is called on completion and close.
-- **Problem 2 (Main GUI Thread Freezing on Long Operations)**: Multi-minute flashing, backup, and extraction routines run synchronously on the main Qt thread:
-  - `flash_rom_screen.py:744`: Custom ROM flashing runs on main thread.
-  - `root_screen.py:711`: Root image flashing runs on main thread.
-  - `backup_screen.py:371, 398`: Partition dumps and ADB backups run on main thread.
-  - `mtk_unisoc_screen.py:536, 570`: PAC firmware extraction and flashing run on main thread.
-  - `downloads_screen.py:767`: Driver installation / PowerShell UAC elevation runs with a 60-second blocking timeout on main thread.
-  - *Fix*: Wrap long operations in non-blocking background workers (using `QThread` pattern, matching `sideload_screen.py`'s `SideloadWorker`), keeping UI animated, responsive, and preventing Windows "Not Responding" crashes.
+3. **`engineering/codebase-design` (`.agents/skills/engineering/codebase-design/SKILL.md`) — [DEEP MODULE SPECIFICATION]**:
+   - Design **deep modules** with small interfaces and rich implementations (high leverage for callers, strict locality for maintainers).
+   - Place clean **seams** where hardware transports and parsers can be mocked, tested, or swapped without editing caller logic.
 
-### 4. Implement Dual-Mode Boot Image Patching Pipeline (`rooting.py` & `root_screen.py`)
-- **Problem**: In `RootScreen`, clicking "1. Patch Boot Image" fails because `RootingEngine.prepare_patch()` currently hardcodes an automatic failure stub.
-- **Implementation**:
-  1. **Pre-patched Direct Import Mode**: Allow operators to browse/select an already-patched `boot.img` / `init_boot.img` (`magisk_patched_*.img` or `kernelsu_*.img`), validate kernel magic headers, and skip Step 1 straight to Step 2 ("Flash to Phone").
-  2. **Device-Assisted ADB Patching Pipeline**: Automatically push `stock_boot.img` to `/sdcard/Download/boot.img`, invoke the Magisk/KernelSU patch script via ADB shell, and pull the resulting patched image back into `data/tools/patched_boot/`.
-  3. **Offline Fallback**: Support bundling/calling `magiskboot.exe` or pure-Python GKI header parser for zero-phone offline patching.
+4. **`engineering/improve-codebase-architecture` (`.agents/skills/engineering/improve-codebase-architecture/SKILL.md`) — [ARCHITECTURAL DEEPENING]**:
+   - Surface architectural friction and turn shallow pass-through wrappers into deep engines.
+   - Enforce locality and eliminate leaking abstractions across seams (e.g., zero-copy `mmap` streaming for `payload_dumper.py` and `lz4_util.py`).
 
-### 5. Implement Unisoc 1-Click Token Unlocker & Anti-Red-State Shield (`unlock_screen.py`, `unisoc.py`, `transsion.py`)
-- **Problem**: Unisoc devices (Tecno Pop, Infinix Smart, itel, Realme C, Moto E) reject standard `fastboot flashing unlock` with `remote: 'Unlock bootloader is not allowed'`.
-- **Implementation**:
-  1. In `flashdock/core/unisoc.py`, create `UnisocUnlockManager`:
-     - Query `fastboot oem get_identifier_token` and extract 64-character token.
-     - Cryptographically sign with community RSA 2048 private key to output `signature.bin`.
-     - Dispatch `fastboot flashing unlock_bootloader signature.bin`.
-     - Add 1-click **"Flash Disabled vbmeta (Anti-Red State)"** button running `fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img` to prevent immediate Red-State brick bootloops.
-  2. In `flashdock/ui/screens/unlock_screen.py`: Add dedicated **"Unisoc / Spreadtrum Token Unlocker"** tab/wizard.
-  3. In `flashdock/brands/transsion.py`: Update Unisoc chipset unlock flow to point directly to the Token Unlocker wizard.
+5. **`engineering/tdd` (`.agents/skills/engineering/tdd/SKILL.md`) — [VERIFICATION & FUZZING FIRST]**:
+   - Construct property-based boundary tests and fuzzing suites in `tests/test_fuzz_parsers.py` before finalizing parser implementations to guarantee uncrashable binary parsing.
 
-### 6. Built-in `payload.bin` Dumper & Samsung `.lz4` Decompressor (`flashdock/tools/`)
-- **Problem**: Modern OTA update zips (Pixel, OnePlus, Nothing, HyperOS, Motorola) contain `payload.bin`, and Samsung firmware contains `.img.lz4` archives. FlashDock cannot parse these directly.
-- **Implementation**:
-  1. Create `flashdock/tools/payload_dumper.py`: Streaming parser for Android Delta/Full OTA `payload.bin` files that extracts individual partitions (`boot.img`, `init_boot.img`, `recovery.img`, `vbmeta.img`) in under 10 seconds without unpacking the entire multi-gigabyte ZIP.
-  2. Create `flashdock/tools/lz4_util.py`: Pure-Python chunked LZ4 decompressor to unpack Samsung `AP_*.tar.md5` archives directly into clean `.img` files.
-  3. Wire extractors into `FlashRomScreen`, `RootScreen`, and `ReturnStockScreen`.
+6. **`engineering/code-review` (`.agents/skills/engineering/code-review/SKILL.md`) — [STANDARDS & SMELL ELIMINATION]**:
+   - Two-axis review of every change: Standards (Python 3.10–3.14 strict typing, PEP 706 `tarfile` data filters) and Spec (faithful execution of all Pillars).
+   - Eliminate Fowler code smells: Primitive Obsession, Data Clumps, Shotgun Surgery, and Divergent Change.
 
-### 7. Expand Factory Restore Firmware Formats (`return_stock_screen.py` & `return_stock.py`)
-- **Problem**: `return_stock_screen.py:613` file picker only permits `"ZIP Archives (*.zip)"` and `return_stock.py:190` rejects any non-zip/folder input. Official Xiaomi fastboot ROMs are `.tgz`/`.tar.gz`, Samsung Odin firmwares are `.tar.md5`, and Unisoc firmwares are `.pac`.
-- **Implementation**:
-  1. Update file picker filter: `"Firmware Archives (*.zip *.tgz *.tar.gz *.tar.md5 *.tar *.pac);;All Files (*.*)"`.
-  2. In `ReturnStockEngine.parse_stock_package()`: Support extracting/parsing `.tgz`, `.tar.gz`, `.tar.md5`, and `.pac` packages into valid partition manifests.
+7. **`engineering/implement-spec` (`.agents/skills/engineering/implement-spec/SKILL.md`) — [TASK GRAPH EXECUTION]**:
+   - Execute the plan as an acyclic task graph across the frontier of ready modules, ensuring dependent subsystems integrate cleanly.
 
-### 8. Subprocess Leak Cleanup & Offline Recovery Dumps (`unbrick_screen.py`, `bootloop_fixer.py`, `backup.py`, `scrcpy.py`)
-- **Unbrick Screen (`unbrick_screen.py:581`)**: Replace direct `subprocess.run` with `self._fastboot.flash()` to avoid black console popups, honor dry-run mode, and respect UTF-8 encoding.
-- **Bootloop Fixer (`bootloop_fixer.py:114, 140, 160`)**: Replace raw `subprocess.run` with `run_command()` with `CREATE_NO_WINDOW`.
-- **Custom Recovery Partition Dumps (`backup.py:234`)**: Allow raw partition dumps in `"recovery"` mode (TWRP / OrangeFox) where ADB shell has root permissions (`uid=0`), without requiring `su -c`.
-- **scrcpy Launch Window (`scrcpy.py:182`)**: Add `CREATE_NO_WINDOW` to avoid opening a blank command prompt window alongside the mirror window.
+8. **`engineering/pr` (`.agents/skills/engineering/pr/SKILL.md`) — [PULL REQUEST & RELEASE NOTES ARCHETYPE]**:
+   - Formats GitHub Release Notes and PR summaries using the high-signal template: Call-Tree Summary, Before/After Evidence, Door classification (one-way vs two-way), and Blast Radius analysis.
 
-### 9. A/B Slot Switcher & FastbootD HUD Indicator
-- **Live HUD Differentiation (`device_hud.py`)**:
-  - In Fastboot mode, query `fastboot getvar is-userspace`.
-  - If `yes`, display **`FastbootD (Userspace)`** badge in Cyan (`#00E5FF`).
-  - If `no`, display **`Fastboot (Bootloader)`** in Cobalt Blue (`#007AFF`).
-- **1-Click Active Slot Switcher (`reboot_switchboard.py` & `phone_panel.py`)**:
-  - Add **"Switch Active Slot (A/B)"** button running `fastboot --set-active=<other_slot>` directly in the Reboot Switchboard and Phone Control Panel for instant bootloop rollback.
+### Productivity & GitHub Protocol Skills (`.agents/skills/productivity/` & `.agents/skills/`)
+9. **`productivity/writing-for-agents` (`.agents/skills/productivity/writing-for-agents/SKILL.md`) — [AGENT EXECUTION RIGOR]**:
+   - Eliminates premature completion risks by defining strict, checkable, and exhaustive completion criteria across all output sections.
 
-### 10. Fix Virtual Keypad (ADB) (`key_guide_dialog.py`)
-- **Problem**: Virtual keypad buttons fail to send keypresses.
-- **Fix**: Format commands strictly as `f"input keyevent {keycode}"`, pass active device serial from `main_window.py`, and automatically detect serial if blank.
+10. **`productivity/handoff` (`.agents/skills/productivity/handoff/SKILL.md`) — [AGENT COMPACTION & RESUME STATE]**:
+    - Keeps handoff documentation tightly synchronized so future agent sessions or subagents can continue seamlessly.
 
-### 11. Remaining Visual & Layout Polish (`fix 6.png`, `12.png`, `13.png`, `14.png`, `fix 8.png`)
-- **`fix 6.png` & `fix 13.png` (`key_guide_dialog.py`)**: Replace glaring white cards with sleek dark cards (`rgba(255,255,255,0.05)`) and fix dark-on-dark unreadable headers.
-- **`fix 12.png` (`device_hud.py`)**: In `_set_mode_ui()`, scope QFrame border style (`QFrame { border: 1px solid {color}; }`) and add `QLabel { border: none; }` so child labels do not inherit the border and create double boxes around the text.
-- **`fix 14.png` (`tools_manager.py:684`)**: Fix `_execute_pnputil_install()` logic check so it never reports success when pnputil output contains "Failed to add driver package: Access is denied" or "Added driver packages: 0".
-- **`fix 8.png` (`integrity_screen.py`)**: Constrain fingerprint table height and enclose the tab in a `QScrollArea` so the "Apply & Inject pif.json" button is never clipped on laptop displays.
+11. **`permissioned-github` (`.agents/skills/permissioned-github/SKILL.md`) — [AUTHORITATIVE GITHUB PROTOCOL]**:
+    - Directs all GitHub interactions through authoritative `gh` CLI commands specifying `-R klein-sys/own-flasher` and standard `git` branch/tag operations. Prohibits ad-hoc scripts or insecure tokens.
 
-### 12. Ergonomic Non-Scrolling Home Tools Canvas (`main_window.py`)
-- Compact Home screen grid into **4 columns** with compact HyperOS chips (height 52–56px) with tooltips.
-- Remove outer `QScrollArea` from `_build_home_page()` so all 15 tools fit **100% visible on screen without vertical scrollbars**.
-- Retain smooth slim scrolling in Left Navigation Sidebar and Live Terminal with smooth splitter handle.
+12. **`readme-gen` (`.agents/skills/Readme-gen/SKILL.md`) — [REPOSITORY DOCUMENTATION INTEGRITY]**:
+    - Updates `README.md` and repository documentation grounded in verified codebase evidence. Reflects the v1.5.0 architecture with tech stack badges, Mermaid flow diagrams, setup guides, and test commands.
 
-### 13. Interactive Clickable Workflow Guide (`workflow_guide.py`)
-- Overhaul all 15 tool cards with "How It Works (Under the Hood)", "Step-by-Step Instructions", safety checklists, and direct "Launch Tool ➔" shortcut buttons.
+---
 
-### 14. Mandatory Verification, Version Bump & GitHub Pipeline
-*(Strictly enforce Section 4 of `.agents/skills/flashdock-workstation/SKILL.md`)*
-1. **Semantic Version Bump to `1.4.0`**:
-   - `flashdock/__init__.py`: `__version__ = "1.4.0"`
-   - `flashdock/constants.py`: `APP_VERSION = "1.4.0"`
-   - `scripts/version_info.txt`: Update `FileVersion` and `ProductVersion` to `1.4.0.0`
-   - `README.md`, `read.md`, and `handoff.md`: Update badges, frontmatter, and headings to `v1.4.0 (Phase 24)`.
-2. **Automated Verification & Packaging**:
-   - Run `python scripts/release_build.py` (ensure 485+ tests pass with 100% success rate).
-   - Compile clean binary `dist/FlashDock_Dist/FlashDock.exe` and archive `dist/FlashDock-v1.4.0-windows-x64.zip`.
-3. **GitHub Push**:
-   - `git add .`
-   - `git commit -m "feat(v1.4.0): Unisoc token unlocker, device sync fix, payload.bin dumper, boot patch engine, and non-scrolling canvas"`
-   - `git push origin main`
-```
+### Strict Operational Rules
+1. **No Placeholders or Hand-Waving**: Every bug you identify must be accompanied by exact file paths, line numbers, root-cause mechanics, and **100% complete, drop-in, production-ready Python/Qt6 code patches**. Never write `# TODO`, `pass`, or `# ... existing code ...` inside your file outputs.
+2. **Evidence-Grounded Analysis**: Inspect the actual implementation in the workspace before diagnosing. Cross-reference callers, signal/slot signatures, and unit tests.
+3. **Preserve Design & Safety Mandates**:
+   - Maintain 100% vector SVG rendering (`flashdock/ui/icon_assets.py`) — zero raw unicode emoji stickers.
+   - Maintain 100% non-blocking GUI execution — zero synchronous subprocess or heavy disk I/O on the main PySide6 thread.
+   - Maintain zero external C-extension dependencies for core parsers (pure-Python standard library for RSA-2048, LZ4, Protobuf OTA payload, and GKI headers).
+
+---
+
+## PILLAR 1: FAILURE MODE & EDGE-CASE ERROR ANALYSIS
+
+Perform a deep-dive static and architectural audit across the following four domains. Trace every execution path under worst-case hardware, OS, and user conditions:
+
+### 1.1 Subprocess, Pipe I/O & Archive Parser Hazards
+- **Pipe Buffer Deadlocks (`flashdock/tools/runner.py`, `adb.py`, `fastboot.py`)**:
+  - Audit how `subprocess.run` and `subprocess.Popen` capture `stdout` and `stderr`. During multi-gigabyte `super.img` sparse writes or verbose `adb logcat` / `fastboot` streams, check if sequential reading or unbuffered pipes can exhaust the 64 KB Win32 anonymous pipe buffer and deadlock the child process.
+- **Zombie Processes & Orphaned Subtrees (`runner.py`, `scrcpy.py`, `flash_engine.py`)**:
+  - When a user yanks the USB cable mid-flash, cancels a task, or closes FlashDock, verify whether `adb.exe`, `fastboot.exe`, or `scrcpy.exe` child processes hang indefinitely in the background holding USB/COM handles. Check if `subprocess.TimeoutExpired` handlers properly terminate the entire process tree (e.g., via Win32 Job Objects or `taskkill /F /T /PID`) rather than leaving zombie children.
+- **Pure-Python Parser Stalls & Memory Exhaustion (`payload_dumper.py`, `lz4_util.py`, `return_stock.py`, `unisoc.py`)**:
+  - **`payload_dumper.py`**: Audit varint decoding (`_read_varint`), protobuf wire-type skipping, and `bz2`/`lzma` decompression streams against truncated or corrupted `.bin` / `.zip` files. Verify that an unexpected EOF or malformed manifest length cannot trigger an infinite loop (`while True` reading `b""`) or allocate a multi-gigabyte `bytearray` in RAM all at once.
+  - **`lz4_util.py`**: Audit block and frame decompression for maliciously crafted or corrupted match offsets (`offset == 0` or `offset > len(dst)`), overlapping copy loops, and unvalidated uncompressed size headers in Samsung `.tar.md5` archives.
+  - **`return_stock.py` & `rom_flasher.py`**: Check `zipfile` and `tarfile` extraction routines for Zip-Slip (path traversal via `../`), disk space exhaustion in `tempfile.TemporaryDirectory`, and unclosed file handles on extraction failure.
+
+### 1.2 Concurrency, Thread Safety & Qt6 Lifecycle Bugs
+- **Hardware Polling vs. Active Flashing Race Conditions (`device_monitor.py`, `device_manager.py`, `flash_shield.py`, `runner.py`)**:
+  - Audit the synchronization between `DeviceMonitorWorker` (1.5s polling loop), `DeviceManager`, and active flashing workers (`FlashEngineWorker`, `RomFlashWorker`, `GsiFlashWorker`, `RootFlashWorker`, `BackupWorker`, `UnisocWorker`).
+  - Verify whether a Time-of-Check to Time-of-Use (TOCTOU) race exists where `DeviceMonitorWorker` fires `adb devices` or `fastboot devices` at the exact millisecond a screen worker initiates a partition write or bootloader reboot—causing USB bus contention or `fastboot` command failure.
+  - Check if `acquire_flash_lock()` / `release_flash_lock()` is thread-safe (protected by a `threading.Lock` or counting semaphore) and guaranteed to release even if an unhandled exception occurs inside a worker thread.
+- **`QThread` Lifecycle & C++ Teardown Violations (`main_window.py` & all `ui/screens/*.py`)**:
+  - Audit every custom `QThread` subclass across all screens (`flash_rom_screen.py`, `root_screen.py`, `backup_screen.py`, `mtk_unisoc_screen.py`, `downloads_screen.py`, `sideload_screen.py`).
+  - Identify any local `QThread` references that can be garbage-collected by Python while the underlying Qt C++ thread is still running (`QThread: Destroyed while thread is still running`), or threads that are not cooperatively stopped and waited on (`wait()`) during `MainWindow.closeEvent()`.
+- **High-Frequency Telemetry UI Starvation (`side_terminal.py`, `logger/__init__.py`)**:
+  - Trace what happens when a background worker emits hundreds of `log_emitted` signals per second. Check if `SideTerminalWidget` performs synchronous DOM/HTML insertion and `QPlainTextEdit` re-layout on every single line without line-count capping (`maximumBlockCount`) or 30–60 Hz timer batching, which can freeze the Qt event loop.
+
+### 1.3 Hardware Protocol & Low-Level Recovery Edge Cases
+- **Fastboot vs. FastbootD State Ambiguity (`device.py`, `fastboot.py`, `rom_flasher.py`)**:
+  - Verify how `is-userspace` is queried and cached. If a device transitions from Bootloader (`fastboot`) to Userspace (`fastbootd`) during dynamic partition (`super`, `system`, `product`) flashing, verify that FlashDock re-validates the mode and waits for USB re-enumeration before issuing `fastboot flash` or `fastboot resize-logical-partition`.
+- **Interrupted A/B Slot Switching & Unbootable States (`main_window.py`, `bootloop_fixer.py`, `flash_engine.py`)**:
+  - Audit `set_active_slot` / `--set-active` execution. Check how FlashDock handles bootloaders that report `Slot _b is unbootable` or require `fastboot: usage: unknown command` fallback syntax (`fastboot set_active b` vs `fastboot --set-active=b`).
+- **Partial `vbmeta` & Anti-Red-State Writes (`unisoc.py`, `rom_flasher.py`, `bootloop_fixer.py`)**:
+  - Audit `generate_disabled_vbmeta()` and `flash_vbmeta_disabled()`. Verify that the generated 256-byte AVB 2.0 header (`AVB0`) has the exact big-endian magic, version, and flags offset (`offset 123 = 0x03`) required by strict BootROMs, and check what happens if `vbmeta_system` or `vbmeta_vendor` remain enabled while root `vbmeta` is disabled.
+- **Driver Elevation & Raw Partition Dump Edge Cases (`tools_manager.py`, `backup.py`)**:
+  - In `tools_manager.py`: Audit `_execute_pnputil_install()` and PowerShell `-Verb RunAs` elevation. Check for path-escaping bugs when workspace paths contain spaces or apostrophes, non-English Windows locale output where `"Failed to add"` is translated, and `pnputil` exit code `3010` (`ERROR_SUCCESS_REBOOT_REQUIRED`) being misinterpreted as a failure.
+  - In `backup.py`: Audit raw partition dumping (`dd if=/dev/block/by-name/...`) over ADB in both rooted System mode (`su -c`) and custom Recovery mode (`uid=0`). Verify that binary/stdout corruption (CRLF `\r\n` translation on Windows) cannot corrupt dumped `.img` files and invalidate SHA-256 calibration backups.
+
+### 1.4 Python 3.10–3.14 Compatibility & Typing Audit
+- **Python 3.14 Strictness**:
+  - Audit `tarfile.extractall()` calls for Python 3.12–3.14 PEP 706 `filter="data"` requirements and deprecation/security behavior.
+  - Audit `winreg` key enumeration loops in `device_monitor.py` to ensure `winreg.OpenKey` handles are deterministically closed via context managers (`with winreg.OpenKey(...)`) so registry handles never leak across thousands of 1.5s polling cycles.
+  - Check `ctypes` windll calls, type annotations (`from __future__ import annotations`), and `PySide6` `@Slot` decorators for signature mismatches that cause silent signal drop-outs in Qt 6.10.
+
+---
+
+## PILLAR 2: DEPENDENCY, BINARY & ENVIRONMENT AUDIT
+
+1. **Packaging & PyInstaller Spec (`requirements.txt`, `flashdock.spec`, `scripts/release_build.py`)**:
+   - Inspect `flashdock.spec` and `requirements.txt`. Verify that all new modules (`payload_dumper`, `lz4_util`, `sideload`, `unisoc`, `header_inspector_dialog`, `reboot_switchboard`, etc.) and required Qt6 plugins (`Qt6Svg`, `qsvg.dll`, `qwindows.dll`) are explicitly bundled so the standalone `FlashDock.exe` never crashes with `ModuleNotFoundError` or blank SVG icons on a clean Windows machine without Python installed.
+2. **External Toolchain Sandboxing & Verification (`tools_manager.py`, `constants.py`)**:
+   - Audit how `adb.exe`, `fastboot.exe`, and `scrcpy.exe` are resolved (`data/tools/platform-tools/` vs. system `PATH`).
+   - Check if `PATH` hijacking (DLL/binary planting in the working directory) is possible, and verify how FlashDock handles corrupted downloads or partial zip extractions when auto-installing `platform-tools`.
+3. **Windows OS & Security Environment (`scripts/sign_app.ps1`, `scripts/dist_helpers/*.bat`)**:
+   - Audit `sign_app.ps1` and the `.bat` helper launchers for PowerShell execution policy blocks, non-admin certificate store errors, and NTFS `Zone.Identifier` alternate data stream stripping.
+
+---
+
+## PILLAR 3: CONCRETE REMEDIATION & CODE HARDENING
+
+Execute fixes across the codebase using defensive engineering patterns:
+- Thread-safe reentrant locks (`threading.RLock` / `QMutexLocker`) around shared state and flash locks.
+- Deterministic resource cleanup (`with` context managers for files, `winreg` keys, temp directories, and flash locks).
+- Non-blocking pipe readers or bounded timeouts with process-tree termination on subprocess hangs.
+- Strict input/header bounds checking before memory allocation in binary parsers.
+
+---
+
+## PILLAR 4: ARCHITECTURAL & FEATURE ADVANCEMENTS (v1.5.0 UPGRADES)
+
+Implement and integrate the following four **FlashDock v1.5.0** architectural upgrades directly into the codebase:
+
+1. **Event-Driven Win32 Hardware Notifications (Replacing/Augmenting 1.5s Polling)**:
+   - Implement a hybrid `DeviceMonitorWorker` that hooks into native Windows `WM_DEVICECHANGE` (`DBT_DEVICEARRIVAL`, `DBT_DEVICEREMOVECOMPLETE`) or uses event-driven signaling, reducing idle CPU/registry polling while triggering instant (<50ms) hardware state resolution when a BROM/EDL/Fastboot device is plugged in.
+2. **Zero-Copy `mmap` Streaming in Binary Extractors (`payload_dumper.py` & `lz4_util.py`)**:
+   - Refactor `PayloadDumper` and `LZ4Util` to support Python's `mmap.mmap` and `memoryview` zero-copy slices when reading local firmware archives, eliminating redundant buffer copies and maximizing NVMe extraction throughput.
+3. **Low-Level Protocol Layer Expansion (`flashdock/tools/usb_transport.py`, `mtk.py`, `unisoc.py`)**:
+   - Implement a pure-Python `ctypes` WinUSB / SetupAPI / Serial transport abstraction (`flashdock/tools/usb_transport.py`) capable of performing real hardware handshakes (Qualcomm Sahara Hello packet `0x01`, MTK BROM `0xA0 0x0A 0x50 0x05` echo check, and Unisoc HDLC `0x7E` ping) directly over Win32 `CreateFileW` / `DeviceIoControl` handles without requiring external `pyusb` or `pyserial` C-dependencies.
+4. **Property-Based Binary Parser Fuzzing Suite (`tests/test_fuzz_parsers.py`)**:
+   - Write a comprehensive unit and fuzzing test module that feeds randomized, truncated, bit-flipped, and boundary-value byte streams into `RootingEngine.validate_boot_image()`, `PayloadDumper`, `LZ4Util`, `UnisocUnlockManager`, and `PartitionHeaderInspectorDialog` to guarantee that malformed firmware files never raise unhandled exceptions.
+
+---
+
+## PILLAR 5: IMMEDIATE EXECUTION & AI-3 DISTRIBUTION BUNDLE (CRITICAL OUTPUT FORMAT)
+
+Do NOT stop at diagnosing or suggesting patches. **Execute all fixes and v1.5.0 upgrades immediately**, update the repository files, and format your entire final response as a single, self-contained **Master Implementation & GitHub Distribution Markdown Document** designed to be handed directly to **AI-3** (an automated file-management and GitHub deployment agent).
+
+Structure your final Markdown output using these exact 5 top-level sections:
+
+### Section 1: `# 1. Prioritized Defect & Risk Matrix`
+Output the comprehensive Markdown table ranking every identified bug, vulnerability, or edge-case hazard:
+| ID | Severity (`CRITICAL` / `HIGH` / `MEDIUM` / `LOW`) | File & Line(s) | Failure Trigger / Scenario | Root Cause Analysis | Exact Remediation Implemented |
+
+### Section 2: `# 2. File Manifest & Action Plan for AI-3`
+Provide a strict checklist of every file in the repository that AI-3 needs to `MODIFY`, `CREATE`, or `DELETE`, using exact relative paths from the repository root (e.g., `flashdock/tools/runner.py`, `flashdock/tools/usb_transport.py`, `tests/test_fuzz_parsers.py`, `flashdock.spec`, `README.md`).
+
+### Section 3: `# 3. Complete Production File Contents for AI-3`
+For **every single file** listed in Section 2, output a sub-header with its exact relative path (`### File: path/to/file.py`) followed by the **complete, 100% unabridged file content** inside a fenced code block (or exact, cleanly applicable unified diff if the file exceeds output token limits, though full file replacements are strongly preferred so AI-3 can overwrite files deterministically without merge conflicts).
+
+### Section 4: `# 4. Verification & Test Suite Commands for AI-3`
+Provide the exact PowerShell command sequence for AI-3 to execute after writing the files to verify the build:
+- Running the full existing + new fuzzing test suite (`python -m pytest tests/ -q`).
+- Verifying PyInstaller spec compilation and SHA-256 signing (`python scripts/release_build.py`).
+
+### Section 5: `# 5. Git & GitHub Deployment Instructions for AI-3`
+Provide a copy-pasteable PowerShell script block and release metadata for AI-3 to sync the changes to `https://github.com/klein-sys/own-flasher` (adhering strictly to `.agents/skills/permissioned-github/SKILL.md` and `.agents/skills/engineering/pr/SKILL.md`):
+1. Exact `git status`, `git add`, and structured conventional commit command (`git commit -m "feat(v1.5.0): ..."`).
+2. Version tag creation (`git tag -a v1.5.0 -m "..."`) and `git push origin main --tags` (or `gh` CLI commands targeted to `-R klein-sys/own-flasher`).
+3. A complete, polished **GitHub Release Notes / Pull Request Body** formatted according to `.agents/skills/engineering/pr/SKILL.md` (Summary with Call-Tree, Evidence Before/After, Door: Two-Way, Blast Radius) and `.agents/skills/Readme-gen/SKILL.md`.
+
+Begin your audit and implementation now.
