@@ -88,10 +88,9 @@ Activate and adhere to this skill whenever developing, modifying, refactoring, o
    - Run `python scripts/release_build.py` (or `pytest`).
    - Ensure 100% of tests pass (baseline: 442+ tests passing).
    - Verify that `dist/FlashDock_Dist/FlashDock.exe` and `dist/FlashDock-v<version>-windows-x64.zip` compile cleanly with SHA-256 checksums written to `dist/SHA256SUMS.txt`.
-3. **Triple-Sync Documentation Integrity**:
-   - Keep these 3 documentation files strictly synchronized with the new version, phase number, and test count:
+3. **Documentation Integrity**:
+   - Keep primary documentation files strictly synchronized with the new version, phase number, and test count:
      - `README.md`
-     - `read.md`
      - `handoff.md`
 4. **Git Commit & Push to GitHub**:
    - Stage all updated files: `git add .`

@@ -1,354 +1,321 @@
----
-title: "FlashDock — Personal Android Service Workstation"
-type: documentation
-status: completed
-version: 1.4.0
-phase: Phase 24 (v1.4.0)
-updated: 2026-10-15
-tags:
-  - flashdock
-  - android-workstation
-  - firmware-flasher
-  - gsm-suite
-  - unisoc-token-unlocker
-  - payload-dumper
-  - samsung-lz4
-  - boot-patch-engine
-  - non-scrolling-home-canvas
-  - interactive-workflow-guide
-  - virtual-keypad-fix
-  - terminal-splitter
-  - universal-sideloading
-  - xapk-installer
-  - android-14-bypass
-  - recovery-sideload
-  - debloater
-  - hyperos-fluidity
-  - macos-sequoia
-  - ios18-control-center
-  - app-icon-generation
-  - apple-hig
-  - fastboot
-  - qualcomm-edl
-  - mediatek-brom
-  - unisoc-sprd
----
+# FlashDock
 
-# FlashDock — Personal Android Service Workstation
+> Personal, unified desktop Android service workstation for Windows — featuring automated rooting, bootloader unlocking, multi-format firmware flashing, partition backup/rescue, and low-level chipset recovery.
 
-[![Version](https://img.shields.io/badge/version-1.4.0-0A84FF.svg)](https://github.com/klein-sys/own-flasher)
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-1D1D1F.svg)](https://github.com/klein-sys/own-flasher)
-[![License](https://img.shields.io/badge/license-MIT-30D158.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-480%20%2F%20480%20passing-30D158.svg)](tests/)
-[![Architecture](https://img.shields.io/badge/architecture-HyperOS%202.0%20%2B%20macOS%20Sequoia-BF5AF2.svg)](flashdock/ui/styles.py)
-[![App Icon](https://img.shields.io/badge/icon-macOS%20Squircle%20(1024x1024)-00F2FE.svg)](flashdock/resources/icon.png)
-[![UI Assets](https://img.shields.io/badge/vector%20graphics-100%25%20SVG%20%7C%20Apple%20HIG-FF9500.svg)](flashdock/ui/icon_assets.py)
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.14">
+  <img src="https://img.shields.io/badge/Qt%206%20%2F%20PySide6-41CD52?style=for-the-badge&logo=qt&logoColor=white" alt="PySide6">
+  <img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 10/11">
+  <img src="https://img.shields.io/badge/Android%20Platform-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android">
+</p>
 
-**Personal, one-click Android service workstation for Windows.**
-
-FlashDock handles rooting, bootloader unlocking, fastboot & custom ROM flashing, Samsung Odin tar extraction, Qualcomm EDL 9008 Sahara/Firehose rescue, MediaTek BROM scatter flashing, Unisoc PAC recovery, bootloop unbricking, Play Integrity spoofing, offline partition backup & restore, live screen mirroring (scrcpy), universal APK/XAPK/split bundle sideloading, Android 14+ low-SDK restriction bypass, recovery OTA sideloading, app debloating, hardware button navigation, laptop setup assistance, and interactive troubleshooting — all through a clean, guided macOS Big Sur-inspired interface with multi-chipset repair tool architecture (UnlockTool, TFT, Chimera).
-
-> **Safety Warning:** This tool modifies device firmware. Always back up your critical partitions before flashing. FlashDock is designed strictly for servicing your own devices and does not support carrier bypass, FRP bypass, or IMEI modifications.
+<p align="center">
+  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.4.0-0A84FF.svg?style=flat-square" alt="Version 1.4.0"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-30D158.svg?style=flat-square" alt="License MIT"></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/tests-480%20%2F%20480%20passing-30D158.svg?style=flat-square" alt="Tests 480/480 Passing"></a>
+  <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-macOS%20Big%20Sur%20%2B%20HyperOS%202.0-BF5AF2.svg?style=flat-square" alt="macOS Big Sur + HyperOS 2.0"></a>
+  <a href="flashdock/ui/icon_assets.py"><img src="https://img.shields.io/badge/UI%20Assets-100%25%20Vector%20SVG-FF9500.svg?style=flat-square" alt="100% Vector SVG"></a>
+</p>
 
 ---
 
-## Current Status — Unisoc Token Unlocker, Payload Dumper, Boot Patch Engine & Device Sync (v1.4.0 — Phase 24)
+## Tech Stack
 
-FlashDock features a fully modular, thread-safe, and asynchronous **GSM Suite Core Architecture** elevated with **Xiaomi HyperOS 2.0 fluidity**, **macOS Sequoia glassmorphism**, and **iOS 18 Control Center aesthetics**:
+| Area | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Language & Runtime** | Python 3.10 – 3.14 (`3.14.7` tested) | Standard-library pure-Python engine: RSA PKCS#1 v1.5 signer, LZ4 decompressor, and Protobuf OTA payload unpacker without external C-extensions. |
+| **Desktop UI Framework** | PySide6 (`Qt 6.10`) | Native Windows desktop GUI, non-blocking `QThread` workers, and high-DPI responsive rendering. |
+| **Design System** | macOS Big Sur & Xiaomi HyperOS 2.0 | Slate Obsidian / Soft Frost themes, Apple HIG typography, squircle badges, and 100% dynamic vector SVG icon factory (zero unicode emoji stickers). |
+| **Device Communication** | ADB, Fastboot, FastbootD | Android userspace communication, sparse chunk flashing, and dynamic partition management. |
+| **Low-Level Hardware** | Qualcomm EDL 9008, MediaTek BROM, Unisoc FDL | Emergency COM serial handshake, bootloader bypass, and deep unbrick flashing. |
+| **Hardware Polling** | Win32 Windows Registry | Real-time asynchronous polling of USB hubs (`HKLM\SYSTEM\CurrentControlSet\Enum\USB`) and COM serial devices (`HKLM\HARDWARE\DEVICEMAP\SERIALCOMM`). |
+| **Distribution & Security** | PyInstaller, Authenticode SHA-256 | Standalone Windows executable distribution, Zone.Identifier unblocker scripts, and Smart App Control compliance. |
 
-### Subsystem Architecture Diagram
+---
+
+## Overview
+
+FlashDock replaces the fragmented, untrusted, and dangerous landscape of legacy cracked GSM repair utilities (Odin, SP Flash Tool, Mi Flash, fastboot scripts, manual payload extractors, and ad-hoc driver bundles) with a unified, personal engineering workstation.
+
+Designed specifically for personal device ownership, development, and enthusiast servicing, FlashDock operates strictly locally on your workstation. It wraps complex OEM protocols and fastboot operations in safety gates—mandating calibration backups (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`), checking battery charge ($\ge 30\%$), querying active A/B slot integrity, and rejecting improper bootloader relocks.
+
+---
+
+## Key Features
+
+### 1. Device Diagnostics & FastbootD Live HUD
+* **Real-Time Mode Resolution**: Instantly classifies connected hardware across ADB (System), Bootloader (Fastboot), FastbootD (Userspace dynamic partitions), Recovery, Qualcomm EDL 9008, MediaTek BROM, and Unisoc SPRD.
+* **FastbootD Differentiation**: Displays distinct visual badges for standard Bootloader (`#007AFF` Cobalt) versus FastbootD Userspace (`#00E5FF` Cyan) so dynamic partition writes are never dispatched to incompatible bootloaders.
+* **Hardware & Battery Telemetry**: Queries active slot (`_a` or `_b`), Knox warranty bit, bootloader unlock state, battery level, SoC chipset architecture, and baseband version.
+* **Automated Pre-Flight Checklist**: 18-point safety verification suite ensuring battery reserve, authorized USB debugging, free disk space ($\ge 2\text{ GB}$), and driver handshakes.
+
+### 2. Dual-Mode Boot Image Patching & Root Engine
+* **Pre-Patched Direct Import Mode**: Directly loads, validates kernel headers, and flashes existing Magisk (`magisk_patched_*.img`) or KernelSU (`kernelsu_*.img`) images straight to the target slot.
+* **Device-Assisted ADB Pipeline**: Automatically pushes stock `boot.img` or `init_boot.img` to `/sdcard/Download/`, executes the Magisk/KernelSU patch script via ADB shell, and retrieves the patched output into `data/tools/patched_boot/`.
+* **Pure-Python GKI Header Parser**: Validates `boot_img_hdr` versions (v0 through v4) and enforces targeting `init_boot.img` on Android 13+ GKI kernels.
+* **Play Integrity Fixer & Spoofer**: Real-time attestation diagnostics (`BASIC`, `DEVICE`, `STRONG`), built-in certified OEM fingerprint profile vault with 1-click injection to `/data/adb/pif.json`, and automated Play Services cache flush.
+* **Root Modules Manager**: Inspects `/data/adb/modules`, toggles modules, and provides an Emergency Bootloop Kill-Switch (`.disable`).
+
+### 3. Unisoc 1-Click Token Unlocker & Anti-Red-State Shield
+* **Pure-Python Cryptographic Signer**: Queries `fastboot oem get_identifier_token` on Unisoc/Spreadtrum devices (Tecno Pop, Infinix Smart, itel, Realme C, Motorola E), signs the 64-character token using an integrated RSA-2048 community private key via PKCS#1 v1.5 with SHA-256, and dispatches `fastboot flashing unlock_bootloader signature.bin`.
+* **Anti-Red-State Shield**: One-click deployment of custom disabled `vbmeta.img` (`fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img`) to prevent immediate bootloops upon unlocking.
+* **Transsion OEM Integration**: Integrated directly into Tecno, Infinix, and itel brand workflow guides.
+
+### 4. Built-in `payload.bin` Dumper & Samsung `.lz4` Decompressor
+* **Streaming OTA Dumper**: Pure-Python varint/protobuf parser for Android Delta/Full OTA `payload.bin` archives. Extracts individual critical partitions (`boot.img`, `init_boot.img`, `recovery.img`, `vbmeta.img`) in seconds without unpacking multi-gigabyte ZIP archives.
+* **Chunked Samsung LZ4 Decompressor**: Pure-Python byte-stream decoder to decompress Samsung Odin `AP_*.tar.md5` archives directly into clean `.img` files.
+
+### 5. Multi-Format Factory Restore & Custom ROM Flashing
+* **Format Expansion**: Natively parses, extracts, and validates `.zip`, `.tgz` / `.tar.gz` (Xiaomi fastboot ROMs), `.tar.md5` (Samsung Odin), `.pac` (Unisoc), and standalone `payload.bin` images.
+* **Chunked Sparse Flasher**: Flashes partition images with real-time byte progress, dry-run safety verification, and hash checking.
+* **1-Click A/B Slot Switchboard**: Immediate slot toggling (`fastboot --set-active=other`) directly from the Reboot Switchboard and Phone Control Panel for instant bootloop rollback.
+
+### 6. Emergency Rescue, Sideloading & Workstation Utilities
+* **Offline Recovery Dumps**: Partition dumping in custom recovery mode (`TWRP`/`OrangeFox`) where ADB has root permissions (`uid=0`), without requiring `su -c`.
+* **Universal Sideload & App Manager**: Drag-and-drop installer for APKs, split XAPKs, and APKS bundles with Android 14+ low-target-SDK bypass (`--bypass-low-target-sdk-block`) and recovery OTA sideloading.
+* **Safe Non-Root Debloater**: Disables carrier and OEM bloatware packages via `pm uninstall -k --user 0` with categorized presets.
+* **Low-Latency Screen Mirroring (`scrcpy`)**: High-speed display mirroring and mouse/keyboard input control launched with console popup suppression (`CREATE_NO_WINDOW`).
+* **OEM Driver & Toolchain Manager**: One-click updates for Android platform-tools and driver INF installation via `pnputil` with automated PowerShell UAC elevation.
+
+---
+
+## Subsystem Architecture
 
 ```mermaid
 flowchart TD
-    subgraph UI_Layer["macOS Big Sur Workstation UI (PySide6)"]
-        TOP_BAR["Segmented Bar (OEMs: Xiaomi, Samsung, Transsion | Chipsets: MTK, Qualcomm, Unisoc)"]
-        OPS_PANEL["Left Operations Panel (15 Service Utilities & Wizards)"]
-        CONSOLE["Right Activity Terminal (Read-Only Color Telemetry: INFO, WARN, SUCCESS, ERROR)"]
-        STATUS["Bottom Status Bar (Persistent Connection Badge & QProgressBar)"]
+    subgraph UI_Layer["User Interface Layer (PySide6 & macOS Big Sur)"]
+        HUD["Live Device HUD (FastbootD / ADB / EDL Indicator)"]
+        CANVAS["Non-Scrolling 4-Column Home Canvas (16 Workstation Cards)"]
+        OPS["Left Operations Panel (Phone Control Panel)"]
+        CONSOLE["Live Telemetry Terminal (Resizable Splitter, Min 240px)"]
     end
 
-    subgraph Monitor_Engine["Subsystem 1: Hardware Polling Engine (QThread)"]
-        REG_SCAN["Windows Registry Enumeration (HKLM USB & SERIALCOMM)"]
-        VID_PID["VID/PID Matcher (MTK 0E8D:0003, EDL 05C6:9008, SPRD 1782:4D02)"]
-        DAEMON_SCAN["Daemon Enumeration (ADB Devices & Fastboot Devices)"]
-        RESOLVE["Primary Mode Resolution (Emergency Ports > Fastboot > ADB)"]
+    subgraph Workers["Asynchronous Worker Thread Pool (QThread)"]
+        DEV_MON["DeviceMonitorWorker (Registry USB & SerialCOMM Polling)"]
+        FLASH_WRK["RomFlashWorker & FlashEngineWorker (Chunked Writes)"]
+        ROOT_WRK["RootFlashWorker (Kernel Inspection & Image Patching)"]
+        BACKUP_WRK["BackupWorker (EFS/NVRAM Calibration Dumps)"]
+        UNISOC_WRK["UnisocWorker (RSA Token Signing & PAC Extraction)"]
     end
 
-    subgraph Diag_Engine["Subsystem 2: Diagnostics & Telemetry Engine"]
-        ADB_PROPS["Batch getprop (Model, Brand, SDK, Baseband, Security Patch)"]
-        KNOX_ROOT["Root Inspection (su, Magisk, KSU, APatch) & Knox Warranty Bit"]
-        FB_VARS["Fastboot getvar all (Active Slot _a/_b, Unlocked, Secure Boot, CID)"]
+    subgraph Core_Engines["Core Business Logic Subsystems"]
+        DEV_MGR["DeviceManager (State Resolution & Cache)"]
+        ROOT_ENG["RootingEngine (GKI Validation & Framework Patching)"]
+        STOCK_ENG["ReturnStockEngine (ZIP, TGZ, TAR.MD5, PAC Manifest Parser)"]
+        UNISOC_ENG["UnisocUnlockManager (Pure-Python RSA-2048 PKCS#1 v1.5)"]
+        RESCUE_ENG["BootloopFixer & SafetyChecklist (Active Slot & ARP Guard)"]
+        INTEG_ENG["PlayIntegrityFixer (Fingerprint Vault & PIF Injector)"]
     end
 
-    subgraph Flash_Engine["Subsystem 3: Flashing & Calibration Backup Engine (QThread)"]
-        PRE_BACKUP["Mandatory Calibration Backup (efs, nvram, nvdata, persist, sec_efs)"]
-        HASH_VAL["SHA-256 Checksum Validation (Pre- & Post-Flash)"]
-        CHUNK_FLASH["Chunked Sparse Image Flasher (boot, init_boot, super, system)"]
-        BL_CTRL["Bootloader Unlock / Relock Controller"]
+    subgraph Toolchain["Native Toolchain & Protocol Handlers"]
+        ADB_TOOL["ADB Interface (Process Shielding & Prop Parser)"]
+        FB_TOOL["Fastboot Interface (Prefix Stripping & Slot Ordering)"]
+        DUMPER["PayloadDumper (Pure-Python Streaming OTA Unpacker)"]
+        LZ4_UTIL["LZ4Util (Pure-Python Block/Frame Decompressor)"]
+        RUNNER["Process Runner (CREATE_NO_WINDOW & UTF-8 Decoder)"]
     end
 
-    subgraph Vector_Assets["Subsystem 4: Vector SVG Icon Engine"]
-        SVG_RENDER["Native QSvgRenderer (37+ Lucide/Feather/Apple HIG Vectors)"]
-        DYNAMIC_TINT["Dynamic Color Tinting (Accent Blue, Amber, Emerald, Coral)"]
-        LIFECYCLE["On-Demand QIcon Factory (Lifecycle-Safe C++ Destruction)"]
+    subgraph Hardware["Connected Device & System Bus"]
+        WIN_REG["Windows Registry (HKLM USB / COM Enumeration)"]
+        USB_BUS["Physical USB 2.0/3.0 Controller"]
+        DEVICE["Android Device (System, Fastboot, FastbootD, BROM, EDL)"]
     end
 
-    REG_SCAN --> VID_PID
-    DAEMON_SCAN --> RESOLVE
-    VID_PID --> RESOLVE
-    RESOLVE -->|Signals: device_connected| UI_Layer
-    UI_Layer -->|Triggers Diagnostics| Diag_Engine
-    Diag_Engine -->|Populates| OPS_PANEL
-    UI_Layer -->|Dispatches FlashTask| Flash_Engine
-    Flash_Engine -->|progress_changed / log_emitted| STATUS
-    Flash_Engine -->|log_emitted| CONSOLE
-    Vector_Assets -->|Vector Badges & Icons| UI_Layer
+    WIN_REG --> DEV_MON
+    USB_BUS --> DEV_MON
+    DEV_MON -->|device_connected| DEV_MGR
+    DEV_MGR --> HUD
+    DEV_MGR --> OPS
+
+    CANVAS -->|Operator Trigger| Workers
+    Workers --> Core_Engines
+    Core_Engines --> Toolchain
+    Toolchain --> RUNNER
+    RUNNER --> DEVICE
+    Workers -->|Console Stream| CONSOLE
 ```
 
-### Flashing Execution & Calibration Backup Workflow
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Operator
-    participant UI as FlashDock UI
-    participant Runner as FlashLock Runner
-    participant Worker as FlashEngineWorker (QThread)
-    participant Fastboot as Fastboot Binary
-    participant FS as Local Storage (data/backups/)
-    participant Device as Android Device
-
-    User->>UI: Select Partition & Click "Flash Image"
-    UI->>Runner: acquire_flash_lock()
-    Runner-->>UI: Lock Acquired (Blocks Concurrent Writes)
-    UI->>Worker: execute_task(FlashTask)
-    Worker->>Worker: Validate File Existence & Hash
-
-    rect rgb(240, 248, 255)
-        note over Worker,FS: Mandatory Pre-Flash Safety Backup
-        Worker->>UI: status_changed("Backing up calibration data...")
-        Worker->>Device: Read EFS / NVRAM / NVDATA / Persist
-        Device-->>Worker: Raw Partition Bytes
-        Worker->>FS: Save Calibration Dump (.img + .sha256)
-        Worker->>UI: log_emitted("SUCCESS", "Saved EFS/NVRAM backup")
-    end
-
-    rect rgb(255, 250, 240)
-        note over Worker,Device: Chunked Partition Writing
-        Worker->>UI: status_changed("Flashing partition...")
-        Worker->>Fastboot: fastboot flash <partition> <image>
-        loop Data Upload & Progress
-            Fastboot->>Device: Write Sparse Data Chunk
-            Fastboot-->>Worker: Progress Bytes Stream
-            Worker->>UI: progress_changed(bytes, total, pct)
-            Worker->>UI: log_emitted("INFO", chunk_progress)
-        end
-        Device-->>Fastboot: Flash OKAY
-        Fastboot-->>Worker: Exit Code 0 (Success)
-    end
-
-    Worker->>Runner: release_flash_lock()
-    Worker->>UI: flash_finished(True, "Flashing completed successfully.")
-    UI->>User: Display Success Badge & Enable Reboot
-```
-
-### Hardware Mode Transitions & Emergency Recovery States
-
-```mermaid
-stateDiagram-v2
-    [*] --> PowerOff: Device Powered Off
-
-    PowerOff --> EDL_9008: Test Point / EDL Cable / EDL Key Combo (Qualcomm)
-    PowerOff --> MTK_BROM: Vol+ / Vol- & USB Plug (MediaTek BROM 0E8D:0003)
-    PowerOff --> SPRD_FDL: Vol- & USB Plug (Unisoc FDL 1782:4D02)
-    PowerOff --> Fastboot: Power + Vol- (Standard Android Bootloader)
-    PowerOff --> Samsung_Download: Vol+ + Vol- & USB Plug (Samsung Odin Mode)
-    PowerOff --> System: Normal Boot
-
-    System --> ADB_Mode: USB Debugging Authorized (Port 5037)
-    System --> Recovery: Power + Vol+ or adb reboot recovery
-
-    ADB_Mode --> Fastboot: adb reboot bootloader
-    ADB_Mode --> FastbootD: adb reboot fastboot
-    ADB_Mode --> Recovery: adb reboot recovery
-    ADB_Mode --> EDL_9008: adb reboot edl (Qualcomm)
-
-    Fastboot --> FastbootD: fastboot reboot fastboot (Dynamic Partitions)
-    FastbootD --> Fastboot: fastboot reboot bootloader
-    Fastboot --> System: fastboot reboot
-    FastbootD --> System: fastboot reboot
-
-    EDL_9008 --> System: Firehose XML / Sahara Unbrick Complete
-    MTK_BROM --> System: SLA/DAA Auth Bypass & Scatter Flash Complete
-    SPRD_FDL --> System: PAC Image Flashed via HDLC FDL2
-    Samsung_Download --> System: PIT / TAR.MD5 Flashed via Odin Protocol
-
-    Recovery --> System: Reboot System Now
-    Recovery --> Sideload: Apply update from ADB (adb sideload)
-    Sideload --> System: Update Complete
-```
-
-### Five Major Workstation Subsystems:
-1. **Connection Monitoring & Hardware Polling Engine (`device_monitor.py`)**:
-   - Asynchronous `QThread` scanning USB/COM ports via zero-dependency Windows Registry enumeration.
-   - Comprehensive Hardware ID (VID/PID) resolution: ADB, Fastboot, MediaTek BROM (`0E8D:0003`), MTK Preloader (`0E8D:2000`), Qualcomm EDL 9008 (`05C6:9008`), Qualcomm Diag (`05C6:9006`), Unisoc SPRD U2S Diag (`1782:4D00`), and FDL Download (`1782:4D02`).
-   - Multi-tiered resolution prioritizing emergency recovery ports over standard user-space daemons.
-2. **Device Diagnostics & Info Extraction Engine (`diagnostics_engine.py`)**:
-   - Deep ADB property extraction: brand, model, manufacturer, build display, Android OS, baseband, security patch level, and battery level/temperature.
-   - Root detection (`su` binary verification, Magisk/KSU version) and Samsung Knox warranty bit tracking.
-   - Deep Fastboot `getvar all` parsing: active partition slot (`_a`/`_b`), bootloader unlocked status, Secure Boot state, CID, and max-download-size with structured fallback dictionaries.
-3. **Firmware Flashing, Partition Management & Safety Backups (`flash_engine.py`)**:
-   - Decoupled `QThread` external binary execution with byte-accurate progress reporting.
-   - Mandatory calibration pre-backups targeting telemetry blocks (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) with SHA-256 verification.
-   - Chunked single-image flashing (`boot`, `init_boot`, `recovery`, `super`, `system`) with pre-flash checksum verification.
-   - Bootloader unlock (`flashing unlock`, `oem unlock`) and relock controllers.
-4. **Vector Icon Asset Manager & Image Provider (`icon_assets.py` & `brand_assets.py`)**:
-   - Zero informal unicode emoji stickers in the UI. 100% vector SVG rendering adhering to Apple Human Interface Guidelines.
-   - 37+ crisp, high-DPI icons (`search`, `checklist`, `warning`, `unlock`, `lock`, `root`, `flash`, `modules`, `diagnostics`, `integrity`, `backup`, `unbrick`, `return_stock`, `mtk_unisoc`, `scrcpy`, `downloads`, `logs_help`, `tools`, etc.) with dynamic tinting.
-   - Clean, on-demand `QIcon` generation that prevents Qt C++ teardown access violations on Windows Python 3.14.
-5. **UI Architecture & macOS Big Sur Styling (`main_window.py` & `styles.py`)**:
-   - Top Segmented Bar for high-volume OEMs (Xiaomi, Samsung, Transsion, Universal Android) and Universal Chipsets (MediaTek BROM, Qualcomm EDL, Unisoc SPRD).
-   - Left Operations Panel: Device Diagnostics, Partition Backup, Flash Firmware, Bootloader Tools, and Reboot Shortcuts.
-   - Right Console Pane: Persistent read-only terminal with color-coded stream prefixes (`[INFO]` in Blue, `[WARN]` in Amber, `[SUCCESS]` in Green, `[ERROR]` in Red).
-   - Bottom Status Bar: Persistent USB connection badge and smooth `QProgressBar`.
-   - Authentic macOS Big Sur design tokens: `#F5F5F7` canvas, `#FFFFFF` rounded containers with subtle borders, `#007AFF` accent, and SF Pro typography hierarchy.
-
-| # | Phase / Feature | Domain | Status | Key Deliverables |
-|---|---|---|---|---|
-| 1 | **Foundation & Architecture** | Core | Done | Rotating logger, thread-safe config, online/offline monitor, serial masking |
-| 2 | **ADB & Fastboot Engine** | Device | Done | Subprocess wrappers, fastboot device tracking, Phone Control Panel |
-| 3 | **Safety Checklist & Distribution** | Rescue | Done | Pre-flight safety checklist, battery/lock gates, PyInstaller build spec |
-| 4 | **Bootloader Unlock Wizard** | Flashing | Done | Brand-specific unlock guides: Google Pixel, Xiaomi (token countdown), Samsung, Tecno (HiOS), Infinix (XOS), itel (itelOS), OnePlus, Motorola |
-| 5 | **Partition Backup & Restore** | Rescue | Done | Slot-aware partition backups (`boot`, `init_boot`, `vbmeta`, `efs`, `persist`) with SHA-256 verification |
-| 6 | **Universal Rooting Wizard** | Root | Done | Magisk (Stable/Alpha), KernelSU Next, APatch, SukiSU; boot extraction & auto-patching |
-| 7 | **Root Modules & Kill-Switch** | Root | Done | Offline module repository, batch flashing, emergency bootloop recovery kill-switch |
-| 8 | **Return to Stock & Anti-Relock Gate** | Flashing | Done | Factory image unpacker (Google, Xiaomi TGZ, Samsung TAR/MD5); strict anti-rollback check |
-| 9 | **ROM, GSI & Recovery Flasher** | Flashing | Done | Fastboot ROM package parser, sparse chunk flasher, Treble GSI flasher, FastbootD switcher |
-| 10 | **Diagnostics, Debloater & Tweaks** | Device | Done | Package manager debloater (safe user-0 disable), battery health telemetry, wireless ADB |
-| 11 | **MediaTek & Unisoc Engine** | Flashing | Done | MTK BROM scatter parser, SLA/DAA auth bypass, Unisoc PAC extractor, FDL HDLC protocol |
-| 12 | **Downloads & OEM Driver Manager** | Device | Done | Driver installer (Google, Samsung, Qualcomm 9008, MTK VCOM, Transsion USB, Unisoc SPD), platform-tools downloader |
-| 13 | **Emergency Unbrick & EDL Flasher** | Rescue | Done | Qualcomm Emergency Download (EDL 9008), Samsung Odin PIT/TAR, MTK SP Flash, Fastboot unbrick |
-| 14 | **Play Integrity & Fingerprint Spoofer** | Root | Done | PIF `pif.json` manager, custom `keybox.xml` injector, banking root-hiding card grid |
-| 15 | **Logs, Telemetry & Troubleshooting** | Device | Done | Rotating application log viewer, device logcat streamer, kernel dmesg, guided interactive triage |
-| 16 | **Production Hardening & Release** | Release | Done | Automated System Self-Test, non-fatal Crash Reporter, release packaging & SHA-256 checksums |
-| 17 | **GSM Suite Core Subsystems** | Core / UI | Done | 4-subsystem engine (Hardware Polling QThread, Deep Diagnostics, FlashEngineWorker, macOS Big Sur UI) |
-| 18 | **Vector SVG Icon Architecture** | UI / UX | Done | Centralized vector SVG asset engine, 100% unicode emoji sticker elimination across 13 screens and 11 widgets |
-| 19 | **System Hardening & Brick-Prevention** | Security | Done | Active slot desync guard, ARP boot header verification, low space abort, sanitized crash reporter |
-| 20 | **Next-Gen Aesthetic & Squircle Icon** | UI / UX | Done | HyperOS 2.0 fluidity, macOS Sequoia glassmorphism, iOS 18 Control Center badge chips, bespoke squircle app icon |
-| + | **Transsion Brands Engine** | Brands | Done | Complete handlers for Tecno (HiOS), Infinix (XOS), itel (itelOS), and Carlcare firmware portal |
-| + | **Vector Brand Badges** | UI / UX | Done | Pixel-perfect vector SVG brand logos (Google, Samsung, Xiaomi, Tecno, Infinix, itel, etc.) |
-| + | **Smart Connection & Keys Helper** | Controls | Done | Interactive sidebar connection troubleshooter (USB debugging/RSA key) & contextual Hardware Key Guide |
-| + | **Laptop Setup Wizard** | Workstation | Done | 4-step wizard for platform-tools, OEM drivers, laptop USB power/sleep settings & live test |
+### Subsystem Responsibilities
+1. **Hardware Polling Engine (`DeviceMonitorWorker`)**: Zero-dependency background thread polling Windows Registry keys (`HKLM\SYSTEM\CurrentControlSet\Enum\USB` and `HKLM\HARDWARE\DEVICEMAP\SERIALCOMM`) every 1.5 seconds. Reconciles hardware states without flooding ADB or Fastboot daemon sockets.
+2. **Core Engines**: Stateless business modules enforcing calibration dumps, GKI boot header integrity, and cryptographic token generation.
+3. **Toolchain Wrappers**: Standardized execution harnesses featuring explicit UTF-8 encoding shields (`errors="replace"`) and console window suppression (`CREATE_NO_WINDOW`).
+4. **Vector SVG Engine (`icon_assets.py`)**: 100% vector SVG rendering using native `QSvgRenderer` with dynamic color tinting across Dark (`#0D1117`) and Light (`#F0F2F5`) themes.
 
 ---
 
-## Complete Workstation Navigation Matrix
+## Project Structure
 
-FlashDock organizes its 15 workstation utilities across four curated categories:
-
+```text
+FlashDock/
+├── flashdock/
+│   ├── brands/               # OEM brand handlers (Google, Xiaomi, Samsung, Transsion, etc.)
+│   ├── core/                 # Core domain logic
+│   │   ├── backup.py         # Partition calibration dumping & ADB user backups
+│   │   ├── bootloop_fixer.py # Slot rollback, verity bypass, and safe mode recovery
+│   │   ├── device.py         # DeviceInfo model & mode classification
+│   │   ├── device_manager.py # Thread-safe hardware state coordinator
+│   │   ├── return_stock.py   # Multi-format factory restore manifest engine
+│   │   ├── rom_flasher.py    # Custom ROM & GSI partition flashing engine
+│   │   ├── rooting.py        # Dual-mode boot patching & GKI validation
+│   │   ├── tools_manager.py  # Platform-tools & elevated INF driver installation
+│   │   └── unisoc.py         # Pure-Python RSA-2048 token signer & vbmeta generator
+│   ├── tools/                # Low-level protocol wrappers & extractors
+│   │   ├── adb.py            # Android Debug Bridge subprocess interface
+│   │   ├── fastboot.py       # Fastboot / FastbootD interface with prefix hardening
+│   │   ├── lz4_util.py       # Pure-Python chunked LZ4 block & frame decompressor
+│   │   ├── payload_dumper.py # Pure-Python streaming OTA payload.bin extractor
+│   │   ├── runner.py         # Subprocess runner with UTF-8 shield & window suppression
+│   │   └── scrcpy.py         # Low-latency display mirror process manager
+│   ├── ui/                   # PySide6 desktop interface
+│   │   ├── screens/          # 16 specialized workstation screens
+│   │   │   ├── backup_screen.py
+│   │   │   ├── downloads_screen.py
+│   │   │   ├── flash_rom_screen.py
+│   │   │   ├── integrity_screen.py
+│   │   │   ├── mtk_unisoc_screen.py
+│   │   │   ├── return_stock_screen.py
+│   │   │   ├── root_screen.py
+│   │   │   ├── sideload_screen.py
+│   │   │   ├── unbrick_screen.py
+│   │   │   └── unlock_screen.py
+│   │   ├── widgets/          # Reusable workstation UI components
+│   │   │   ├── device_hud.py         # Live status visualizer & FastbootD indicator
+│   │   │   ├── device_selector.py    # Bottom bar serial selection combobox
+│   │   │   ├── flash_shield.py       # Critical operation modal with process locking
+│   │   │   ├── key_guide_dialog.py   # Hardware key combos & virtual keypad (ADB)
+│   │   │   ├── phone_panel.py        # Left navigation sidebar & quick switchboard
+│   │   │   ├── reboot_switchboard.py # Slot toggle & power mode dispatcher
+│   │   │   ├── side_terminal.py      # Resizable live telemetry terminal
+│   │   │   └── workflow_guide.py     # Interactive 16-tool clickable guide dialog
+│   │   ├── icon_assets.py    # 100% Vector SVG graphics factory
+│   │   ├── main_window.py    # Main workstation canvas & navigation coordinator
+│   │   └── styles.py         # macOS Big Sur & HyperOS design tokens
+│   └── workers/              # Asynchronous QThread background workers
+│       ├── device_monitor.py # Windows Registry & daemon polling loop
+│       └── flash_engine.py   # Flashing and backup worker threads
+├── scripts/                  # Release packaging, signing, and verification scripts
+│   ├── release_build.py      # Automated build, test, signing, and ZIP packaging
+│   ├── sign_app.ps1          # Authenticode SHA-256 certificate generation & signing
+│   └── version_info.txt      # Windows PE version resource descriptor
+├── tests/                    # 480 unit and integration tests across 47 modules
+├── main.py                   # Application entry point
+├── flashdock.spec            # PyInstaller distribution build specification
+└── requirements.txt          # Python dependencies (PySide6, pytest)
 ```
-FlashDock Workstation
-├── Root & Modules
-│   ├── Root my phone (Magisk, KernelSU, APatch, SukiSU)
-│   ├── Manage Modules (Batch install, repository, kill-switch)
-│   └── Fix Play Integrity (PIF spoofing, keybox injection, banking protection)
-├── Flashing & ROMs
-│   ├── Unlock Bootloader (Multi-brand wizards & fastboot)
-│   ├── Return to Stock (Factory images & anti-relock protection)
-│   ├── Flash ROM / GSI (Fastboot ROMs, GSIs, TWRP/OrangeFox)
-│   └── MTK / Unisoc mode (BROM scatter & PAC flasher)
-├── Rescue & Unbrick
-│   ├── Safety Checklist (Pre-flight hardware verification)
-│   ├── Backup / Restore (Critical partition image dumps)
-│   └── Fix bricked phone (Qualcomm 9008 EDL, Odin, SP Flash)
-└── Device & Tools
-    ├── Check my phone (Hardware properties, slot, OS detection)
-    ├── Diagnostics & Tweaks (Debloater, battery health, wireless ADB)
-    ├── Downloads & Tools (Platform-tools, USB drivers, firmware finder)
-    ├── Screen Mirror (Live scrcpy display & keyboard/touch control)
-    ├── Logs & Help (Application telemetry, logcat streamer, triage)
-    ├── Setup Laptop (Platform-tools, USB drivers, laptop power setup)
-    ├── Key Guide (Physical Vol+/Vol-/Power combinations & remote)
-    └── Self-Test (Prerequisites, toolchain, & permission diagnostics)
-```
-
----
-
-## Visual Design System (HyperOS 2.0, macOS Sequoia & iOS 18 Control Center)
-
-- **Bespoke macOS Squircle App Icon**: Master 1024x1024 emblem with continuous curvature squircle container, frosted metallic midnight titanium rim (`#161B22` to `#0B0E14`), and glowing electric cyan (`#00F2FE` to `#4FACFE`) geometric lightning bolt docked into a stylized chipset silhouette. Multi-resolution `.ico` embedded into the Windows binary.
-- **HyperOS 2.0 & iOS 18 Control Center Action Cards**: Action card buttons housed in **30x30px circular chip gradient badges** (Electric Cobalt, Neon Violet, Coral Crimson, Emerald Green, Warm Amber) with crisp `#FFFFFF` vector SVGs, 16px radius containers, and smooth drop shadows (`offset: 0, 4; blur: 16`).
-- **Pill Navigation & Interactive Chips**: Elevated capsule filter pills (`border-radius: 14px; padding: 6px 14px`) and sidebar navigation pills with fluid hover transitions.
-- **Window Canvas & Depth Hierarchy**: Warm Slate-Mica (`#ECEFF4` / `#F0F2F5`) and floating White Frost cards (`#FFFFFF` / `#F8F9FA`) in Light Mode; Deep Space Obsidian (`#0D1117`) and elevated Frosted Slate cards (`#181E26` / `#1A212E` with inner border highlight) in Dark Mode.
-- **Recessed Obsidian Console & Form Controls**: Recessed `#080B10` terminal with JetBrains Mono font, glowing status pills (`[INFO]`, `[SUCCESS]`, `[WARN]`, `[ERROR]`, `[CMD]`), squircle text inputs with clear buttons, and elevated pill action triggers (`border-radius: 20px`).
-- **High-DPI Vector Icons**: Native SVG rendering replaces emoji stickers with 37+ crisp, high-DPI vector icons adhering to Apple Human Interface Guidelines.
-- **Offline Shading**: When internet connectivity drops, cloud-dependent buttons automatically dim (`opacity: 0.45; dashed border`) and update tooltips to `"[OFFLINE] Internet connection required"`.
 
 ---
 
 ## Getting Started
 
-### Option A: Standalone Windows Binary (Recommended)
-Download the standalone precompiled release from `dist/`:
-1. Extract `FlashDock-v1.3.2-windows-x64.zip`.
-2. Launch `FlashDock.exe` (or double-click `Run-FlashDock.bat`). No Python installation required!
-3. Verify integrity against `dist/SHA256SUMS.txt`:
-   - `FlashDock.exe`: `2fe8c3d7270933787ad792d1332fb82d64f1f1c704cfbc4e983ae076c7789317`
-   - `FlashDock-v1.3.2-windows-x64.zip`: `69703224c7dcdb8ba796354eda39d4dc2f838c84ff43ae6955662efa4444eb6a`
+### Prerequisites
+* **Operating System**: Windows 10 (Build 19041+) or Windows 11 (64-bit).
+* **Hardware Connection**: Quality USB 2.0 or USB 3.0 cable connected directly to the motherboard port (avoid unpowered USB hubs).
+* **Android Prerequisites**: `USB Debugging` and `OEM Unlocking` enabled under *Settings > Developer Options*.
 
 ---
 
-### Windows Smart App Control & Defender SmartScreen Resolution
+### Option A: Standalone Windows Binary (Recommended)
 
-When downloading open-source binaries on Windows 11 or Windows 10, **Smart App Control (SAC)** or **Microsoft Defender SmartScreen** may show a warning banner (*"Smart App Control blocked an app that may be unsafe"* or *"Windows protected your PC: SmartScreen prevented an unrecognized app from starting"*). This occurs because Microsoft's cloud requires hundreds of thousands of corporate downloads to build automatic reputation for newly compiled binaries.
+1. **Download Release**: Grab the latest release package (`FlashDock-v1.4.0-windows-x64.zip`) from the [Releases](https://github.com/klein-sys/own-flasher/releases) page.
+2. **Extract Archive**: Extract the ZIP archive to a local folder (e.g., `C:\Tools\FlashDock\`).
+3. **Launch Workstation**:
+   * Double-click **`Run-FlashDock.bat`** (automatically strips Windows Mark-of-the-Web `Zone.Identifier` download flags and launches `FlashDock.exe`).
+   * *(Optional)* Double-click **`Install-Certificate.bat`** once to add FlashDock's Authenticode SHA-256 certificate to your local *Trusted Publishers* store to satisfy Windows Smart App Control.
 
-FlashDock includes built-in 1-click tools and an Authenticode digital signature to resolve this instantly:
-
-| Method | Resolution Workflow | When to Use |
-| :--- | :--- | :--- |
-| **1. 1-Click Launcher (Recommended)** | Double-click **`Run-FlashDock.bat`** | Automatically strips the web download flag (`Zone.Identifier`) and launches `FlashDock.exe`. |
-| **2. Install Security Certificate** | Double-click **`Install-Certificate.bat`** | Installs FlashDock's code-signing certificate (`FlashDock-Security-Certificate.cer`) into your local *Trusted Publishers* store so Smart App Control verifies the digital signature. |
-| **3. SmartScreen "More Info"** | Click **More info** → **Run anyway** | Standard Windows Defender SmartScreen bypass for downloaded files. |
-| **4. Manual File Unblock** | Right-click `FlashDock.exe` → **Properties** → check **Unblock** → **OK** | Permanently unblocks the executable in Windows Explorer (or double-click `Unblock-FlashDock.bat`). |
-| **5. Direct Python Runner** | Double-click **`Run-Via-Python.bat`** (or `python main.py`) | Runs FlashDock from source. The Python interpreter is pre-signed by Microsoft / Python Software Foundation with universal reputation, completely bypassing Smart App Control. |
+---
 
 ### Option B: Run from Source
+
 ```powershell
-# 1. Clone repository
+# 1. Clone the repository
 git clone https://github.com/klein-sys/own-flasher.git
 cd own-flasher
 
-# 2. Set up virtual environment
+# 2. Create and activate a clean virtual environment
 python -m venv .venv
 .venv\Scripts\activate
 
-# 3. Install dependencies
+# 3. Install core dependencies
 pip install -r requirements.txt
 
 # 4. Launch FlashDock
 python main.py
 ```
 
-### Running Tests
-```powershell
-python scripts/release_build.py
-# 472 passed in 86.97s (100% success rate)
+---
+
+## Recommended Safe Workflow
+
+To guarantee zero-brick operations, follow FlashDock's recommended 5-step lifecycle:
+
+```text
+[Step 1: Diagnose] ──► [Step 2: Pre-Flight] ──► [Step 3: Backup EFS] ──► [Step 4: Unlock/Flash] ──► [Step 5: Verify]
+  Live HUD Check        Safety Checklist        Calibration Dump        Fastboot/D Writing       Integrity Check
 ```
+
+1. **Diagnose**: Connect your phone in normal system mode with USB debugging enabled. Verify the Live Device HUD reflects your exact device model, battery status ($\ge 30\%$), and current partition slot (`_a` or `_b`).
+2. **Pre-Flight**: Navigate to **Safety Checklist** (`ChecklistScreen`). Click **Run Pre-Flight Check** to verify battery reserve, storage free space, and USB driver readiness.
+3. **Mandatory Backup**: Navigate to **Backup / Restore** (`BackupScreen`). Perform a raw dump of calibration partitions (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) to `data/backups/`.
+4. **Bootloader Unlock / Flash**:
+   * For standard devices: Use **Unlock Bootloader** to execute official OEM unlock flows.
+   * For Unisoc / Transsion devices: Use the **Unisoc Token Unlocker** to generate a cryptographic `signature.bin` and deploy disabled `vbmeta`.
+   * For flashing: Select target firmware in **Flash ROM / GSI** or **Return to Stock** and execute via the asynchronous flashing engine.
+5. **Verify & Tweak**: After rebooting, use **Fix Play Integrity** to inject certified fingerprint configurations or **Diagnostics & Tweaks** to optimize UI animation scales.
 
 ---
 
-## Safety & Brick-Prevention Principles
+## Safety & Zero-Brick Protocols
 
-1. **Active Slot Desync Guard**: Verifies active Fastboot slot (`_a`/`_b`) against the connected device before writing partition images. Rejects slot-specific flashing if Fastboot reports null or ambiguous slot states.
-2. **Anti-Rollback Protection (ARP / AVB 2.0)**: Binary inspection of Android `boot.img` headers (`boot_img_hdr` v0–v4) compares target OS/patch level against device counters to prevent permanent QFUSE blows and Knox warranty bit trips.
-3. **Pre-Flash Partition Integrity & Low Space Abort**: Enforces calibration backups (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) with SHA-256 verification before flashing and aborts immediately if free volume space is under 2.0 GB.
-4. **USB Drop & Power Sleep Resilience**: Detects Windows USB Selective Suspend and isolates mid-flash disconnects, gracefully terminating background workers and providing actionable terminal recovery instructions.
-5. **Strict Anti-Relock Gate**: Prevents users from relocking bootloaders on modified, custom, or cross-region ROMs to prevent permanent bricks.
-6. **Strict Secret Masking & Telemetry Redaction**: Automatically redacts IMEI (`[REDACTED_IMEI]`), MEID (`[REDACTED_MEID]`), Android ID (`[REDACTED_ANDROID_ID]`), serial numbers (`[REDACTED_SERIAL]`), and user directories (`[USER_DIR]`). Generates local sanitized `.json` crash dumps in `data/crashes/` without leaking network sockets or system credentials.
-7. **Local-First Architecture**: Firmware, drivers, modules, and cache files stay entirely on your local workstation without external telemetry dependencies.
+FlashDock enforces strict hardware safety guardrails at every layer of the workstation:
+
+1. **Active Slot Desync Guard**: On A/B and Virtual A/B devices, FlashDock validates the active boot slot before writing any partition. If Fastboot reports an ambiguous or null slot, slot-targeted flashing is immediately aborted.
+2. **Anti-Rollback (ARP) & eFuse Protection**: Binary inspection of Android kernel headers (`boot_img_hdr`) validates kernel versions before writing to prevent triggering hardware rollback counters (Qualcomm QFUSE, Samsung Knox 0x1).
+3. **Mandatory Calibration Pre-Backups**: Critical radio and factory calibration blocks (`efs`, `nvram`, `nvdata`, `persist`, `sec_efs`) are backed up with SHA-256 validation before partition write operations begin.
+4. **Strict Anti-Relock Gate**: FlashDock prevents bootloader relocking (`fastboot flashing lock`, `oem lock`) if a custom ROM, modified kernel, or cross-region firmware is installed, preventing unrecoverable AVB verification bricks.
+5. **Low-Disk Space Abort**: Write operations halt immediately if free workstation disk space drops below 2.0 GB.
+6. **Zero Telemetry & Secret Masking**: All logs and crash dumps automatically redact sensitive identifiers:
+   * IMEI: `[REDACTED_IMEI]`
+   * MEID: `[REDACTED_MEID]`
+   * Android ID: `[REDACTED_ANDROID_ID]`
+   * Device Serial: `[REDACTED_SERIAL]`
+   * Local User Paths: `[USER_DIR]`
+
+---
+
+## Testing & Quality Verification
+
+FlashDock maintains an automated test suite covering all core engines, toolchain wrappers, parser logic, and GUI components.
+
+```powershell
+# Run the complete test suite
+python -m pytest tests/ -q
+
+# Run automated release verification & compilation
+python scripts/release_build.py
+```
+
+### Verification Results (v1.4.0)
+* **Test Suite**: **480 passed tests** across 47 test modules (100% pass rate in 181.71s).
+* **Compiled Distribution**: `dist/FlashDock_Dist/FlashDock.exe` (2.97 MB, Authenticode SHA-256 signed).
+* **Release Archive**: `dist/FlashDock-v1.4.0-windows-x64.zip` (59.76 MB).
+* **Integrity Hashes**: Recorded in `dist/SHA256SUMS.txt`.
+
+---
+
+## Contributing
+
+Contributions, bug reports, and hardware profile updates are welcome!
+
+1. Fork the repository on GitHub (`https://github.com/klein-sys/own-flasher`).
+2. Create a feature branch: `git checkout -b feat/new-chipset-support`.
+3. Adhere to FlashDock's engineering standards:
+   * Keep GUI operations non-blocking using `QThread`.
+   * Use 100% vector SVG icons via `flashdock.ui.icon_assets` (no raw emoji stickers in the UI).
+   * Ensure 100% test pass rate across `pytest tests/`.
+4. Submit a Pull Request with a clear description and testing evidence.
 
 ---
 
 ## License
 
-Distributed under the **MIT License**. See `LICENSE` for details.
+Distributed under the **MIT License**. See [LICENSE](LICENSE) for full details.
