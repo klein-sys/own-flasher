@@ -218,3 +218,49 @@ def run_command(
                      return_code, elapsed_ms, cmd_str, result.stderr[:200])
 
     return result
+
+
+# ============================================================================
+# v1.5.0 Hardening: Reentrant Flash Lock Scope & Process-Tree Termination
+# ============================================================================
+import contextlib as _contextlib
+import subprocess as _subprocess
+import sys as _sys
+import threading as _threading
+
+_V150_FLASH_RLOCK = _threading.RLock()
+_V150_FLASH_DEPTH = 0
+
+
+@_contextlib.contextmanager
+def flash_lock_scope():
+    """Thread-safe reentrant context manager guaranteeing flash lock release."""
+    global _V150_FLASH_DEPTH
+    with _V150_FLASH_RLOCK:
+        _V150_FLASH_DEPTH += 1
+        acquire_flash_lock()
+    try:
+        yield
+    finally:
+        with _V150_FLASH_RLOCK:
+            _V150_FLASH_DEPTH = max(0, _V150_FLASH_DEPTH - 1)
+            if _V150_FLASH_DEPTH == 0:
+                release_flash_lock()
+
+
+def kill_process_tree(pid: int) -> bool:
+    """Forcefully terminate a child process and all of its descendants on Windows."""
+    if pid <= 0:
+        return False
+    if _sys.platform == "win32":
+        try:
+            res = _subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(pid)],
+                capture_output=True,
+                timeout=5,
+                creationflags=0x08000000,
+            )
+            return res.returncode == 0
+        except Exception:
+            return False
+    return False

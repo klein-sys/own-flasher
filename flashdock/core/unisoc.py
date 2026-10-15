@@ -564,19 +564,18 @@ class UnisocUnlockManager:
         return False, "", raw
 
     @classmethod
-    def sign_token(
+    def generate_signature_bytes(
         cls,
         token: str,
         custom_pem: Optional[str] = None,
-        output_path: Optional[Path | str] = None,
-    ) -> tuple[bool, Path, str]:
+    ) -> bytes:
         """
-        Signs the Unisoc identifier token with RSA-2048 PKCS#1 v1.5 with SHA-256.
-        Returns (success, signature_path, message).
+        Signs the Unisoc identifier token with RSA-2048 PKCS#1 v1.5 with SHA-256
+        and returns the raw 256-byte signature block.
         """
         clean_token = token.strip()
         if not clean_token:
-            return False, Path(), "Token string is empty."
+            raise ValueError("Token string is empty.")
 
         n, d = UNISOC_RSA_N, UNISOC_RSA_D
 
@@ -611,22 +610,38 @@ class UnisocUnlockManager:
             except Exception as e:
                 log.warning("Could not parse custom RSA PEM (%s), using default community key", e)
 
+        token_bytes = clean_token.encode("ascii", errors="replace")
+        h = hashlib.sha256(token_bytes).digest()
+
+        asn1_prefix = b"\x30\x31\x30\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04\x20"
+        t = asn1_prefix + h
+        k = 256
+        pad_len = k - 3 - len(t)
+        if pad_len < 8:
+            raise ValueError("Token payload size exceeds RSA modulus capacity.")
+
+        em = b"\x00\x01" + (b"\xff" * pad_len) + b"\x00" + t
+        m_int = int.from_bytes(em, "big")
+        s_int = pow(m_int, d, n)
+        return s_int.to_bytes(k, "big")
+
+    @classmethod
+    def sign_token(
+        cls,
+        token: str,
+        custom_pem: Optional[str] = None,
+        output_path: Optional[Path | str] = None,
+    ) -> tuple[bool, Path, str]:
+        """
+        Signs the Unisoc identifier token with RSA-2048 PKCS#1 v1.5 with SHA-256.
+        Returns (success, signature_path, message).
+        """
+        clean_token = token.strip()
+        if not clean_token:
+            return False, Path(), "Token string is empty."
+
         try:
-            token_bytes = clean_token.encode("ascii")
-            h = hashlib.sha256(token_bytes).digest()
-
-            asn1_prefix = b"\x30\x31\x30\x0d\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01\x05\x00\x04\x20"
-            t = asn1_prefix + h
-            k = 256
-            pad_len = k - 3 - len(t)
-            if pad_len < 8:
-                return False, Path(), "Token payload size exceeds RSA modulus capacity."
-
-            em = b"\x00\x01" + (b"\xff" * pad_len) + b"\x00" + t
-            m_int = int.from_bytes(em, "big")
-            s_int = pow(m_int, d, n)
-            sig_bytes = s_int.to_bytes(k, "big")
-
+            sig_bytes = cls.generate_signature_bytes(clean_token, custom_pem=custom_pem)
             if output_path:
                 out = Path(output_path)
             else:
@@ -684,3 +699,15 @@ class UnisocUnlockManager:
             serial=serial,
             action="flash_vbmeta_disabled",
         )
+
+
+# ============================================================================
+# v1.5.0 Low-Level Win32 Unisoc HDLC 0x7E Handshake Verification
+# ============================================================================
+from flashdock.tools.usb_transport import (
+    HandshakeResult,
+    crc16_xmodem,
+    decode_unisoc_hdlc_frame,
+    encode_unisoc_hdlc_frame,
+    perform_unisoc_hdlc_ping,
+)

@@ -151,6 +151,7 @@ class SideTerminalWidget(QWidget):
         self._text_edit = QPlainTextEdit()
         self._text_edit.setReadOnly(True)  # Cannot be edited or touched by user
         self._text_edit.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self._text_edit.setMaximumBlockCount(5000)  # Capped buffer to prevent memory bloat / layout freeze
         self._text_edit.setStyleSheet(
             "QPlainTextEdit { background-color: #080B10; border: 1px solid rgba(255, 255, 255, 0.08); "
             "border-radius: 12px; margin: 4px 8px 8px 8px; padding: 8px; color: #E6EDF3; "

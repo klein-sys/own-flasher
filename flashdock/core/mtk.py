@@ -453,3 +453,14 @@ class MTKFlashPipeline:
 
         log.info("MTK Flash sequence complete.")
         return True
+
+
+# ============================================================================
+# v1.5.0 Low-Level Win32 BROM Handshake Verification
+# ============================================================================
+from flashdock.tools.usb_transport import HandshakeResult, perform_mtk_brom_handshake
+
+
+def verify_brom_echo_on_port(port: str) -> HandshakeResult:
+    """Execute the 4-byte MediaTek BROM 0xA0 0x0A 0x50 0x05 echo handshake."""
+    return perform_mtk_brom_handshake(port)

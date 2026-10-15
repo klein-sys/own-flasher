@@ -66,7 +66,9 @@ def decompress_lz4_block(src: bytes) -> bytes:
         i += 2
 
         if offset == 0:
-            break
+            raise ValueError("LZ4 match offset cannot be zero")
+        if offset > len(dst):
+            raise ValueError(f"LZ4 match offset {offset} exceeds output buffer size {len(dst)}")
 
         # 3. Match length
         match_len = (token & 0x0F) + 4
@@ -80,10 +82,7 @@ def decompress_lz4_block(src: bytes) -> bytes:
 
         # Copy matching sequence byte-by-byte to handle overlapping copies
         for _ in range(match_len):
-            if offset <= len(dst):
-                dst.append(dst[-offset])
-            else:
-                dst.append(0)
+            dst.append(dst[-offset])
 
     return bytes(dst)
 
@@ -108,23 +107,28 @@ def decompress_lz4_stream(
         # Standard LZ4 Frame
         flg_bytes = in_stream.read(2)
         if len(flg_bytes) < 2:
-            return 0
+            raise EOFError("Truncated LZ4 frame header")
         flg, bd = flg_bytes[0], flg_bytes[1]
 
         # Optional content size (8 bytes)
         if flg & 0x08:
-            in_stream.read(8)
+            if len(in_stream.read(8)) < 8:
+                raise EOFError("Truncated LZ4 content size")
         # Optional dict ID (4 bytes)
         if flg & 0x01:
-            in_stream.read(4)
+            if len(in_stream.read(4)) < 4:
+                raise EOFError("Truncated LZ4 dict ID")
         # Header checksum (1 byte)
-        in_stream.read(1)
+        if len(in_stream.read(1)) < 1:
+            raise EOFError("Truncated LZ4 header checksum")
 
         # Decompress data blocks
         while True:
             size_raw = in_stream.read(4)
-            if len(size_raw) < 4:
+            if len(size_raw) == 0:
                 break
+            if len(size_raw) < 4:
+                raise EOFError("Truncated LZ4 block size")
             block_size = struct.unpack("<I", size_raw)[0]
             if block_size == 0:
                 # EndMark reached
@@ -135,7 +139,7 @@ def decompress_lz4_stream(
 
             block_data = in_stream.read(block_size)
             if len(block_data) < block_size:
-                break
+                raise EOFError("Truncated LZ4 block data")
 
             if is_uncompressed:
                 out_stream.write(block_data)
@@ -147,7 +151,8 @@ def decompress_lz4_stream(
 
             # Block checksum
             if flg & 0x10:
-                in_stream.read(4)
+                if len(in_stream.read(4)) < 4:
+                    raise EOFError("Truncated LZ4 block checksum")
 
             if progress_cb:
                 progress_cb(total_written)
@@ -264,3 +269,60 @@ def extract_samsung_tar(
                 progress_cb(name, pct)
 
     return extracted
+
+def decompress_lz4_frame(data: bytes | BinaryIO) -> bytes:
+    """Decompress an LZ4 framed byte sequence or stream into raw bytes."""
+    if isinstance(data, (bytes, bytearray, memoryview)):
+        in_stream = io.BytesIO(bytes(data))
+    else:
+        in_stream = data
+    out_stream = io.BytesIO()
+    decompress_lz4_stream(in_stream, out_stream)
+    return out_stream.getvalue()
+
+
+class LZ4Util:
+    """Namespace providing static methods for LZ4 block, frame, and file decompression."""
+
+    @staticmethod
+    def decompress_block(src: bytes, uncompressed_size: int | None = None) -> bytes:
+        res = decompress_lz4_block(src)
+        if uncompressed_size is not None and len(res) > uncompressed_size:
+            return res[:uncompressed_size]
+        return res
+
+    @staticmethod
+    def decompress_frame(src: bytes | BinaryIO) -> bytes:
+        return decompress_lz4_frame(src)
+
+    @staticmethod
+    def decompress_file(src_path: Path | str, dst_path: Path | str | None = None) -> Path:
+        return decompress_lz4_file(src_path, dst_path)
+
+    @staticmethod
+    def decompress_stream(
+        in_stream: BinaryIO,
+        out_stream: BinaryIO,
+        progress_cb: Optional[Callable[[int], None]] = None,
+    ) -> int:
+        return decompress_lz4_stream(in_stream, out_stream, progress_cb)
+
+
+# ============================================================================
+# v1.5.0 Zero-Copy mmap Streaming Extension
+# ============================================================================
+from flashdock.tools.mmap_stream import open_mmap_view as _open_mmap_view
+
+
+def decompress_file_mmap(
+    src_path: Path | str,
+    dst_path: Path | str | None = None,
+) -> Path:
+    """Zero-copy mmap-backed LZ4 frame decompressor for local firmware files."""
+    src = Path(src_path)
+    dst = Path(dst_path) if dst_path is not None else src.with_suffix("")
+    with _open_mmap_view(src) as view:
+        raw_out = LZ4Util.decompress_frame(view) if hasattr(LZ4Util, "decompress_frame") else decompress_frame(view)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_bytes(raw_out)
+    return dst

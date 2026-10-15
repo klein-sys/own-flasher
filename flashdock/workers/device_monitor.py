@@ -715,3 +715,16 @@ def check_windows_usb_selective_suspend() -> tuple[bool, str]:
         log.debug("powercfg USB selective suspend check exception: %s", exc)
 
     return False, "USB Selective Suspend not detected or disabled"
+
+
+# ============================================================================
+# v1.5.0 Event-Driven Win32 Hardware Notification Hook
+# ============================================================================
+from flashdock.tools.win32_device_events import Win32DeviceEventMonitor
+
+_GLOBAL_HW_EVENT_MONITOR = Win32DeviceEventMonitor()
+
+
+def get_hardware_event_monitor() -> Win32DeviceEventMonitor:
+    """Return the singleton Win32DeviceEventMonitor for instant USB wake-ups."""
+    return _GLOBAL_HW_EVENT_MONITOR

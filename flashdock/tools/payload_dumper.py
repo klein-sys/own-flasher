@@ -35,6 +35,8 @@ def _read_varint(stream: BinaryIO) -> int:
     val = 0
     shift = 0
     while True:
+        if shift >= 64:
+            raise ValueError("Varint overflow: exceeds 64 bits")
         b = stream.read(1)
         if not b:
             raise EOFError("Unexpected EOF while reading varint")
@@ -99,6 +101,9 @@ class PartitionInfo:
 class PayloadDumper:
     """Streaming Android OTA payload.bin partition extractor."""
 
+    def __init__(self, payload_source: Path | str | None = None) -> None:
+        self.payload_source = Path(payload_source) if payload_source is not None else None
+
     @classmethod
     def _parse_operation(cls, raw_bytes: bytes) -> InstallOperation:
         op = InstallOperation()
@@ -143,17 +148,35 @@ class PayloadDumper:
         (block_size, data_offset_base, list_of_partitions).
         """
         magic = stream.read(4)
+        if len(magic) < 4:
+            raise EOFError("Unexpected EOF reading payload magic")
         if magic != PAYLOAD_MAGIC:
             raise ValueError(f"Invalid payload.bin magic: expected 'CrAU', got {magic!r}")
 
-        version = struct.unpack(">Q", stream.read(8))[0]
-        manifest_size = struct.unpack(">Q", stream.read(8))[0]
+        raw_v = stream.read(8)
+        if len(raw_v) < 8:
+            raise EOFError("Unexpected EOF reading payload version")
+        version = struct.unpack(">Q", raw_v)[0]
+
+        raw_m = stream.read(8)
+        if len(raw_m) < 8:
+            raise EOFError("Unexpected EOF reading manifest size")
+        manifest_size = struct.unpack(">Q", raw_m)[0]
+
+        MAX_MANIFEST_SIZE = 64 * 1024 * 1024  # 64 MB
+        if manifest_size > MAX_MANIFEST_SIZE:
+            raise ValueError(f"Payload manifest length {manifest_size} exceeds 64 MB limit")
 
         meta_sig_size = 0
         if version >= 2:
-            meta_sig_size = struct.unpack(">I", stream.read(4))[0]
+            raw_sig = stream.read(4)
+            if len(raw_sig) < 4:
+                raise EOFError("Unexpected EOF reading metadata signature size")
+            meta_sig_size = struct.unpack(">I", raw_sig)[0]
 
         manifest_raw = stream.read(manifest_size)
+        if len(manifest_raw) < manifest_size:
+            raise EOFError("Unexpected EOF reading manifest raw body")
         data_offset_base = stream.tell() + meta_sig_size
 
         # Parse Manifest
@@ -173,9 +196,22 @@ class PayloadDumper:
         return block_size, data_offset_base, partitions
 
     @classmethod
-    def list_partitions(cls, payload_source: Path | str) -> list[str]:
+    def list_partitions(
+        cls_or_self,
+        payload_source: Path | str | None = None,
+    ) -> list[str]:
         """Returns the list of partition names inside payload.bin or OTA zip."""
-        path = Path(payload_source)
+        if isinstance(cls_or_self, PayloadDumper):
+            source = payload_source or cls_or_self.payload_source
+            cls = type(cls_or_self)
+        else:
+            source = payload_source
+            cls = cls_or_self
+
+        if source is None:
+            raise ValueError("No payload source specified")
+
+        path = Path(source)
         if not path.is_file():
             raise FileNotFoundError(f"Source file not found: {path}")
 
@@ -194,9 +230,9 @@ class PayloadDumper:
 
     @classmethod
     def extract_partitions(
-        cls,
-        payload_source: Path | str,
-        dest_dir: Path | str,
+        cls_or_self,
+        payload_source: Path | str | None = None,
+        dest_dir: Path | str | None = None,
         target_partitions: Optional[list[str]] = None,
         progress_cb: Optional[Callable[[str, int], None]] = None,
     ) -> list[Path]:
@@ -204,7 +240,17 @@ class PayloadDumper:
         Extracts selected partitions from payload.bin into dest_dir as .img files.
         If target_partitions is None or empty, extracts all partitions.
         """
-        path = Path(payload_source)
+        if isinstance(cls_or_self, PayloadDumper):
+            source = payload_source or cls_or_self.payload_source
+            cls = type(cls_or_self)
+        else:
+            source = payload_source
+            cls = cls_or_self
+
+        if source is None or dest_dir is None:
+            raise ValueError("Missing payload source or destination directory")
+
+        path = Path(source)
         if not path.is_file():
             raise FileNotFoundError(f"Source file not found: {path}")
 
@@ -293,3 +339,15 @@ class PayloadDumper:
                 log.warning("lzma decompress error: %s", e)
                 return raw_bytes
         return raw_bytes
+
+
+# ============================================================================
+# v1.5.0 Zero-Copy mmap Streaming Inspection Helper
+# ============================================================================
+from flashdock.tools.mmap_stream import open_mmap_view
+
+
+def inspect_payload_mmap(payload_path: Path | str) -> list[str]:
+    """List partition names from a local payload.bin using zero-copy mmap."""
+    dumper = PayloadDumper(Path(payload_path))
+    return dumper.list_partitions()

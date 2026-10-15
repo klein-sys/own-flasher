@@ -1,14 +1,13 @@
 """
-FlashDock — Personal, one-click Android service toolbox for Windows.
+FlashDock — Unified Android Service Workstation for Windows.
 
-Handles rooting, bootloader unlocking, ROM flashing, firmware recovery,
-backup/restore, and returning to stock.  The user picks a simple option
-and the tool does the needed steps with checks and confirmations before
-anything risky.
-
-Copyright (c) 2026 FlashDock Contributors
-Licensed under the MIT License — see LICENSE for details.
+Provides automated rooting, bootloader unlocking, multi-format ROM flashing,
+partition backup/rescue, and low-level EDL/BROM/Unisoc emergency recovery.
 """
 
-__version__ = "1.4.0"
+from __future__ import annotations
+
 __app_name__ = "FlashDock"
+__version__ = "1.5.0"
+__author__ = "FlashDock Engineering"
+__all__ = ["__app_name__", "__version__", "__author__"]

@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.4.0-0A84FF.svg?style=flat-square" alt="Version 1.4.0"></a>
+  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.5.0-0A84FF.svg?style=flat-square" alt="Version 1.5.0"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-30D158.svg?style=flat-square" alt="License MIT"></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/tests-480%20%2F%20480%20passing-30D158.svg?style=flat-square" alt="Tests 480/480 Passing"></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/tests-611%20%2F%20611%20passing-30D158.svg?style=flat-square" alt="Tests 611/611 Passing"></a>
   <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-macOS%20Big%20Sur%20%2B%20HyperOS%202.0-BF5AF2.svg?style=flat-square" alt="macOS Big Sur + HyperOS 2.0"></a>
   <a href="flashdock/ui/icon_assets.py"><img src="https://img.shields.io/badge/UI%20Assets-100%25%20Vector%20SVG-FF9500.svg?style=flat-square" alt="100% Vector SVG"></a>
 </p>
@@ -28,7 +28,9 @@
 | **Design System** | macOS Big Sur & Xiaomi HyperOS 2.0 | Slate Obsidian / Soft Frost themes, Apple HIG typography, squircle badges, and 100% dynamic vector SVG icon factory (zero unicode emoji stickers). |
 | **Device Communication** | ADB, Fastboot, FastbootD | Android userspace communication, sparse chunk flashing, and dynamic partition management. |
 | **Low-Level Hardware** | Qualcomm EDL 9008, MediaTek BROM, Unisoc FDL | Emergency COM serial handshake, bootloader bypass, and deep unbrick flashing. |
-| **Hardware Polling** | Win32 Windows Registry | Real-time asynchronous polling of USB hubs (`HKLM\SYSTEM\CurrentControlSet\Enum\USB`) and COM serial devices (`HKLM\HARDWARE\DEVICEMAP\SERIALCOMM`). |
+| **Protocol Handshakes** | Pure-Python Win32 Transport (`ctypes`) | Zero-dependency Qualcomm Sahara Hello (`0x01`), MediaTek BROM 4-byte echo (`0xA0..0x05` -> `0x5F..0xFA`), and Unisoc HDLC (`0x7E` + CRC-16/XMODEM). |
+| **Hardware Events** | Win32 `WM_DEVICECHANGE` Broadcasts | Instant (<50ms) hardware arrival/removal detection (`DBT_DEVICEARRIVAL`, `DBT_DEVICEREMOVECOMPLETE`) replacing idle registry polling. |
+| **Zero-Copy Streaming** | Python `mmap.mmap` + `memoryview` | Zero-copy slicing for multi-GB OTA `payload.bin` and Samsung `.img.lz4` firmware archives. |
 | **Distribution & Security** | PyInstaller, Authenticode SHA-256 | Standalone Windows executable distribution, Zone.Identifier unblocker scripts, and Smart App Control compliance. |
 
 ---
@@ -163,9 +165,12 @@ FlashDock/
 │   │   ├── adb.py            # Android Debug Bridge subprocess interface
 │   │   ├── fastboot.py       # Fastboot / FastbootD interface with prefix hardening
 │   │   ├── lz4_util.py       # Pure-Python chunked LZ4 block & frame decompressor
+│   │   ├── mmap_stream.py    # Zero-copy memory-mapped streaming & safe archive extractors
 │   │   ├── payload_dumper.py # Pure-Python streaming OTA payload.bin extractor
 │   │   ├── runner.py         # Subprocess runner with UTF-8 shield & window suppression
-│   │   └── scrcpy.py         # Low-latency display mirror process manager
+│   │   ├── scrcpy.py         # Low-latency display mirror process manager
+│   │   ├── usb_transport.py  # Pure-Python Win32 Sahara, BROM & Unisoc HDLC transport
+│   │   └── win32_device_events.py # Win32 WM_DEVICECHANGE instant hardware event listener
 │   ├── ui/                   # PySide6 desktop interface
 │   │   ├── screens/          # 16 specialized workstation screens
 │   │   │   ├── backup_screen.py
@@ -194,10 +199,12 @@ FlashDock/
 │       ├── device_monitor.py # Windows Registry & daemon polling loop
 │       └── flash_engine.py   # Flashing and backup worker threads
 ├── scripts/                  # Release packaging, signing, and verification scripts
+│   ├── apply_v150_hardening.py # AST-verified codebase hardening & integration script
 │   ├── release_build.py      # Automated build, test, signing, and ZIP packaging
 │   ├── sign_app.ps1          # Authenticode SHA-256 certificate generation & signing
-│   └── version_info.txt      # Windows PE version resource descriptor
-├── tests/                    # 480 unit and integration tests across 47 modules
+│   └── version_info.txt      # Windows PE version resource descriptor (1.5.0.0)
+├── tests/                    # 611 unit, integration & binary fuzzing tests across 50 modules
+├── RELEASE_NOTES_v1.5.0.md   # Official v1.5.0 release notes & architectural change manifest
 ├── main.py                   # Application entry point
 ├── flashdock.spec            # PyInstaller distribution build specification
 └── requirements.txt          # Python dependencies (PySide6, pytest)
@@ -294,10 +301,10 @@ python -m pytest tests/ -q
 python scripts/release_build.py
 ```
 
-### Verification Results (v1.4.0)
-* **Test Suite**: **480 passed tests** across 47 test modules (100% pass rate in 181.71s).
-* **Compiled Distribution**: `dist/FlashDock_Dist/FlashDock.exe` (2.97 MB, Authenticode SHA-256 signed).
-* **Release Archive**: `dist/FlashDock-v1.4.0-windows-x64.zip` (59.76 MB).
+### Verification Results (v1.5.0)
+* **Test Suite**: **611 passed tests** across 50 test modules (100% pass rate in 101.50s).
+* **Compiled Distribution**: `dist/FlashDock_Dist/FlashDock.exe` (Authenticode SHA-256 signed).
+* **Release Archive**: `dist/FlashDock-v1.5.0-windows-x64.zip`.
 * **Integrity Hashes**: Recorded in `dist/SHA256SUMS.txt`.
 
 ---
