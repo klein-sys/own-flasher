@@ -1435,3 +1435,16 @@ def get_stylesheet(theme: str = "dark") -> str:
     if theme.lower() == "light":
         return LIGHT_STYLESHEET
     return DARK_STYLESHEET
+
+
+# ============================================================================
+# v1.5.0 macOS Big Sur + HyperOS 2.0 Semantic Theme Token Integration
+# ============================================================================
+from flashdock.ui.theme_tokens import (
+    SLATE_OBSIDIAN_TOKENS,
+    SOFT_FROST_TOKENS,
+    WorkstationThemeTokens,
+    build_workstation_supplemental_qss,
+    get_mode_badge_palette,
+    get_theme_tokens,
+)

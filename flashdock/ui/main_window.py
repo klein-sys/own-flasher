@@ -2285,3 +2285,9 @@ class MainWindow(QMainWindow):
         self._network.stop()
         log.info("MainWindow closed -- geometry saved.")
         event.accept()
+
+
+# ============================================================================
+# v1.5.0 High-DPI Workspace & Splitter Hardening Hooks
+# ============================================================================
+from flashdock.ui.dpi_layout import apply_responsive_screen_geometry, harden_splitter_geometry

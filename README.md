@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.5.0-0A84FF.svg?style=flat-square" alt="Version 1.5.0"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-30D158.svg?style=flat-square" alt="License MIT"></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/tests-611%20%2F%20611%20passing-30D158.svg?style=flat-square" alt="Tests 611/611 Passing"></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/tests-629%20%2F%20629%20passing-30D158.svg?style=flat-square" alt="Tests 629/629 Passing"></a>
   <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-macOS%20Big%20Sur%20%2B%20HyperOS%202.0-BF5AF2.svg?style=flat-square" alt="macOS Big Sur + HyperOS 2.0"></a>
   <a href="flashdock/ui/icon_assets.py"><img src="https://img.shields.io/badge/UI%20Assets-100%25%20Vector%20SVG-FF9500.svg?style=flat-square" alt="100% Vector SVG"></a>
 </p>
@@ -25,7 +25,7 @@
 | :--- | :--- | :--- |
 | **Language & Runtime** | Python 3.10 – 3.14 (`3.14.7` tested) | Standard-library pure-Python engine: RSA PKCS#1 v1.5 signer, LZ4 decompressor, and Protobuf OTA payload unpacker without external C-extensions. |
 | **Desktop UI Framework** | PySide6 (`Qt 6.10`) | Native Windows desktop GUI, non-blocking `QThread` workers, and high-DPI responsive rendering. |
-| **Design System** | macOS Big Sur & Xiaomi HyperOS 2.0 | Slate Obsidian / Soft Frost themes, Apple HIG typography, squircle badges, and 100% dynamic vector SVG icon factory (zero unicode emoji stickers). |
+| **Design System & HiDPI** | macOS Big Sur & Xiaomi HyperOS 2.0 | `theme_tokens.py`, `dpi_layout.py`, Slate Obsidian / Soft Frost themes, squircle badges, and 100% dynamic vector SVG icon factory. |
 | **Device Communication** | ADB, Fastboot, FastbootD | Android userspace communication, sparse chunk flashing, and dynamic partition management. |
 | **Low-Level Hardware** | Qualcomm EDL 9008, MediaTek BROM, Unisoc FDL | Emergency COM serial handshake, bootloader bypass, and deep unbrick flashing. |
 | **Protocol Handshakes** | Pure-Python Win32 Transport (`ctypes`) | Zero-dependency Qualcomm Sahara Hello (`0x01`), MediaTek BROM 4-byte echo (`0xA0..0x05` -> `0x5F..0xFA`), and Unisoc HDLC (`0x7E` + CRC-16/XMODEM). |

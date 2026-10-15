@@ -971,3 +971,21 @@ class FirmwareFinder:
                 others.append(repo)
 
         return matched + others
+
+
+# ============================================================================
+# v1.5.0 Driver Elevation Exit-Code Normalization (0, 259, 3010)
+# ============================================================================
+PNPUTIL_VALID_EXIT_CODES = (0, 259, 3010)
+
+
+def is_pnputil_exit_code_success(returncode: int) -> tuple[bool, bool]:
+    """
+    Evaluate a pnputil.exe exit code independently of Windows display language.
+    Returns (is_success, reboot_required):
+      - 0: Installed and active immediately
+      - 259 (ERROR_NO_MORE_ITEMS): Driver package already exists in store
+      - 3010 (ERROR_SUCCESS_REBOOT_REQUIRED): Staged; reboot required
+    """
+    rc = int(returncode)
+    return (rc in PNPUTIL_VALID_EXIT_CODES, rc == 3010)

@@ -600,3 +600,9 @@ class PhoneControlPanel(QFrame):
             btn.setEnabled(mode_id in allowed)
             if mode_id not in allowed:
                 btn.setToolTip("Not available in current mode")
+
+
+# ============================================================================
+# v1.5.0 Bootloader (#007AFF Cobalt) vs FastbootD (#00E5FF Cyan) Mode Tokens
+# ============================================================================
+from flashdock.ui.theme_tokens import get_mode_badge_palette, get_theme_tokens

@@ -238,3 +238,9 @@ class StatusBarWidget(QFrame):
         """Hide the status bar progress bar."""
         self._progress_bar.setVisible(False)
         self._progress_bar.setValue(0)
+
+
+# ============================================================================
+# v1.5.0 Bootloader (#007AFF Cobalt) vs FastbootD (#00E5FF Cyan) Mode Tokens
+# ============================================================================
+from flashdock.ui.theme_tokens import get_mode_badge_palette, get_theme_tokens

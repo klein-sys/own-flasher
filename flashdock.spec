@@ -1,8 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
 PyInstaller Specification for FlashDock v1.5.0 (Windows x64).
-Bundles all core engines, pure-Python binary parsers, Win32 USB/Event transports,
-and PySide6 Qt6Svg vector rendering plugins.
+Bundles all UI/UX theme token & High-DPI modules, core engines, pure-Python
+binary parsers, Win32 USB/Event transports, and PySide6 Qt6Svg vector plugins.
 """
 
 from pathlib import Path
@@ -55,6 +55,7 @@ hidden_imports = [
     "flashdock.core.tools_manager",
     "flashdock.core.troubleshooter",
     "flashdock.core.unisoc",
+    "flashdock.database",
     "flashdock.logger",
     "flashdock.tools.adb",
     "flashdock.tools.fastboot",
@@ -67,9 +68,11 @@ hidden_imports = [
     "flashdock.tools.usb_transport",
     "flashdock.tools.win32_device_events",
     "flashdock.ui.brand_assets",
+    "flashdock.ui.dpi_layout",
     "flashdock.ui.icon_assets",
     "flashdock.ui.main_window",
     "flashdock.ui.styles",
+    "flashdock.ui.theme_tokens",
     "flashdock.ui.screens.backup_screen",
     "flashdock.ui.screens.checklist_screen",
     "flashdock.ui.screens.diagnostics_screen",
@@ -149,4 +152,3 @@ exe = EXE(
     icon=str(icon_path) if icon_path.exists() else None,
     version=str(version_path) if version_path.exists() else None,
 )
-

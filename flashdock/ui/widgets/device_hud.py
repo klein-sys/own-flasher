@@ -431,3 +431,9 @@ class LiveDeviceHud(QFrame):
         if self._current_device and self._current_device.serial:
             log.info("Emergency Pre-Flash Restore requested for %s", self._current_device.serial)
             self.restore_preflash_requested.emit(self._current_device.serial)
+
+
+# ============================================================================
+# v1.5.0 Bootloader (#007AFF Cobalt) vs FastbootD (#00E5FF Cyan) Mode Tokens
+# ============================================================================
+from flashdock.ui.theme_tokens import get_mode_badge_palette, get_theme_tokens

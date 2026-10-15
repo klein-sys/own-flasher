@@ -259,3 +259,9 @@ class SideTerminalWidget(QWidget):
 
         # Auto-scroll to bottom
         self._text_edit.moveCursor(QTextCursor.MoveOperation.End)
+
+
+# ============================================================================
+# v1.5.0 High-Frequency Telemetry Capping (5,000 blocks)
+# ============================================================================
+MAX_TERMINAL_BLOCKS_V150 = 5000

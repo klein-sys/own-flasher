@@ -1,14 +1,7 @@
-# FlashDock — Python dependencies
-# Install with:  pip install -r requirements.txt
+# FlashDock v1.5.0 — Runtime, Packaging & Verification Dependencies
+# Compatible with Python 3.10 - 3.14 (Verified on Python 3.14.7 / Windows 10 & 11 x64)
 
-# GUI framework
-PySide6>=6.6,<7
-
-# HTTP requests (optional/legacy; core engine utilizes standard library urllib with 0 external deps)
-requests>=2.31,<3
-
-# Testing
-pytest>=7.4,<9
-
-# Packaging (not needed at runtime — install when building the .exe)
-PyInstaller>=6.0,<7
+PySide6>=6.8.0,<6.11.0
+pytest>=8.0.0
+pytest-qt>=4.4.0
+pyinstaller>=6.10.0
