@@ -17,6 +17,8 @@ skills_applied:
   - productivity/handoff
   - permissioned-github
   - readme-gen
+  - android-cli
+  - find-skills
 tags:
   - flashdock
   - v1.5.0
@@ -88,6 +90,12 @@ Before auditing or writing any code, you must strictly activate and adhere to th
 
 12. **`readme-gen` (`.agents/skills/Readme-gen/SKILL.md`) — [REPOSITORY DOCUMENTATION INTEGRITY]**:
     - Updates `README.md` and repository documentation grounded in verified codebase evidence. Reflects the v1.5.0 architecture with tech stack badges, Mermaid flow diagrams, setup guides, and test commands.
+
+13. **`android-cli` (`.agents/skills/android-cli/SKILL.md`) — [OFFICIAL ANDROID CLI & PLATFORM TOOLS LAW]**:
+    - Governs low-level Android SDK management, ADB shell layout inspection, screen hierarchy capture, and end-to-end device journey testing directly against physical and virtual hardware targets.
+
+14. **`find-skills` (`.agents/skills/find-skills/SKILL.md`) — [DYNAMIC SKILL EXTENSION & ECOSYSTEM CAPABILITY]**:
+    - Integrates the open agent skills ecosystem (`npx skills`), allowing dynamic discovery, verification, and installation of specialized firmware, USB protocol, and packaging workflows.
 
 ---
 

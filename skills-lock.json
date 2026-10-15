@@ -228,6 +228,18 @@
       "sourceType": "github",
       "skillPath": "skills/in-progress/writing-shape/SKILL.md",
       "computedHash": "175889218686932bda7724425b97a0a10a7679db51447c40a1a0d3a5e6f2130e"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "c00eeea0e13e74fe4a9d84ba0a8542205a1b736d65f13134fe1a6647eb14976f"
+    },
+    "android-cli": {
+      "source": "android-cli-plugin",
+      "sourceType": "local",
+      "skillPath": "skills/android-cli/SKILL.md",
+      "computedHash": "0739dfca51872398fa94a338fd5f0bca5c0cecd6460beea03c0fd68265da75b2"
     }
   }
 }
