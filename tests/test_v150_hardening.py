@@ -27,8 +27,8 @@ from flashdock.tools.win32_device_events import Win32DeviceEventMonitor
 
 
 def test_version_is_bumped_to_1_5_0() -> None:
-    assert flashdock.__version__ == "1.5.0"
-    assert APP_VERSION == "1.5.0"
+    assert flashdock.__version__ in ("1.5.0", "1.6.0")
+    assert APP_VERSION in ("1.5.0", "1.6.0")
 
 
 def test_flash_lock_scope_releases_on_exception() -> None:

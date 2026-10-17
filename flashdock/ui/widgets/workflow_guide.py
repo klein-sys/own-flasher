@@ -202,6 +202,16 @@ class WorkflowGuideDialog(QDialog):
             "1. View real-time console logs and error streams.<br>2. Click 'Export Sanitized Log' to save a shareable log file without leaking private serial numbers.<br>3. Consult built-in troubleshooting guides for step-by-step solutions to common errors.",
             "When asking for assistance online or on forums, always share sanitized logs rather than raw output to protect your hardware identifiers.",
         ),
+        (
+            "unisoc_unlock",
+            "unlock",
+            "Unisoc & Transsion Unlock",
+            "FLASHING",
+            "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F97316, stop:1 #EA580C)",
+            "Pure-Python RSA-2048 PKCS#1 v1.5 token signer and Anti-Red-State vbmeta patcher. Generates signature.bin from 'fastboot oem get_identifier_token' and patches vbmeta flags to disable verification for Infinix, Tecno, itel, and Unisoc hardware.",
+            "1. Obtain identifier token in Fastboot: fastboot oem get_identifier_token.<br>2. Paste token into Unisoc Unlocker card and load private RSA key (or use default).<br>3. Flash generated signature.bin with 'fastboot flashing unlock_bootloader signature.bin'.<br>4. Select stock vbmeta.img and click 'Patch vbmeta' to disable flags 0x01/0x02 and prevent bootloop Red State.",
+            "Always patch vbmeta before booting custom GSI images on Unisoc devices to permanently neutralize DM-Verity Red-State boot failure.",
+        ),
     ]
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:

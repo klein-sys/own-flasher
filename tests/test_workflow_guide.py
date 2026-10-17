@@ -26,10 +26,10 @@ class TestWorkflowGuideDialog:
         assert tabs is not None
         assert tabs.count() == 3
 
-    def test_all_16_function_cards_loaded(self, qapp):
+    def test_all_function_cards_loaded(self, qapp):
         dlg = WorkflowGuideDialog()
-        assert len(dlg._cards_list) == 16
-        assert len(dlg._FUNCTION_GUIDE_DATA) == 16
+        assert len(dlg._cards_list) == 17
+        assert len(dlg._FUNCTION_GUIDE_DATA) == 17
 
     def test_action_launch_signal(self, qapp):
         dlg = WorkflowGuideDialog()

@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller Specification for FlashDock v1.5.0 (Windows x64).
+PyInstaller Specification for FlashDock v1.6.0 (Windows x64).
 Bundles all UI/UX theme token & High-DPI modules, core engines, pure-Python
 binary parsers, Win32 USB/Event transports, and PySide6 Qt6Svg vector plugins.
 """
@@ -41,17 +41,20 @@ hidden_imports = [
     "flashdock.core.device_monitor",
     "flashdock.core.diagnostics",
     "flashdock.core.diagnostics_engine",
+    "flashdock.core.emergency_transfer",
     "flashdock.core.flash_engine",
     "flashdock.core.integrity",
     "flashdock.core.modules",
     "flashdock.core.mtk",
     "flashdock.core.network",
+    "flashdock.core.oem_workflows",
     "flashdock.core.repository",
     "flashdock.core.return_stock",
     "flashdock.core.rom_flasher",
     "flashdock.core.rooting",
     "flashdock.core.safety",
     "flashdock.core.selftest",
+    "flashdock.core.super_img",
     "flashdock.core.tools_manager",
     "flashdock.core.troubleshooter",
     "flashdock.core.unisoc",
@@ -71,6 +74,7 @@ hidden_imports = [
     "flashdock.ui.dpi_layout",
     "flashdock.ui.icon_assets",
     "flashdock.ui.main_window",
+    "flashdock.ui.oem_svg_assets",
     "flashdock.ui.styles",
     "flashdock.ui.theme_tokens",
     "flashdock.ui.screens.backup_screen",
@@ -91,9 +95,11 @@ hidden_imports = [
     "flashdock.ui.widgets.device_card",
     "flashdock.ui.widgets.device_hud",
     "flashdock.ui.widgets.device_selector",
+    "flashdock.ui.widgets.emergency_loader_card",
     "flashdock.ui.widgets.flash_shield",
     "flashdock.ui.widgets.header_inspector_dialog",
     "flashdock.ui.widgets.key_guide_dialog",
+    "flashdock.ui.widgets.oem_workflow_wizard",
     "flashdock.ui.widgets.phone_panel",
     "flashdock.ui.widgets.reboot_switchboard",
     "flashdock.ui.widgets.root_library_dialog",
@@ -103,6 +109,8 @@ hidden_imports = [
     "flashdock.ui.widgets.setup_wizard_dialog",
     "flashdock.ui.widgets.side_terminal",
     "flashdock.ui.widgets.status_bar",
+    "flashdock.ui.widgets.super_inspector",
+    "flashdock.ui.widgets.unisoc_unlocker_card",
     "flashdock.ui.widgets.workflow_guide",
     "flashdock.workers.device_monitor",
     "flashdock.workers.flash_engine",

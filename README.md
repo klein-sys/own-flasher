@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.5.0-0A84FF.svg?style=flat-square" alt="Version 1.5.0"></a>
+  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.6.0-0A84FF.svg?style=flat-square" alt="Version 1.6.0"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-30D158.svg?style=flat-square" alt="License MIT"></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/tests-629%20%2F%20629%20passing-30D158.svg?style=flat-square" alt="Tests 629/629 Passing"></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/tests-656%20%2F%20656%20passing-30D158.svg?style=flat-square" alt="Tests 656/656 Passing"></a>
   <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-macOS%20Big%20Sur%20%2B%20HyperOS%202.0-BF5AF2.svg?style=flat-square" alt="macOS Big Sur + HyperOS 2.0"></a>
   <a href="flashdock/ui/icon_assets.py"><img src="https://img.shields.io/badge/UI%20Assets-100%25%20Vector%20SVG-FF9500.svg?style=flat-square" alt="100% Vector SVG"></a>
 </p>

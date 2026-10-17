@@ -48,6 +48,7 @@ from flashdock.core.unisoc import (
 )
 from flashdock.logger import get_logger
 from flashdock.ui.icon_assets import create_icon_label, get_icon
+from flashdock.ui.widgets.unisoc_unlocker_card import UnisocUnlockerCard
 
 log = get_logger("ui.mtk_unisoc")
 
@@ -352,6 +353,11 @@ class MtkUnisocScreen(QWidget):
         pac_layout.addWidget(self._unisoc_progress)
 
         layout.addWidget(pac_group)
+
+        # Unisoc 1-Click Unlocker & vbmeta Patcher Card
+        self._unisoc_card = UnisocUnlockerCard(container)
+        layout.addWidget(self._unisoc_card)
+
         layout.addStretch(1)
 
         scroll.setWidget(container)

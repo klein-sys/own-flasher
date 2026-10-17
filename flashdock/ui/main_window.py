@@ -1919,6 +1919,12 @@ class MainWindow(QMainWindow):
             self._stack.setCurrentIndex(PAGE_MTK_UNISOC)
             return
 
+        if action_id == "unisoc_unlock":
+            # Switch to Unlock wizard and load Unisoc brand guide / unlocker
+            self._unlock_screen._load_manual_brand("unisoc")
+            self._stack.setCurrentIndex(PAGE_UNLOCK)
+            return
+
         if action_id == "downloads":
             # Switch to Phase 12 Downloads, Drivers & Platform-Tools Manager
             self._downloads_screen.load_for_device(self._device_mgr.device)

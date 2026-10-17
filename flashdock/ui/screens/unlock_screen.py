@@ -9,6 +9,7 @@ Spec reference: Section 8.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
@@ -38,6 +39,7 @@ from flashdock.tools.adb import ADB
 from flashdock.tools.fastboot import Fastboot
 from flashdock.ui.brand_assets import get_brand_badge
 from flashdock.ui.icon_assets import create_icon_label, get_icon
+from flashdock.ui.widgets.unisoc_unlocker_card import UnisocUnlockerCard
 
 log = get_logger(__name__)
 
@@ -424,6 +426,14 @@ class UnlockScreen(QWidget):
             wt_layout.addWidget(wait_lbl, 1)
             self._content_layout.insertWidget(self._content_layout.count() - 1, wait_card)
 
+        # Unisoc & Transsion 1-Click Unlocker Card
+        if getattr(flow, "brand", "") in ("unisoc", "spreadtrum", "infinix", "tecno", "itel") or any(
+            k in getattr(flow, "brand_display", "").lower() for k in ("unisoc", "spreadtrum", "infinix", "tecno", "itel")
+        ):
+            self._unisoc_card = UnisocUnlockerCard(self._content)
+            self._unisoc_card.unlock_dispatched.connect(self._on_unisoc_unlock_dispatched)
+            self._content_layout.insertWidget(self._content_layout.count() - 1, self._unisoc_card)
+
         # Steps
         steps_title = QLabel(f"Steps ({len(flow.steps)} total)", self._content)
         steps_title.setProperty("cssClass", "subheading")
@@ -447,6 +457,36 @@ class UnlockScreen(QWidget):
             links.setWordWrap(True)
             links.setProperty("cssClass", "muted")
             self._content_layout.insertWidget(self._content_layout.count() - 1, links)
+
+    def _on_unisoc_unlock_dispatched(self, token: str, sig_path: str) -> None:
+        """Handle 1-click unlock dispatch from UnisocUnlockerCard."""
+        device = self._device_mgr.device
+        if device and device.mode == "fastboot" and getattr(device, "serial", ""):
+            reply = QMessageBox.question(
+                self,
+                "Flash Unisoc Unlock Signature",
+                f"Generated unlock signature ({Path(sig_path).name}).\n\n"
+                f"Device {device.serial} is currently in Fastboot mode.\n"
+                "Flash signature and unlock bootloader now?\n\n"
+                "WARNING: This will wipe all user data on the device!",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes,
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+                from flashdock.core.unisoc import UnisocUnlockManager
+                res = UnisocUnlockManager.unlock_bootloader(self._fb, Path(sig_path), serial=device.serial)
+                if res.success:
+                    QMessageBox.information(self, "Bootloader Unlocked", "Unisoc bootloader unlock command succeeded!")
+                else:
+                    QMessageBox.warning(self, "Unlock Failed", f"fastboot flashing unlock_bootloader failed:\n\n{res.stderr}")
+        else:
+            QMessageBox.information(
+                self,
+                "Signature Ready",
+                f"Unlock signature saved to:\n{sig_path}\n\n"
+                "To finish unlocking, put your phone into Fastboot mode and run:\n"
+                f"fastboot flashing unlock_bootloader {Path(sig_path).name}",
+            )
 
     def _on_step_execute(self, step_index: int) -> None:
         """Execute an auto step."""

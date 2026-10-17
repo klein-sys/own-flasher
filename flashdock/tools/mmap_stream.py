@@ -52,8 +52,12 @@ def open_mmap_view(path: Path | str) -> Iterator[memoryview]:
         finally:
             try:
                 view.release()
-            finally:
+            except Exception:
+                pass
+            try:
                 mm.close()
+            except (BufferError, Exception):
+                pass
 
 
 def validate_safe_member_path(dest_dir: Path, member_name: str) -> Path:
