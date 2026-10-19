@@ -56,6 +56,7 @@ from flashdock.core.device import DeviceInfo
 from flashdock.core.device_manager import DeviceManager
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
+from flashdock.core.apk_verifier import ApkPreFlightResult, verify_apk_preflight
 from flashdock.tools.sideload import (
     ApkMetadata,
     SideloadAppItem,
@@ -866,9 +867,9 @@ class SideloadScreen(QWidget):
 
             type_label = "Split Bundle (.xapk)" if meta.is_split else "Single APK"
             splits_info = f" ({len(meta.split_names)} splits)" if meta.split_names else ""
-            details = f"Size: {meta.file_size_mb:.2f} MB • {type_label}{splits_info} • Min SDK: {meta.min_sdk or 'N/A'}"
+            details = f"Size: {meta.file_size_mb:.2f} MB \u2022 {type_label}{splits_info} \u2022 Min SDK: {meta.min_sdk or 'N/A'}"
             if meta.version_name:
-                details += f" • v{meta.version_name}"
+                details += f" \u2022 v{meta.version_name}"
             self._meta_details_lbl.setText(details)
 
             # Icon rendering
@@ -885,6 +886,24 @@ class SideloadScreen(QWidget):
             self._meta_card.setVisible(True)
             self._update_button_states()
             self._append_log("SUCCESS", f"Package verified: {meta.summary_line}")
+
+            # --- APK Pre-Flight Signature Check (informational at selection time) ---
+            ext = Path(file_path).suffix.lower()
+            if ext == ".apk" and not meta.is_split:
+                preflight = verify_apk_preflight(file_path)
+                if preflight.ok:
+                    sig_parts = []
+                    if preflight.has_v1_jar_sig:
+                        sig_parts.append("v1 (JAR)")
+                    if preflight.has_v2_v3_sig_block:
+                        sig_parts.append("v2/v3 (APK Sig Block 42)")
+                    self._append_log(
+                        "SUCCESS",
+                        f"APK signature pre-flight: {', '.join(sig_parts)} "
+                        f"(SHA-256: {preflight.sha256[:16]}...)",
+                    )
+                else:
+                    self._append_log("WARN", f"APK pre-flight warning: {preflight.error_reason}")
 
         except Exception as exc:
             self._append_log("ERROR", f"Failed to extract metadata: {exc}")

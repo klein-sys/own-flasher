@@ -273,6 +273,6 @@ class TestMainWindow:
         assert not win._status_bar._connection_badge.isHidden()
         assert not win._status_bar._mode_label.isHidden()
         assert not win._status_bar._version_label.isHidden()
-        assert any(v in win._status_bar._version_label.text() for v in ("1.6.0", "1.5.0", "1.4.0"))
+        assert any(v in win._status_bar._version_label.text() for v in ("1.6.1", "1.6.0", "1.5.0", "1.4.0"))
 
 

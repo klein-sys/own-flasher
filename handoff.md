@@ -1,9 +1,9 @@
 # FlashDock — Engineering Handoff & Session State
 
-- **Current Version**: `v1.6.0` (Milestone 1.6.0 — Dynamic Partition Management, Full Emergency Protocol Streaming, OEM Stage-Gates & Unisoc Elevation)
+- **Current Version**: `v1.6.1` (Patch Milestone 1.6.1 — Pure-Python APK Pre-Flight Verifier, Atomic Staging & Android 14 APK Signature Scheme v3 Diagnostics)
 - **Repository**: `https://github.com/klein-sys/own-flasher`
 - **Runtime**: Python 3.10–3.14 (verified on Python 3.14.7) | PySide6 (Qt 6.10) | Windows 10/11 x64
-- **Test Suite Status**: `100% Passing` (`tests/` — 55 test modules, 656 passing tests with zero regressions)
+- **Test Suite Status**: `100% Passing` (`tests/` — 56 test modules, 684 passing tests with zero regressions)
 
 ---
 
@@ -67,17 +67,35 @@
 
 ---
 
+### Milestone 1.6.1: APK Pre-Flight Verifier & Android 14 v3 Signature Protection
+- **Core Engine (`flashdock/core/apk_verifier.py`)**:
+  - Implemented 100% pure-Python APK pre-flight verifier (`verify_apk_preflight()`) adhering to zero-external C extensions.
+  - Zero-modification passthrough: prevents in-place zip modification / timestamp re-compression that invalidates cryptographic signature digests.
+  - Pure-Python streaming SHA-256 computation (`compute_sha256()`).
+  - Pure-Python ZIP Central Directory and End-of-Central-Directory (`PK\x05\x06`) parsing with APK Signature Scheme v2/v3 magic header detection (`APK Sig Block 42`).
+  - Comprehensive internal CRC-32 integrity inspection via `zipfile.testzip()`.
+  - Atomic staging (`stage_apk_atomically()`): stages APKs to `%TEMP%` strictly when required for non-ASCII path characters with mandatory `flush()`, `os.fsync()`, and SHA-256 parity verification.
+  - Glass-Box diagnostic classification (`classify_adb_install_error()`): maps raw `INSTALL_PARSE_FAILED_NO_CERTIFICATES` (including `SHA-256 digest of contents did not verify`) to actionable troubleshooting remediation steps.
+- **Sideload Engine & UI Integration**:
+  - `flashdock/tools/sideload.py`: Integrated pre-flight gate and atomic staging into `install_apk()` and `install_split_bundle()`. Integrated error classification into stderr handling.
+  - `flashdock/ui/screens/sideload_screen.py`: Live pre-flight telemetry and signature block status (v1 JAR / v2/v3 APK Sig Block) in file inspection card.
+- **Test Verification (`tests/test_apk_verifier.py` & `tests/test_sideload.py`)**:
+  - 28 new tests in `test_apk_verifier.py` covering hash verification, signing block detection, CRC failures, atomic staging parity, and error classification.
+  - Updated `test_sideload.py` with 15 passing tests. Total suite: 684/684 tests passing.
+
+---
+
 ## 2. Version Synchronization & Release Verification
 
 - **Version Synchronized**:
-  - `flashdock/__init__.py`: `__version__ = "1.6.0"`
-  - `flashdock/constants.py`: `APP_VERSION = "1.6.0"`
-  - `version_info.txt`: `filevers=(1, 6, 0, 0)`, `prodvers=(1, 6, 0, 0)`
-  - `scripts/version_info.txt`: `filevers=(1, 6, 0, 0)`, `prodvers=(1, 6, 0, 0)`
-  - `flashdock.spec`: Registered all 8 new modules in `hidden_imports`.
+  - `flashdock/__init__.py`: `__version__ = "1.6.1"`
+  - `flashdock/constants.py`: `APP_VERSION = "1.6.1"`
+  - `version_info.txt`: `filevers=(1, 6, 1, 0)`, `prodvers=(1, 6, 1, 0)`
+  - `scripts/version_info.txt`: `filevers=(1, 6, 1, 0)`, `prodvers=(1, 6, 1, 0)`
+  - `flashdock.spec`: Registered `flashdock.core.apk_verifier` in `hidden_imports`.
 - **Release Commands**:
   ```powershell
-  # 1. Run complete test suite (656 tests)
+  # 1. Run complete test suite (684 tests)
   python -m pytest tests/ -q
 
   # 2. Compile standalone Windows executable & ZIP distribution

@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller Specification for FlashDock v1.6.0 (Windows x64).
+PyInstaller Specification for FlashDock v1.6.1 (Windows x64).
 Bundles all UI/UX theme token & High-DPI modules, core engines, pure-Python
 binary parsers, Win32 USB/Event transports, and PySide6 Qt6Svg vector plugins.
 """
@@ -32,6 +32,7 @@ hidden_imports = [
     "flashdock.brands.samsung",
     "flashdock.brands.transsion",
     "flashdock.brands.xiaomi",
+    "flashdock.core.apk_verifier",
     "flashdock.core.backup",
     "flashdock.core.bootloop_fixer",
     "flashdock.core.checklist",

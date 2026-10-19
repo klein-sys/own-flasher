@@ -24,6 +24,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Optional
 
+from flashdock.core.apk_verifier import (
+    classify_adb_install_error,
+    stage_apk_atomically,
+    verify_apk_preflight,
+)
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
 from flashdock.tools.runner import CommandResult
@@ -356,44 +361,82 @@ class SideloadManager:
         serial: str = "",
         progress_cb: Optional[Callable[[str], None]] = None,
     ) -> tuple[bool, str]:
-        """Install single APK with runtime permission and restriction bypass flags."""
+        """Install single APK with pre-flight verification, atomic staging, and restriction bypass flags."""
         path = Path(apk_path)
         if not path.is_file():
             return False, f"File not found: {path}"
 
-        flags = flags or SideloadFlags()
-        dev_sdk = self.get_device_sdk(serial=serial)
-        extra_args = flags.to_adb_args(device_sdk=dev_sdk)
-
-        cmd = ["install"] + extra_args + [str(path.resolve())]
+        # --- Pre-Flight APK Verification (Zero-Modification Passthrough) ---
         if progress_cb:
-            progress_cb(f"Executing: adb {' '.join(cmd)}")
-
-        res = self.adb._run(cmd, serial=serial, timeout=300, action="sideload_install_apk")
-        output = res.output
-
-        if "success" in output.lower():
+            progress_cb(f"Running pre-flight verification on {path.name}...")
+        preflight = verify_apk_preflight(path)
+        if not preflight.ok:
+            err = f"APK Pre-Flight Failed: {preflight.error_reason}"
+            log.warning("Pre-flight check failed for %s: %s", path.name, preflight.error_reason)
             if progress_cb:
-                progress_cb(f"Success: Installed {path.name}")
-            return True, f"Successfully installed {path.name}"
-
-        # Error diagnostics
-        err_msg = res.stderr or res.stdout
-        if "INSTALL_FAILED_DEPRECATED_SDK_VERSION" in output:
-            err_msg = (
-                "Android 14+ blocked this legacy APK because its target SDK is too old.\n"
-                "Enable 'Bypass Android 14+ Low SDK block' to force-install."
-            )
-        elif "INSTALL_FAILED_VERSION_DOWNGRADE" in output:
-            err_msg = "Device has a newer version installed. Enable 'Allow version downgrade (-d)'."
-        elif "INSTALL_FAILED_ALREADY_EXISTS" in output:
-            err_msg = "Package already exists. Enable 'Reinstall existing application (-r)'."
-        elif "INSTALL_FAILED_INSUFFICIENT_STORAGE" in output:
-            err_msg = "Device has insufficient free internal storage."
+                progress_cb(f"BLOCKED: {err}")
+            return False, err
 
         if progress_cb:
-            progress_cb(f"Failed: {err_msg}")
-        return False, err_msg
+            sig_info = []
+            if preflight.has_v1_jar_sig:
+                sig_info.append("v1 (JAR)")
+            if preflight.has_v2_v3_sig_block:
+                sig_info.append("v2/v3 (APK Sig Block)")
+            progress_cb(
+                f"Pre-flight passed: {', '.join(sig_info)} signatures verified "
+                f"(SHA-256: {preflight.sha256[:12]}...)"
+            )
+
+        # --- Atomic Staging (non-ASCII path safety) ---
+        staged_path = stage_apk_atomically(path)
+        staged = staged_path != path
+        if staged and progress_cb:
+            progress_cb(f"Staged APK to temp path (non-ASCII source): {staged_path.name}")
+
+        try:
+            flags = flags or SideloadFlags()
+            dev_sdk = self.get_device_sdk(serial=serial)
+            extra_args = flags.to_adb_args(device_sdk=dev_sdk)
+
+            cmd = ["install"] + extra_args + [str(staged_path.resolve())]
+            if progress_cb:
+                progress_cb(f"Executing: adb {' '.join(cmd)}")
+
+            res = self.adb._run(cmd, serial=serial, timeout=300, action="sideload_install_apk")
+            output = res.output
+
+            if "success" in output.lower():
+                if progress_cb:
+                    progress_cb(f"Success: Installed {path.name}")
+                return True, f"Successfully installed {path.name}"
+
+            # Error diagnostics with Glass-Box error classification
+            err_msg = res.stderr or res.stdout
+            if "INSTALL_PARSE_FAILED_NO_CERTIFICATES" in output:
+                err_msg = classify_adb_install_error(output, path)
+            elif "INSTALL_FAILED_DEPRECATED_SDK_VERSION" in output:
+                err_msg = (
+                    "Android 14+ blocked this legacy APK because its target SDK is too old.\n"
+                    "Enable 'Bypass Android 14+ Low SDK block' to force-install."
+                )
+            elif "INSTALL_FAILED_VERSION_DOWNGRADE" in output:
+                err_msg = "Device has a newer version installed. Enable 'Allow version downgrade (-d)'."
+            elif "INSTALL_FAILED_ALREADY_EXISTS" in output:
+                err_msg = "Package already exists. Enable 'Reinstall existing application (-r)'."
+            elif "INSTALL_FAILED_INSUFFICIENT_STORAGE" in output:
+                err_msg = "Device has insufficient free internal storage."
+
+            if progress_cb:
+                progress_cb(f"Failed: {err_msg}")
+            return False, err_msg
+        finally:
+            # Cleanup staged temp file if we created one
+            if staged:
+                try:
+                    staged_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
 
     def install_split_bundle(
         self,

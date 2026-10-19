@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.6.0-0A84FF.svg?style=flat-square" alt="Version 1.6.0"></a>
+  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.6.1-0A84FF.svg?style=flat-square" alt="Version 1.6.1"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-30D158.svg?style=flat-square" alt="License MIT"></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/tests-656%20%2F%20656%20passing-30D158.svg?style=flat-square" alt="Tests 656/656 Passing"></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/tests-684%20%2F%20684%20passing-30D158.svg?style=flat-square" alt="Tests 684/684 Passing"></a>
   <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-macOS%20Big%20Sur%20%2B%20HyperOS%202.0-BF5AF2.svg?style=flat-square" alt="macOS Big Sur + HyperOS 2.0"></a>
   <a href="flashdock/ui/icon_assets.py"><img src="https://img.shields.io/badge/UI%20Assets-100%25%20Vector%20SVG-FF9500.svg?style=flat-square" alt="100% Vector SVG"></a>
 </p>
@@ -301,10 +301,10 @@ python -m pytest tests/ -q
 python scripts/release_build.py
 ```
 
-### Verification Results (v1.5.0)
-* **Test Suite**: **611 passed tests** across 50 test modules (100% pass rate in 101.50s).
+### Verification Results (v1.6.1)
+* **Test Suite**: **684 passed tests** across 56 test modules (100% pass rate).
 * **Compiled Distribution**: `dist/FlashDock_Dist/FlashDock.exe` (Authenticode SHA-256 signed).
-* **Release Archive**: `dist/FlashDock-v1.5.0-windows-x64.zip`.
+* **Release Archive**: `dist/FlashDock-v1.6.1-windows-x64.zip`.
 * **Integrity Hashes**: Recorded in `dist/SHA256SUMS.txt`.
 
 ---

@@ -156,7 +156,10 @@ class TestSideloadManager:
 
     def test_install_single_apk_success(self, tmp_path, mock_adb):
         apk_path = tmp_path / "app.apk"
-        apk_path.write_bytes(b"dummy apk")
+        with zipfile.ZipFile(apk_path, "w") as zf:
+            zf.writestr("AndroidManifest.xml", b"fake manifest")
+            zf.writestr("META-INF/CERT.RSA", b"fake cert")
+            zf.writestr("classes.dex", b"fake dex")
 
         mock_adb._run.return_value = CommandResult(
             command=["adb", "install"],
@@ -182,7 +185,9 @@ class TestSideloadManager:
 
     def test_install_single_apk_error_parsing(self, tmp_path, mock_adb):
         apk_path = tmp_path / "legacy_app.apk"
-        apk_path.write_bytes(b"dummy apk")
+        with zipfile.ZipFile(apk_path, "w") as zf:
+            zf.writestr("AndroidManifest.xml", b"fake manifest")
+            zf.writestr("META-INF/CERT.RSA", b"fake cert")
 
         mock_adb._run.return_value = CommandResult(
             command=["adb", "install"],
