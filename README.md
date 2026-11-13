@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.7.0-555555.svg?style=flat-square" alt="Version 1.7.0"></a>
+  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.7.2-555555.svg?style=flat-square" alt="Version 1.7.2"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-30D158.svg?style=flat-square" alt="License MIT"></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/tests-696%20%2F%20696%20passing-30D158.svg?style=flat-square" alt="Tests 696/696 Passing"></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/tests-698%20%2F%20698%20passing-30D158.svg?style=flat-square" alt="Tests 698/698 Passing"></a>
   <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-Monochrome%20Liquid%20Glass-555555.svg?style=flat-square" alt="Monochrome Liquid Glass"></a>
   <a href="flashdock/ui/icon_assets.py"><img src="https://img.shields.io/badge/UI%20Assets-100%25%20Vector%20SVG-FF9500.svg?style=flat-square" alt="100% Vector SVG"></a>
 </p>
@@ -24,6 +24,10 @@
 Version 1.7.0 groups the existing 16 tools into four inset glass workflow sheets. Pearl Light and Obsidian Dark share a painted ambient field, cursor-reactive highlights, smoked icon droplets, and a unified device island. The home workspace and compact sidebar fit without scrolling. The activity console opens from the footer.
 
 The write switch starts Safe and locks write-capable screens until armed. Changing the device serial or connection mode returns it to Safe. Each workflow retains its existing preflight checks and simulation settings. The island displays reported telemetry and leaves unknown slots unset.
+
+Version 1.7.1 lets you drop or browse for Android packages and recovery ZIPs in Write: Safe. Arm Write and connect in the appropriate ADB mode to install a package or apply an OTA.
+
+Version 1.7.2 validates packages in the background. Damaged packages stay blocked and FlashDock asks for a fresh copy.
 
 The SVG source pack can be regenerated with `python scripts/generate_bw_icons.py`. Its assets and the glass stylesheet are included in the Windows bundle.
 
@@ -308,11 +312,11 @@ python -m pytest tests/ -q
 python scripts/release_build.py
 ```
 
-### Verification Results (v1.7.0)
+### Verification Results (v1.7.2)
 
-* The published source snapshot contains 696 tests across 57 test modules.
-* The unsigned Windows build is at `dist/liquid-glass-v1.7.0/FlashDock_Dist/FlashDock.exe`. Its normal startup reached the main window in an offscreen check.
-* The release archive is `dist/FlashDock-v1.7.0-windows-x64.zip`. SHA-256 hashes are recorded in `dist/SHA256SUMS.txt`.
+* The published source snapshot contains 698 tests across 57 test modules.
+* The unsigned Windows build is at `dist/liquid-glass-v1.7.2/FlashDock_Dist/FlashDock.exe`.
+* The release archive is `dist/FlashDock-v1.7.2-windows-x64.zip`. SHA-256 hashes are recorded in `dist/SHA256SUMS.txt`.
 * Both themes were visually checked at 1260×780 and the dashboard at 900×600. Previews use sample device telemetry.
 * Native compositor appearance requires a live Windows visual check. Long tool forms and data lists retain scrolling.
 

@@ -20,6 +20,7 @@ import shutil
 import struct
 import tempfile
 import zipfile
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -102,6 +103,24 @@ def _detect_apk_sig_block_v2_v3(file_path: Path) -> bool:
         return False
 
 
+def _check_zip_entries(archive: zipfile.ZipFile) -> str | None:
+    """Read each entry to EOF so zipfile checks its CRC without loading it into memory."""
+    for entry in archive.infolist():
+        try:
+            with archive.open(entry) as stream:
+                while stream.read(1024 * 1024):
+                    pass
+        except zipfile.BadZipFile as exc:
+            if str(exc).startswith("Bad CRC-32"):
+                return entry.filename
+            raise
+        except (zlib.error, EOFError, NotImplementedError, RuntimeError) as exc:
+            raise zipfile.BadZipFile(
+                f"Cannot read {entry.filename!r}. Get a fresh copy of the package."
+            ) from exc
+    return None
+
+
 def verify_apk_preflight(apk_path: str | Path) -> ApkPreFlightResult:
     """
     Validate APK archive integrity and signature presence before calling ``adb install``.
@@ -147,7 +166,7 @@ def verify_apk_preflight(apk_path: str | Path) -> ApkPreFlightResult:
                 )
 
             # Pure-Python CRC-32 check across all internal entries
-            bad_entry = zf.testzip()
+            bad_entry = _check_zip_entries(zf)
             if bad_entry is not None:
                 return ApkPreFlightResult(
                     ok=False,
@@ -161,7 +180,7 @@ def verify_apk_preflight(apk_path: str | Path) -> ApkPreFlightResult:
                 n.startswith("META-INF/") and n.upper().endswith((".RSA", ".DSA", ".EC"))
                 for n in names
             )
-    except zipfile.BadZipFile as exc:
+    except (zipfile.BadZipFile, OSError) as exc:
         return ApkPreFlightResult(
             ok=False,
             has_v2_v3_sig_block=False,

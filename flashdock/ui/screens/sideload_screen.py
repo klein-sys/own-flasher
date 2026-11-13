@@ -24,6 +24,7 @@ Zero raw emojis — 100% vector SVG icons.
 from __future__ import annotations
 
 import os
+import zipfile
 from pathlib import Path
 from typing import Optional
 
@@ -56,7 +57,7 @@ from flashdock.core.device import DeviceInfo
 from flashdock.core.device_manager import DeviceManager
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
-from flashdock.core.apk_verifier import ApkPreFlightResult, verify_apk_preflight
+from flashdock.core.apk_verifier import _check_zip_entries, verify_apk_preflight
 from flashdock.tools.sideload import (
     ApkMetadata,
     SideloadAppItem,
@@ -80,6 +81,7 @@ class SideloadWorker(QThread):
     log_emitted = Signal(str, str)         # level, message
     operation_finished = Signal(bool, str)  # success, message
     packages_loaded = Signal(list)          # list[SideloadAppItem]
+    package_inspected = Signal(str, object, str)
 
     def __init__(
         self,
@@ -95,7 +97,9 @@ class SideloadWorker(QThread):
 
     def run(self) -> None:
         try:
-            if self.action == "install_single":
+            if self.action == "inspect_package":
+                self._inspect_package()
+            elif self.action == "install_single":
                 apk_path = self.params["path"]
                 flags = self.params["flags"]
                 serial = self.params.get("serial", "")
@@ -159,6 +163,26 @@ class SideloadWorker(QThread):
             self.log_emitted.emit("ERROR", str(exc))
             self.operation_finished.emit(False, str(exc))
 
+    def _inspect_package(self) -> None:
+        path = self.params["path"]
+        meta = None
+        try:
+            meta = extract_apk_metadata(path)
+            if meta.is_split:
+                with zipfile.ZipFile(path) as archive:
+                    bad_entry = _check_zip_entries(archive)
+                if bad_entry:
+                    raise zipfile.BadZipFile(f"CRC check failed for {bad_entry}. Get a fresh copy of the package.")
+                if not meta.split_names:
+                    raise zipfile.BadZipFile("The bundle contains no APK files.")
+                error = ""
+            else:
+                error = verify_apk_preflight(path).error_reason
+        except Exception as exc:
+            log.exception("Package inspection failed")
+            error = f"Could not inspect the package. {exc}"
+        self.package_inspected.emit(path, meta, error)
+
 
 # ---------------------------------------------------------------------------
 # Interactive Squircle Dropzone Widget
@@ -175,9 +199,12 @@ class FileDropZone(QFrame):
         subtitle: str = "or click to browse from computer (Supports .apk, .xapk, .apks, .apkm, .zip)",
         file_filters: str = "Android Packages (*.apk *.xapk *.apks *.apkm *.zip);;All Files (*.*)",
         parent: Optional[QWidget] = None,
+        *,
+        extensions: tuple[str, ...] = (".apk", ".xapk", ".apks", ".apkm", ".zip"),
     ) -> None:
         super().__init__(parent)
         self.file_filters = file_filters
+        self._extensions = extensions
         self.setAcceptDrops(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMinimumHeight(120)
@@ -217,14 +244,15 @@ class FileDropZone(QFrame):
         self._apply_normal_style("dark")
 
     def _apply_normal_style(self, theme: str) -> None:
+        self._theme = theme
         if theme == "light":
             self.setStyleSheet("""
-                QFrame {
+                FileDropZone {
                     background-color: #EFEFEF;
                     border: 2px dashed #D1D1D1;
                     border-radius: 16px;
                 }
-                QFrame:hover {
+                FileDropZone:hover {
                     background-color: #F6F6F6;
                     border-color: #6A6A6A;
                 }
@@ -233,12 +261,12 @@ class FileDropZone(QFrame):
             self.sub_lbl.setStyleSheet("font-size: 11px; color: #646464; background: transparent;")
         else:
             self.setStyleSheet("""
-                QFrame {
+                FileDropZone {
                     background-color: #202020;
                     border: 2px dashed rgba(255, 255, 255, 0.15);
                     border-radius: 16px;
                 }
-                QFrame:hover {
+                FileDropZone:hover {
                     background-color: #2B2B2B;
                     border-color: #737373;
                 }
@@ -248,7 +276,7 @@ class FileDropZone(QFrame):
 
     def _apply_drag_style(self) -> None:
         self.setStyleSheet("""
-            QFrame {
+            FileDropZone {
                 background-color: rgba(115, 115, 115, 0.15);
                 border: none;
                 border-radius: 16px;
@@ -256,27 +284,30 @@ class FileDropZone(QFrame):
         """)
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        if event.mimeData().hasUrls():
-            for url in event.mimeData().urls():
-                ext = Path(url.toLocalFile()).suffix.lower()
-                if ext in (".apk", ".xapk", ".apks", ".apkm", ".zip"):
-                    event.acceptProposedAction()
-                    self._apply_drag_style()
-                    return
-        event.ignore()
+        if self._drop_path(event):
+            event.acceptProposedAction()
+            self._apply_drag_style()
+        else:
+            event.ignore()
 
     def dragLeaveEvent(self, event) -> None:
-        self._apply_normal_style("dark")
+        self._apply_normal_style(self._theme)
 
     def dropEvent(self, event: QDropEvent) -> None:
-        self._apply_normal_style("dark")
+        self._apply_normal_style(self._theme)
+        path = self._drop_path(event)
+        if path:
+            event.acceptProposedAction()
+            self.file_selected.emit(path)
+        else:
+            event.ignore()
+
+    def _drop_path(self, event: QDropEvent) -> str:
         for url in event.mimeData().urls():
             local_file = url.toLocalFile()
-            if os.path.isfile(local_file):
-                event.acceptProposedAction()
-                self.file_selected.emit(local_file)
-                return
-        event.ignore()
+            if Path(local_file).suffix.lower() in self._extensions and os.path.isfile(local_file):
+                return local_file
+        return ""
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
@@ -286,7 +317,7 @@ class FileDropZone(QFrame):
                 "",
                 self.file_filters,
             )
-            if chosen:
+            if chosen and Path(chosen).suffix.lower() in self._extensions:
                 self.file_selected.emit(chosen)
         super().mousePressEvent(event)
 
@@ -315,10 +346,15 @@ class SideloadScreen(QWidget):
         self._device_sdk = 0
         self._selected_file_path = ""
         self._cached_meta: Optional[ApkMetadata] = None
+        self._package_ready = False
+        self._inspection_worker: Optional[SideloadWorker] = None
         self._worker: Optional[SideloadWorker] = None
         self._current_theme = "dark"
+        self._write_armed = False
+        self._write_in_progress = False
 
         self._build_ui()
+        self._update_button_states()
 
     def _build_ui(self) -> None:
         root_layout = QVBoxLayout(self)
@@ -651,6 +687,7 @@ class SideloadScreen(QWidget):
             title="Drop Recovery OTA ZIP package here",
             subtitle="Supports signed OTA update.zip, custom ROMs, or kernel recovery archives",
             file_filters="Recovery Update Packages (*.zip);;All Files (*.*)",
+            extensions=(".zip",),
         )
         self._dropzone_recovery.file_selected.connect(self._on_recovery_file_selected)
         lay.addWidget(self._dropzone_recovery)
@@ -832,7 +869,7 @@ class SideloadScreen(QWidget):
                 font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 10px;
                 background-color: rgba(166, 166, 166, 0.15); color: #A6A6A6; border: none;
             """)
-            self._device_sdk = self._manager.get_device_sdk(serial=serial)
+            self._device_sdk = self._manager.get_device_sdk(serial=serial) if self._device_in_mode("system") else 0
             if self._device_sdk >= 34:
                 self._chk_bypass_low_sdk.setChecked(True)
                 self._append_log("INFO", f"Android 14+ (SDK {self._device_sdk}) detected: Low SDK bypass auto-enabled.")
@@ -845,21 +882,75 @@ class SideloadScreen(QWidget):
             """)
             self._update_button_states()
 
+    def set_write_armed(self, armed: bool) -> None:
+        self._write_armed = armed
+        self._update_button_states()
+
+    def _device_in_mode(self, *modes: str) -> bool:
+        device = self._current_device
+        return bool(device and device.serial and device.mode in modes)
+
+    def _can_write(self, *modes: str) -> bool:
+        return self._write_armed and not self._write_in_progress and self._device_in_mode(*modes)
+
+    @Slot()
+    def _finish_write(self) -> None:
+        self._write_in_progress = False
+        self._update_button_states()
+
     def _update_button_states(self) -> None:
-        has_device = bool(self._current_device and self._current_device.mode != "not_connected")
-        has_file = bool(self._selected_file_path and os.path.isfile(self._selected_file_path))
-        self._btn_install.setEnabled(has_device and has_file)
-        self._btn_sideload_ota.setEnabled(has_device and bool(getattr(self, "_selected_ota_path", "")))
+        self._btn_install.setEnabled(
+            self._can_write("system") and self._package_ready and os.path.isfile(self._selected_file_path)
+        )
+        self._btn_reboot_recovery.setEnabled(self._can_write("system", "recovery"))
+        self._btn_sideload_ota.setEnabled(
+            self._can_write("recovery", "sideload")
+            and os.path.isfile(getattr(self, "_selected_ota_path", ""))
+        )
+        self._on_table_selection_changed()
 
     @Slot(str)
     def _on_file_selected(self, file_path: str) -> None:
-        if not os.path.isfile(file_path):
+        if self.is_inspecting_package():
+            return
+        if Path(file_path).suffix.lower() not in self._dropzone._extensions or not os.path.isfile(file_path):
             return
         self._selected_file_path = file_path
+        self._cached_meta = None
+        self._package_ready = False
+        self._meta_card.hide()
+        self._dropzone.setEnabled(False)
+        self._update_button_states()
         self._append_log("INFO", f"Inspecting package: {Path(file_path).name}...")
+        worker = SideloadWorker(self._manager, "inspect_package", {"path": file_path}, self)
+        self._inspection_worker = worker
+        worker.package_inspected.connect(self._show_package_result)
+        worker.finished.connect(self._finish_inspection)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
 
+    def is_inspecting_package(self) -> bool:
+        return self._inspection_worker is not None
+
+    @Slot()
+    def _finish_inspection(self) -> None:
+        self._inspection_worker = None
+        self._dropzone.setEnabled(True)
+
+    @Slot(str, object, str)
+    def _show_package_result(self, file_path: str, meta: Optional[ApkMetadata], error: str) -> None:
+        if meta is not None:
+            self._render_package_metadata(file_path, meta)
+        self._package_ready = meta is not None and not error
+        self._update_button_states()
+        if error:
+            self._append_log("ERROR", f"Package validation failed: {error}")
+            QMessageBox.warning(self, "Package validation failed", error)
+        elif meta is not None:
+            self._append_log("SUCCESS", f"Package preflight passed: {meta.summary_line}")
+
+    def _render_package_metadata(self, file_path: str, meta: ApkMetadata) -> None:
         try:
-            meta = extract_apk_metadata(file_path)
             self._cached_meta = meta
 
             self._meta_title_lbl.setText(meta.app_label or Path(file_path).stem)
@@ -884,32 +975,14 @@ class SideloadScreen(QWidget):
                 self._app_icon_lbl.setPixmap(get_icon_pixmap("box", width=32, height=32, color="#737373"))
 
             self._meta_card.setVisible(True)
-            self._update_button_states()
-            self._append_log("SUCCESS", f"Package verified: {meta.summary_line}")
-
-            # --- APK Pre-Flight Signature Check (informational at selection time) ---
-            ext = Path(file_path).suffix.lower()
-            if ext == ".apk" and not meta.is_split:
-                preflight = verify_apk_preflight(file_path)
-                if preflight.ok:
-                    sig_parts = []
-                    if preflight.has_v1_jar_sig:
-                        sig_parts.append("v1 (JAR)")
-                    if preflight.has_v2_v3_sig_block:
-                        sig_parts.append("v2/v3 (APK Sig Block 42)")
-                    self._append_log(
-                        "SUCCESS",
-                        f"APK signature pre-flight: {', '.join(sig_parts)} "
-                        f"(SHA-256: {preflight.sha256[:16]}...)",
-                    )
-                else:
-                    self._append_log("WARN", f"APK pre-flight warning: {preflight.error_reason}")
 
         except Exception as exc:
             self._append_log("ERROR", f"Failed to extract metadata: {exc}")
             QMessageBox.warning(self, "Metadata Extraction Error", f"Could not inspect package:\n{exc}")
 
     def _browse_file(self) -> None:
+        if self.is_inspecting_package():
+            return
         chosen, _ = QFileDialog.getOpenFileName(
             self,
             "Select Android Package or Archive",
@@ -921,7 +994,8 @@ class SideloadScreen(QWidget):
 
     @Slot()
     def _on_install_clicked(self) -> None:
-        if not self._selected_file_path or not os.path.isfile(self._selected_file_path):
+        if (not self._can_write("system") or not self._package_ready
+                or not os.path.isfile(self._selected_file_path)):
             return
 
         flags = SideloadFlags(
@@ -937,7 +1011,8 @@ class SideloadScreen(QWidget):
         is_split = (self._cached_meta and self._cached_meta.is_split) or (Path(self._selected_file_path).suffix.lower() in (".xapk", ".apks", ".apkm"))
         action = "install_split" if is_split else "install_single"
 
-        self._btn_install.setEnabled(False)
+        self._write_in_progress = True
+        self._update_button_states()
         self._progress_bar.setRange(0, 0)  # Marquee
 
         self._worker = SideloadWorker(
@@ -948,6 +1023,7 @@ class SideloadScreen(QWidget):
         )
         self._worker.log_emitted.connect(self._append_log)
         self._worker.operation_finished.connect(self._on_install_finished)
+        self._worker.finished.connect(self._finish_write)
         self._worker.start()
 
     @Slot(bool, str)
@@ -969,6 +1045,8 @@ class SideloadScreen(QWidget):
 
     @Slot(str)
     def _on_recovery_file_selected(self, file_path: str) -> None:
+        if Path(file_path).suffix.lower() != ".zip" or not os.path.isfile(file_path):
+            return
         self._selected_ota_path = file_path
         self._lbl_selected_ota.setText(f"Selected: {Path(file_path).name} ({os.path.getsize(file_path) / (1024*1024):.2f} MB)")
         self._lbl_selected_ota.setStyleSheet("font-size: 12px; font-weight: 600; color: #737373;")
@@ -976,6 +1054,8 @@ class SideloadScreen(QWidget):
 
     @Slot()
     def _on_reboot_recovery_clicked(self) -> None:
+        if not self._can_write("system", "recovery"):
+            return
         serial = self._current_device.serial if self._current_device else ""
         self._append_log("INFO", "Rebooting device to recovery mode...")
         res = self._adb.reboot_recovery(serial=serial)
@@ -987,11 +1067,12 @@ class SideloadScreen(QWidget):
     @Slot()
     def _on_sideload_ota_clicked(self) -> None:
         ota_path = getattr(self, "_selected_ota_path", "")
-        if not ota_path or not os.path.isfile(ota_path):
+        if not self._can_write("recovery", "sideload") or not os.path.isfile(ota_path):
             return
 
         serial = self._current_device.serial if self._current_device else ""
-        self._btn_sideload_ota.setEnabled(False)
+        self._write_in_progress = True
+        self._update_button_states()
         self._progress_bar.setValue(0)
 
         self._worker = SideloadWorker(
@@ -1003,6 +1084,7 @@ class SideloadScreen(QWidget):
         self._worker.progress_updated.connect(lambda pct, st: self._progress_bar.setValue(pct))
         self._worker.log_emitted.connect(self._append_log)
         self._worker.operation_finished.connect(self._on_sideload_ota_finished)
+        self._worker.finished.connect(self._finish_write)
         self._worker.start()
 
     @Slot(bool, str)
@@ -1020,6 +1102,8 @@ class SideloadScreen(QWidget):
     # -----------------------------------------------------------------------
 
     def _load_packages(self, filter_type: str) -> None:
+        if not self._device_in_mode("system") or self._write_in_progress:
+            return
         self._btn_filter_3rd.setChecked(filter_type == "3rd_party")
         self._btn_filter_system.setChecked(filter_type == "system")
         self._btn_filter_disabled.setChecked(filter_type == "disabled")
@@ -1078,12 +1162,14 @@ class SideloadScreen(QWidget):
 
     def _on_table_selection_changed(self) -> None:
         selected = self._get_selected_package()
-        has_sel = selected is not None
-        self._btn_pull.setEnabled(has_sel)
-        self._btn_clear_data.setEnabled(has_sel)
-        self._btn_force_stop.setEnabled(has_sel)
-        self._btn_toggle_disable.setEnabled(has_sel)
-        self._btn_uninstall.setEnabled(has_sel)
+        self._btn_pull.setEnabled(
+            selected is not None and not self._write_in_progress and self._device_in_mode("system")
+        )
+        can_change = selected is not None and self._can_write("system")
+        self._btn_clear_data.setEnabled(can_change)
+        self._btn_force_stop.setEnabled(can_change)
+        self._btn_toggle_disable.setEnabled(can_change)
+        self._btn_uninstall.setEnabled(can_change)
 
         if selected:
             if selected.is_enabled:
@@ -1104,14 +1190,17 @@ class SideloadScreen(QWidget):
 
     def _execute_pkg_action(self, action: str) -> None:
         pkg = self._get_selected_package()
-        if not pkg:
+        if not pkg or self._write_in_progress or not self._device_in_mode("system"):
+            return
+        if action != "pull" and not self._can_write("system"):
             return
 
         serial = self._current_device.serial if self._current_device else ""
         dest_dir = None
         if action == "pull":
             dest_dir = QFileDialog.getExistingDirectory(self, "Select Save Directory for Extracted APK")
-            if not dest_dir:
+            if (not dest_dir or self._write_in_progress or not self._device_in_mode("system")
+                    or self._current_device.serial != serial):
                 return
 
         if action == "uninstall":
@@ -1124,7 +1213,12 @@ class SideloadScreen(QWidget):
             )
             if reply != QMessageBox.StandardButton.Yes:
                 return
+            if not self._can_write("system") or self._current_device.serial != serial:
+                return
 
+        if action != "pull":
+            self._write_in_progress = True
+            self._update_button_states()
         self._worker = SideloadWorker(
             manager=self._manager,
             action="manage_package",
@@ -1138,6 +1232,8 @@ class SideloadScreen(QWidget):
         )
         self._worker.log_emitted.connect(self._append_log)
         self._worker.operation_finished.connect(self._on_pkg_action_finished)
+        if action != "pull":
+            self._worker.finished.connect(self._finish_write)
         self._worker.start()
 
     def _toggle_disable_selected(self) -> None:

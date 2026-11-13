@@ -154,7 +154,8 @@ class TestSideloadManager:
         adb.getprop.return_value = "34"
         return adb
 
-    def test_install_single_apk_success(self, tmp_path, mock_adb):
+    def test_install_single_apk_success(self, tmp_path, mock_adb, monkeypatch):
+        monkeypatch.chdir(tmp_path)
         apk_path = tmp_path / "app.apk"
         with zipfile.ZipFile(apk_path, "w") as zf:
             zf.writestr("AndroidManifest.xml", b"fake manifest")
@@ -171,12 +172,13 @@ class TestSideloadManager:
 
         mgr = SideloadManager(adb=mock_adb)
         flags = SideloadFlags(grant_permissions=True, allow_downgrade=True)
-        ok, msg = mgr.install_apk(apk_path, flags=flags, serial="TEST_SERIAL")
+        ok, msg = mgr.install_apk(apk_path.name, flags=flags, serial="TEST_SERIAL")
 
         assert ok is True
         assert "Successfully installed" in msg
         mock_adb._run.assert_called_once()
         cmd_run = mock_adb._run.call_args[0][0]
+        assert apk_path.is_file()
         assert "install" in cmd_run
         assert "-g" in cmd_run
         assert "-d" in cmd_run
@@ -351,28 +353,43 @@ class TestSideloadScreenUI:
         assert screen._tabs.count() == 3
 
         # Simulate device connection
-        dev = DeviceInfo(serial="DEV_123", mode="device", model="Pixel 8 Pro", brand="Google")
+        dev = DeviceInfo(serial="DEV_123", mode="system", model="Pixel 8 Pro", brand="Google")
         screen.load_for_device(dev)
 
         assert "DEV_123" in screen._dev_chip.text() or "Pixel 8 Pro" in screen._dev_chip.text()
         assert screen._chk_bypass_low_sdk.isChecked() is True
 
-    def test_file_selection_updates_ui(self, qapp, tmp_path):
+    def test_file_selection_updates_ui(self, qtbot, tmp_path, monkeypatch):
         adb = MagicMock(spec=ADB)
         screen = SideloadScreen(adb=adb)
 
-        dev = DeviceInfo(serial="DEV_123", mode="device", model="Galaxy S24", brand="Samsung")
+        dev = DeviceInfo(serial="DEV_123", mode="system", model="Galaxy S24", brand="Samsung")
         screen.load_for_device(dev)
 
         apk_path = tmp_path / "com.example.hello.apk"
         with zipfile.ZipFile(apk_path, "w") as zf:
             zf.writestr("AndroidManifest.xml", b"fake xml")
+            zf.writestr("META-INF/CERT.RSA", b"test signature marker")
 
         screen._on_file_selected(str(apk_path))
+        qtbot.waitUntil(lambda: not screen.is_inspecting_package())
 
         assert not screen._meta_card.isHidden()
         assert "com.example.hello" in screen._meta_pkg_lbl.text()
+        assert not screen._btn_install.isEnabled()
+        screen.set_write_armed(True)
         assert screen._btn_install.isEnabled() is True
+
+        from PySide6.QtWidgets import QMessageBox
+        warnings = []
+        monkeypatch.setattr(QMessageBox, "warning", lambda *args: warnings.append(args[2]))
+        broken = tmp_path / "broken.apk"
+        broken.write_bytes(b"not an APK")
+        screen._on_file_selected(str(broken))
+        assert not screen._btn_install.isEnabled()
+        qtbot.waitUntil(lambda: not screen.is_inspecting_package())
+        assert warnings and "valid ZIP" in warnings[0]
+        assert not screen._btn_install.isEnabled()
 
     def test_theme_toggle_applies_cleanly(self, qapp):
         adb = MagicMock(spec=ADB)

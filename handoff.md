@@ -1,9 +1,9 @@
 # FlashDock — Engineering Handoff & Session State
 
-- **Current Version**: `v1.7.0` (Monochrome Liquid Glass workstation)
+- **Current Version**: `v1.7.2` (Monochrome Liquid Glass workstation)
 - **Repository**: `https://github.com/klein-sys/own-flasher`
 - **Runtime**: Python 3.10–3.14 (verified on Python 3.14.7) | PySide6 (Qt 6.12) | Windows 10/11 x64
-- **Test Suite Status**: 696 tests in the publication snapshot across 57 test modules.
+- **Test Suite Status**: 698 tests in the publication snapshot across 57 test modules.
 
 ---
 
@@ -115,3 +115,11 @@
 - The build is unsigned and stored at `dist/liquid-glass-v1.7.0/FlashDock_Dist/FlashDock.exe`. The 52.1 MiB ZIP is `dist/FlashDock-v1.7.0-windows-x64.zip`. Source and bundled copies of the stylesheet and all 32 SVG files match byte for byte. The ZIP CRC check passed.
 - Native DWM appearance has not been visually checked on the live desktop. Long tool forms and data lists still scroll. Dashboard previews use sample telemetry.
 - The local working tree contains separate APK verifier, device-manager, and sideload edits. The publication snapshot covers Liquid Glass and the source launcher.
+
+### Milestone 1.7.1 — Safe mode file selection
+
+- APK and recovery ZIP drop zones remain available in Write: Safe. Device-changing actions require Write: Armed and a compatible ADB connection.
+
+### Milestone 1.7.2 — APK integrity checks
+
+- Inspect packages off the UI thread and keep installation disabled until validation passes. Reject unreadable archive entries without modifying the selected file. Preserve the original APK when installing from a relative path.

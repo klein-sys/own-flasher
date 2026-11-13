@@ -375,7 +375,7 @@ class MainWindow(QMainWindow):
         # Unified single bottom bar hosting telemetry and device controls
         self._status_bar = StatusBarWidget(self, device_selector=self._device_selector)
         self._status_bar._connection_badge.hide()
-        self._safety_hint = QLabel("Write controls are locked. Select Write: Safe in the top bar to arm them.")
+        self._safety_hint = QLabel()
         self._safety_hint.setWordWrap(True)
         center_lay.insertWidget(0, self._safety_hint)
         self._stack.currentChanged.connect(self._update_safety_hint)
@@ -817,9 +817,9 @@ class MainWindow(QMainWindow):
             self._unlock_screen, self._backup_screen, self._root_screen,
             self._modules_screen, self._integrity_screen, self._flash_rom_screen,
             self._return_stock_screen, self._unbrick_screen, self._mtk_unisoc_screen,
-            self._sideload_screen,
         ):
             screen.setEnabled(armed)
+        self._sideload_screen.set_write_armed(armed)
         self._live_hud.setEnabled(armed)
         self._update_safety_hint(self._stack.currentIndex())
 
@@ -828,6 +828,10 @@ class MainWindow(QMainWindow):
             PAGE_UNLOCK, PAGE_BACKUP, PAGE_ROOT, PAGE_MODULES, PAGE_INTEGRITY,
             PAGE_FLASH_ROM, PAGE_RETURN_STOCK, PAGE_UNBRICK, PAGE_MTK_UNISOC, PAGE_SIDELOAD,
         }
+        if index == PAGE_SIDELOAD:
+            self._safety_hint.setText("You can select files in Safe mode. Arm Write before installing or changing apps.")
+        else:
+            self._safety_hint.setText("Write controls are locked. Select Write: Safe in the top bar to arm them.")
         self._safety_hint.setVisible(index in write_pages and not self._island.write_switch.is_armed)
 
     # ==================================================================
@@ -1423,6 +1427,10 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:  # noqa: N802
         """Save window geometry and stop background threads."""
+        if self._sideload_screen.is_inspecting_package():
+            QMessageBox.information(self, "Package inspection", "Wait for package inspection to finish before closing FlashDock.")
+            event.ignore()
+            return
         if is_flash_locked():
             reply = QMessageBox.critical(
                 self,

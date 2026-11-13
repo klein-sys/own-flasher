@@ -287,6 +287,71 @@ class TestMainWindow:
         assert not win._island.write_switch.is_armed
         assert not win._flash_rom_screen.isEnabled()
 
+    def test_sideload_drop_in_safe_mode(self, qtbot, mock_main_window, tmp_path, monkeypatch):
+        import zipfile
+        from pathlib import Path
+        from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
+        from PySide6.QtGui import QDragEnterEvent, QDropEvent
+        from flashdock.ui.screens.sideload_screen import SideloadWorker
+        qapp = QApplication.instance()
+
+        win = mock_main_window
+        win._on_action("sideload")
+        screen = win._sideload_screen
+        assert screen._dropzone.isEnabled()
+        assert screen._dropzone_recovery.isEnabled()
+
+        apk = tmp_path / "example.apk"
+        with zipfile.ZipFile(apk, "w") as bundle:
+            bundle.writestr("AndroidManifest.xml", b"test")
+            bundle.writestr("META-INF/CERT.RSA", b"test signature marker")
+        unsupported = tmp_path / "notes.txt"
+        unsupported.touch()
+        mime = QMimeData()
+        mime.setUrls([QUrl.fromLocalFile(str(unsupported)), QUrl.fromLocalFile(str(apk))])
+        drag = QDragEnterEvent(QPoint(10, 10), Qt.DropAction.CopyAction, mime,
+                               Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+        drop = QDropEvent(QPointF(10, 10), Qt.DropAction.CopyAction, mime,
+                          Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+        qapp.sendEvent(screen._dropzone, drag)
+        qapp.sendEvent(screen._dropzone, drop)
+        assert drag.isAccepted() and drop.isAccepted()
+        qtbot.waitUntil(lambda: not screen.is_inspecting_package())
+        assert Path(screen._selected_file_path) == apk
+        assert not screen._btn_install.isEnabled()
+
+        ota = tmp_path / "update.zip"
+        ota.touch()
+        mime.setUrls([QUrl.fromLocalFile(str(apk)), QUrl.fromLocalFile(str(ota))])
+        drag = QDragEnterEvent(QPoint(10, 10), Qt.DropAction.CopyAction, mime,
+                               Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+        drop = QDropEvent(QPointF(10, 10), Qt.DropAction.CopyAction, mime,
+                          Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+        qapp.sendEvent(screen._dropzone_recovery, drag)
+        qapp.sendEvent(screen._dropzone_recovery, drop)
+        assert drag.isAccepted() and drop.isAccepted()
+        assert Path(screen._selected_ota_path) == ota
+        assert not screen._btn_sideload_ota.isEnabled()
+
+        monkeypatch.setattr(screen._manager, "get_device_sdk", lambda **_: 33)
+        screen.load_for_device(DeviceInfo(serial="PHONE", mode="system"))
+        started = []
+        monkeypatch.setattr(SideloadWorker, "start", lambda self: started.append(self.action))
+        screen._on_install_clicked()
+        assert not started and not screen._btn_install.isEnabled()
+        win._island.write_switch.set_armed(True)
+        assert screen._btn_install.isEnabled()
+        screen._btn_install.click()
+        assert started == ["install_single"]
+        win._island.write_switch.set_armed(False)
+        assert screen._dropzone.isEnabled() and not screen._btn_install.isEnabled()
+        screen._worker.finished.emit()
+        screen.load_for_device(DeviceInfo(serial="PHONE", mode="sideload"))
+        screen._on_sideload_ota_clicked()
+        assert started == ["install_single"]
+        win._island.write_switch.set_armed(True)
+        assert screen._btn_sideload_ota.isEnabled() and not screen._btn_install.isEnabled()
+
     def test_background_device_and_network_updates_reach_ui(self, qapp, mock_main_window):
         from threading import Thread
 

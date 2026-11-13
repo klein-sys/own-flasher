@@ -147,6 +147,23 @@ class TestDetectApkSigBlock:
 # ---------------------------------------------------------------------------
 
 class TestVerifyApkPreflight:
+    def test_invalid_deflate_entry_returns_failure_without_changing_apk(self, tmp_path):
+        apk = tmp_path / "damaged.apk"
+        with zipfile.ZipFile(apk, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("AndroidManifest.xml", b"manifest")
+            archive.writestr("META-INF/CERT.RSA", b"cert")
+            archive.writestr("classes.dex", b"data" * 100)
+            entry = archive.getinfo("classes.dex")
+        damaged = bytearray(apk.read_bytes())
+        offset = entry.header_offset + 30 + len("classes.dex")
+        damaged[offset] = 0xff
+        apk.write_bytes(damaged)
+        result = verify_apk_preflight(apk)
+        assert not result.ok
+        assert "classes.dex" in result.error_reason
+        assert "fresh copy" in result.error_reason
+        assert apk.read_bytes() == damaged
+
     def test_missing_file(self, tmp_path):
         result = verify_apk_preflight(tmp_path / "ghost.apk")
         assert result.ok is False

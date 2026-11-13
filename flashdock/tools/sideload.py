@@ -390,7 +390,7 @@ class SideloadManager:
 
         # --- Atomic Staging (non-ASCII path safety) ---
         staged_path = stage_apk_atomically(path)
-        staged = staged_path != path
+        staged = staged_path != path.resolve()
         if staged and progress_cb:
             progress_cb(f"Staged APK to temp path (non-ASCII source): {staged_path.name}")
 
