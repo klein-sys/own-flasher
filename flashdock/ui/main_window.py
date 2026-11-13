@@ -1,10 +1,8 @@
 """
 FlashDock — Main application window.
 
-Assembles the sidebar (Phone Control Panel), the central action area
-with the 13 main buttons, device selector, device card, and the status
-bar.  Phase 2 wires up real device detection, reboot buttons, and the
-"Check my phone" screen.
+Assembles four glass workflow sheets, a unified device island,
+sidebar controls, and the existing device-service screens.
 """
 
 from __future__ import annotations
@@ -14,22 +12,18 @@ from functools import partial
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import QMetaObject, QTimer, Qt, Q_ARG, Slot
-from PySide6.QtGui import QAction, QColor, QFont, QKeySequence, QShortcut
+from PySide6.QtCore import QTimer, Qt, Signal, Slot
+from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
     QFrame,
-    QGraphicsDropShadowEffect,
-    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QMainWindow,
     QMessageBox,
     QPushButton,
-    QScrollArea,
-    QSizePolicy,
     QSplitter,
     QStackedWidget,
     QVBoxLayout,
@@ -41,6 +35,7 @@ from flashdock.config import Config
 from flashdock.constants import TOOLS_DIR
 from flashdock.core.device import DeviceInfo
 from flashdock.core.device_manager import DeviceManager
+from flashdock.core.device_state_sync import DeviceStateBroadcaster
 from flashdock.core.network import NetworkMonitor
 from flashdock.logger import get_logger
 from flashdock.tools.adb import ADB
@@ -61,10 +56,16 @@ from flashdock.ui.screens.unbrick_screen import UnbrickScreen
 from flashdock.ui.screens.integrity_screen import IntegrityScreen
 from flashdock.ui.screens.logs_help_screen import LogsHelpScreen
 from flashdock.ui.screens.sideload_screen import SideloadScreen
-from flashdock.ui.brand_assets import get_brand_icon, get_brand_pixmap
 from flashdock.ui.styles import get_stylesheet
 from flashdock.ui.widgets.device_card import DeviceCard
 from flashdock.ui.widgets.device_hud import LiveDeviceHud
+from flashdock.ui.widgets.dynamic_island import ObsidianDynamicIslandBar
+from flashdock.ui.widgets.liquid_glass_widget import (
+    LiquidGlassActionRow,
+    LiquidGlassCanvas,
+    LiquidGlassSheet,
+    enable_windows_acrylic_blur,
+)
 from flashdock.ui.widgets.device_selector import DeviceSelector
 from flashdock.ui.widgets.header_inspector_dialog import PartitionHeaderInspectorDialog
 from flashdock.ui.widgets.key_guide_dialog import HardwareKeyGuideDialog
@@ -77,248 +78,12 @@ from flashdock.ui.widgets.setup_wizard_dialog import SetupWizardDialog
 from flashdock.ui.widgets.side_terminal import SideTerminalHandler, SideTerminalWidget
 from flashdock.ui.widgets.status_bar import StatusBarWidget
 from flashdock.ui.widgets.workflow_guide import WorkflowGuideDialog
-from flashdock.workers.device_monitor import (
-    DeviceMonitorWorker,
-    HardwareMode,
-    HARDWARE_VID_PID_MAP,
-)
-from flashdock.workers.flash_engine import (
-    FlashEngineWorker,
-    FlashOperationType,
-    FlashTask,
-)
-from flashdock.core.diagnostics_engine import (
-    DiagnosticsEngine,
-    AdbDiagnosticsResult,
-    FastbootDiagnosticsResult,
-)
-from flashdock.ui.icon_assets import create_icon_label, get_icon, get_icon_pixmap
+from flashdock.workers.device_monitor import DeviceMonitorWorker
+from flashdock.workers.flash_engine import FlashEngineWorker
+from flashdock.core.diagnostics_engine import DiagnosticsEngine
+from flashdock.ui.icon_assets import create_icon_label, get_icon
 
 log = get_logger(__name__)
-
-# ---------------------------------------------------------------------------
-# Category Design Tokens & Card Styling
-# ---------------------------------------------------------------------------
-CAT_STYLES = {
-    "dark": {
-        "Root": ("rgba(191, 90, 242, 0.18)", "#BF5AF2"),
-        "Flashing": ("rgba(10, 132, 255, 0.18)", "#0A84FF"),
-        "Rescue": ("rgba(255, 69, 58, 0.18)", "#FF453A"),
-        "Device": ("rgba(48, 209, 88, 0.18)", "#30D158"),
-        "Tools": ("rgba(255, 159, 10, 0.18)", "#FF9F0A"),
-    },
-    "light": {
-        "Root": ("rgba(175, 82, 222, 0.15)", "#8944AB"),
-        "Flashing": ("rgba(0, 122, 255, 0.15)", "#0071E3"),
-        "Rescue": ("rgba(255, 59, 48, 0.15)", "#D70015"),
-        "Device": ("rgba(52, 199, 89, 0.15)", "#248A3D"),
-        "Tools": ("rgba(255, 149, 0, 0.15)", "#C96E00"),
-    },
-}
-
-VIBRANT_BADGE_GRADIENTS = {
-    "Flashing": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0A84FF, stop:1 #0056B3)",
-    "Root": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #BF5AF2, stop:1 #7B2CBF)",
-    "Rescue": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FF453A, stop:1 #C92A2A)",
-    "Device": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #30D158, stop:1 #1E824C)",
-    "Tools": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FF9F0A, stop:1 #D35400)",
-}
-
-# Distinct, high-vibrancy gradients for each individual workstation action card
-ACTION_BADGE_GRADIENTS = {
-    # ADB & Device Inspection
-    "check_phone":  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7)",
-    "diagnostics":  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00B4D8, stop:1 #0077B6)",
-    "sideload":     "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00C6FF, stop:1 #0072FF)",
-    "downloads":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #10B981, stop:1 #059669)",
-    "scrcpy":       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #6366F1, stop:1 #4338CA)",
-    "logs_help":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #8B5CF6, stop:1 #6D28D9)",
-
-    # Flashing & Bootloader
-    "flash_rom":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2563EB, stop:1 #1D4ED8)",
-    "unlock_bl":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F59E0B, stop:1 #D97706)",
-    "return_stock": "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0284C7, stop:1 #0369A1)",
-    "mtk_unisoc":   "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EA580C, stop:1 #C2410C)",
-
-    # Root, Modules & Integrity
-    "root":         "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #A855F7, stop:1 #7E22CE)",
-    "modules":      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EC4899, stop:1 #BE185D)",
-    "integrity":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #3B82F6, stop:1 #1E40AF)",
-
-    # Rescue & Safety Prerequisites
-    "checklist":    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #059669, stop:1 #047857)",
-    "backup":       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F97316, stop:1 #C2410C)",
-    "unbrick":      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EF4444, stop:1 #B91C1C)",
-}
-
-ACTION_ICON_MAP = {
-    "check_phone": "search",
-    "checklist": "checklist",
-    "unlock_bl": "unlock",
-    "root": "root",
-    "flash_rom": "flash",
-    "modules": "modules",
-    "diagnostics": "diagnostics",
-    "integrity": "integrity",
-    "backup": "backup",
-    "unbrick": "unbrick",
-    "return_stock": "return_stock",
-    "mtk_unisoc": "mtk_unisoc",
-    "scrcpy": "scrcpy",
-    "downloads": "downloads",
-    "logs_help": "logs_help",
-    "sideload": "box",
-}
-
-
-class ActionCardButton(QPushButton):
-    """Next-Gen HyperOS / iOS 18 Action Card with compact height, vibrant circular badge, and rich tooltip."""
-
-    def __init__(
-        self,
-        action_id: str,
-        icon: str,
-        label: str,
-        desc: str,
-        category: str,
-        parent: Optional[QWidget] = None,
-    ) -> None:
-        super().__init__(parent)
-        self.action_id = action_id
-        self.icon_str = icon
-        self.label_str = label
-        self.desc_str = desc
-        self.category = category
-        self.setProperty("cssClass", "action")
-        self.setToolTip(f"<b>{label}</b> ({category.upper()})<br>{desc}")
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.setFixedHeight(54)
-
-        # Smooth macOS Sequoia Drop Shadow (offset: 0, 2; blur: 10)
-        self._shadow = QGraphicsDropShadowEffect(self)
-        self._shadow.setBlurRadius(10)
-        self._shadow.setXOffset(0)
-        self._shadow.setYOffset(2)
-        self._shadow.setColor(QColor(0, 0, 0, 35))
-        self.setGraphicsEffect(self._shadow)
-
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 6, 12, 6)
-        layout.setSpacing(10)
-
-        # Left Circular Badge Container (28x28px circular chip, border-radius: 14px)
-        self.chip_frame = QFrame()
-        self.chip_frame.setFixedSize(28, 28)
-        self.chip_frame.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        chip_layout = QHBoxLayout(self.chip_frame)
-        chip_layout.setContentsMargins(0, 0, 0, 0)
-        chip_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.icon_lbl = QLabel()
-        self.icon_lbl.setFixedSize(14, 14)
-        self.icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        chip_layout.addWidget(self.icon_lbl)
-        layout.addWidget(self.chip_frame, 0, Qt.AlignmentFlag.AlignVCenter)
-
-        # Content Layout: Title and Category badge inline
-        header_row = QHBoxLayout()
-        header_row.setContentsMargins(0, 0, 0, 0)
-        header_row.setSpacing(6)
-
-        self.title_lbl = QLabel(label)
-        self.title_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        header_row.addWidget(self.title_lbl, 1)
-
-        self.badge_lbl = QLabel(category.upper())
-        self.badge_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        header_row.addWidget(self.badge_lbl, 0)
-        layout.addLayout(header_row, 1)
-
-        # Retain self.desc_lbl for backward-compatibility with tests, hidden in layout
-        self.desc_lbl = QLabel(desc)
-        self.desc_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.desc_lbl.setVisible(False)
-
-    def apply_theme(self, theme: str) -> None:
-        theme = theme.lower()
-        cat_info = CAT_STYLES.get(theme, CAT_STYLES["dark"]).get(
-            self.category, ("rgba(255, 255, 255, 0.08)", "#8E8E93")
-        )
-        bg_tint, text_color = cat_info
-
-        # Vibrant unique accent gradient for this specific action card
-        grad = ACTION_BADGE_GRADIENTS.get(
-            self.action_id,
-            VIBRANT_BADGE_GRADIENTS.get(
-                self.category,
-                "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0A84FF, stop:1 #0056B3)",
-            ),
-        )
-        self.chip_frame.setStyleSheet(
-            f"background: {grad}; border-radius: 14px; border: none;"
-        )
-
-        # High-res vector SVG icon rendered in crisp white inside the badge
-        icon_name = ACTION_ICON_MAP.get(self.action_id, self.icon_str or "flash")
-        pix = get_icon_pixmap(icon_name, width=14, height=14, color="#FFFFFF")
-        self.icon_lbl.setPixmap(pix)
-
-        if theme == "light":
-            self.setStyleSheet(
-                "QPushButton { background-color: #ECEFF4; border: 1px solid #CBD1DC; border-radius: 12px; }"
-                "QPushButton:hover { background-color: #F4F6F9; border-color: #007AFF; }"
-                "QPushButton:pressed { background-color: #D8DCE4; }"
-            )
-            self._shadow.setColor(QColor(0, 0, 0, 15))
-            self.title_lbl.setStyleSheet(
-                "font-size: 11.5px; font-weight: 600; color: #1C2024; background: transparent;"
-            )
-            self.desc_lbl.setStyleSheet(
-                "font-size: 11px; color: #5A6572; background: transparent;"
-            )
-        else:
-            self.setStyleSheet(
-                "QPushButton { background-color: #1A212E; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; }"
-                "QPushButton:hover { background-color: #222C3D; border-color: #0A84FF; }"
-                "QPushButton:pressed { background-color: #161D28; }"
-            )
-            self._shadow.setColor(QColor(0, 0, 0, 80))
-            self.title_lbl.setStyleSheet(
-                "font-size: 11.5px; font-weight: 600; color: #E6EDF3; background: transparent;"
-            )
-            self.desc_lbl.setStyleSheet(
-                "font-size: 11px; color: #8B949E; background: transparent;"
-            )
-
-        self.badge_lbl.setStyleSheet(
-            f"font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; "
-            f"background-color: {bg_tint}; color: {text_color};"
-        )
-
-    def set_offline_state(self, is_offline: bool, theme: str) -> None:
-        if is_offline:
-            self.setEnabled(False)
-            self.setCursor(Qt.CursorShape.ForbiddenCursor)
-            self.setToolTip("[Offline] Internet connection required for this function.")
-            if theme.lower() == "light":
-                self.setStyleSheet(
-                    "QPushButton { background-color: #F4F4F5; border: 1px dashed #D4D4D8; "
-                    "border-radius: 10px; color: #A1A1AA; }"
-                )
-            else:
-                self.setStyleSheet(
-                    "QPushButton { background-color: #141416; border: 1px dashed #2C2C2E; "
-                    "border-radius: 10px; color: #555558; }"
-                )
-        else:
-            self.setEnabled(True)
-            self.setCursor(Qt.CursorShape.PointingHandCursor)
-            self.setToolTip(self.desc_str)
-            self.setStyleSheet("")
-            self.apply_theme(theme)
-
 
 # ---------------------------------------------------------------------------
 # Main action definitions (id, icon_name, label, description, category, tags)
@@ -342,6 +107,13 @@ MAIN_ACTIONS = [
     ("logs_help",     "logs_help",    "Logs & Help",            "View telemetry logs, guides & troubleshooting", "Device", ["logs", "help", "guide", "troubleshooting", "terminal", "support", "docs"]),
 ]
 
+WORKFLOWS = (
+    ("Inspect", "01. Inspect & Backup", ("check_phone", "checklist", "backup", "diagnostics")),
+    ("Daily", "02. ADB & Daily Apps", ("sideload", "scrcpy", "downloads", "logs_help")),
+    ("Root", "03. Root & Integrity", ("root", "modules", "integrity", "unlock_bl")),
+    ("Flash", "04. Flash & Rescue", ("flash_rom", "unbrick", "mtk_unisoc", "return_stock")),
+)
+
 # Page indices in the stacked widget
 PAGE_HOME = 0
 PAGE_DEVICE_CARD = 1
@@ -364,6 +136,9 @@ PAGE_SIDELOAD = 15
 class MainWindow(QMainWindow):
     """Top-level application window."""
 
+    device_changed = Signal(object)
+    network_changed = Signal(bool)
+
     def __init__(
         self,
         config: Config,
@@ -383,13 +158,19 @@ class MainWindow(QMainWindow):
         self._diagnostics_engine = DiagnosticsEngine(adb=self._adb, fastboot=self._fastboot)
         self._monitor_worker = DeviceMonitorWorker(adb=self._adb, fastboot=self._fastboot)
         self._flash_worker = FlashEngineWorker(adb=self._adb, fastboot=self._fastboot)
-        self._action_buttons: dict[str, QPushButton] = {}
+        self._action_buttons: dict[str, LiquidGlassActionRow] = {}
+        self._device_state = DeviceStateBroadcaster(self)
+        self._hardware_info: DeviceInfo | None = None
+        self._displayed_device: tuple[str, str] | None = None
         self._action_descs: dict[str, str] = {}
 
         self._init_window()
         self._build_menu_bar()
         self._build_central()
         self._connect_signals()
+        self._set_theme(self._config.get("theme", "dark"))
+        self._apply_write_safety(False)
+        self._handle_device_change(self._device_mgr.device)
 
         # Kick off an initial network check
         self._network.check_now()
@@ -414,17 +195,7 @@ class MainWindow(QMainWindow):
 
         self.setMinimumSize(900, 600)
 
-        # Set high-resolution squircle window icon
-        from pathlib import Path
-        from PySide6.QtGui import QIcon
-        icon_candidates = [
-            Path(__file__).resolve().parent.parent / "resources" / "icon.png",
-            Path(__file__).resolve().parent.parent.parent / "resources" / "icon.png",
-        ]
-        for icp in icon_candidates:
-            if icp.is_file():
-                self.setWindowIcon(QIcon(str(icp)))
-                break
+        self.setWindowIcon(get_icon("app_logo", 64, color="#FFFFFF"))
 
     # ==================================================================
     # Menu bar
@@ -507,15 +278,18 @@ class MainWindow(QMainWindow):
     # ==================================================================
 
     def _build_central(self) -> None:
-        central = QWidget()
+        central = LiquidGlassCanvas()
+        central.setObjectName("centralWorkspace")
         self.setCentralWidget(central)
         root_layout = QVBoxLayout(central)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
 
-        # ---- Top Navigation Bar: GSM Suite Brand Showcase Header (Fix 16 & 17) ----
-        self._top_segmented_bar = self._build_top_brand_bar()
-        root_layout.addWidget(self._top_segmented_bar)
+        self._island = ObsidianDynamicIslandBar(self)
+        self._island.lens_control.segment_selected.connect(self._on_category_clicked)
+        self._island.write_switch.toggled.connect(self._apply_write_safety)
+        self._island.island_pill.clicked.connect(partial(self._on_action, "check_phone"))
+        root_layout.addWidget(self._island)
 
         # ---- Top area: sidebar + content ----
         body = QHBoxLayout()
@@ -524,6 +298,7 @@ class MainWindow(QMainWindow):
 
         # Phone Control Panel (left sidebar)
         self._phone_panel = PhoneControlPanel()
+        self._phone_panel.setObjectName('iosSidebar')
         body.addWidget(self._phone_panel)
 
         # Center workspace container
@@ -534,22 +309,11 @@ class MainWindow(QMainWindow):
 
         # 1. Live Device State Visualizer & Diagnostics HUD (Section 1)
         self._live_hud = LiveDeviceHud(self)
-        center_lay.addWidget(self._live_hud)
 
         # 2. Resizable Horizontal Splitter (Phase 24: 5px grip line, hover styling, non-collapsible)
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
         self._main_splitter.setHandleWidth(5)
         self._main_splitter.setChildrenCollapsible(False)
-        self._main_splitter.setStyleSheet("""
-            QSplitter::handle:horizontal {
-                background: rgba(255, 255, 255, 0.08);
-                border-radius: 2px;
-            }
-            QSplitter::handle:horizontal:hover {
-                background: #0A84FF;
-            }
-        """)
-
         # Stacked widget: page 0 = home, page 1 = device card, page 2 = checklist
         self._stack = QStackedWidget(self)
         self._build_home_page()       # PAGE_HOME = 0
@@ -574,6 +338,7 @@ class MainWindow(QMainWindow):
         self._side_terminal = SideTerminalWidget(self)
         self._side_terminal.setMinimumWidth(240)
         self._side_terminal.setMaximumWidth(600)
+        self._side_terminal.hide()
         self._side_terminal.collapse_requested.connect(self._toggle_terminal_visibility)
         self._main_splitter.addWidget(self._side_terminal)
 
@@ -596,20 +361,6 @@ class MainWindow(QMainWindow):
         self._btn_driver_fix.setToolTip("Install missing OEM USB drivers, fix MTK VCOM code 10, or fix Qualcomm 9008 COM port errors")
         self._btn_driver_fix.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_driver_fix.setFixedHeight(28)
-        self._btn_driver_fix.setStyleSheet("""
-            QPushButton {
-                background: rgba(255, 159, 10, 0.15);
-                color: #FF9F0A;
-                border: 1px solid rgba(255, 159, 10, 0.4);
-                border-radius: 7px;
-                padding: 2px 10px;
-                font-size: 11px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background: rgba(255, 159, 10, 0.3);
-            }
-        """)
         self._btn_driver_fix.clicked.connect(lambda: self._on_action("downloads"))
 
         # Terminal Toggle Button
@@ -618,392 +369,107 @@ class MainWindow(QMainWindow):
         self._btn_terminal_toggle.setToolTip("Hide Live Telemetry Terminal to maximize workspace canvas")
         self._btn_terminal_toggle.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_terminal_toggle.setFixedHeight(28)
-        self._btn_terminal_toggle.setStyleSheet("""
-            QPushButton {
-                background: rgba(10, 132, 255, 0.12);
-                color: #0A84FF;
-                border: 1px solid rgba(10, 132, 255, 0.35);
-                border-radius: 7px;
-                padding: 2px 10px;
-                font-size: 11px;
-                font-weight: 600;
-            }
-            QPushButton:hover {
-                background: rgba(10, 132, 255, 0.22);
-            }
-        """)
         self._btn_terminal_toggle.clicked.connect(self._toggle_terminal_visibility)
         self._device_selector.add_action_widget(self._btn_terminal_toggle)
 
         # Unified single bottom bar hosting telemetry and device controls
         self._status_bar = StatusBarWidget(self, device_selector=self._device_selector)
+        self._status_bar._connection_badge.hide()
+        self._safety_hint = QLabel("Write controls are locked. Select Write: Safe in the top bar to arm them.")
+        self._safety_hint.setWordWrap(True)
+        center_lay.insertWidget(0, self._safety_hint)
+        self._stack.currentChanged.connect(self._update_safety_hint)
         root_layout.addWidget(self._status_bar)
-
-    def _build_top_brand_bar(self) -> QWidget:
-        """Build the Brand Logo Showcase Header displaying vector badges across supported OEMs (Fix 17)."""
-        self._seg_frame = QFrame()
-        self._seg_frame.setFixedHeight(44)
-        self._seg_frame.setProperty("cssClass", "segmented_control")
-        seg_layout = QHBoxLayout(self._seg_frame)
-        seg_layout.setContentsMargins(12, 6, 12, 6)
-        seg_layout.setSpacing(8)
-
-        self._gsm_segments = [
-            ("Tecno", "tecno", "Tecno Mobile (HiOS)"),
-            ("Infinix", "infinix", "Infinix (XOS)"),
-            ("itel", "itel", "itel Mobile (itelOS)"),
-            ("Samsung", "samsung", "Samsung Galaxy (One UI, Knox, Odin)"),
-            ("Xiaomi", "xiaomi", "Xiaomi / POCO / Redmi (HyperOS & MIUI)"),
-            ("Huawei", "huawei", "Huawei / Honor (EMUI / HarmonyOS)"),
-            ("OPPO", "oppo", "OPPO (ColorOS)"),
-            ("Vivo", "vivo", "Vivo / iQOO (FuntouchOS / OriginOS)"),
-            ("Realme", "realme", "Realme (Realme UI)"),
-            ("Pixel", "google", "Google Pixel (AOSP / Factory Images)"),
-            ("OnePlus", "oneplus", "OnePlus (OxygenOS)"),
-            ("Motorola", "motorola", "Motorola (MyUX)"),
-        ]
-
-        self._gsm_btn_group: dict[str, QPushButton] = {}
-        for title, key, desc in self._gsm_segments:
-            btn = QPushButton(title)
-            btn.setIcon(get_brand_icon(key, 16))
-            btn.setCheckable(True)
-            btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-            btn.setFixedHeight(30)
-            btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn.setToolTip(f"{title}: {desc} — Click to filter tools catalog")
-            btn.clicked.connect(lambda checked, k=key, t=title: self._on_gsm_segment_selected(k, t))
-            seg_layout.addWidget(btn, 1)  # Expand proportionally across the entire header width
-            self._gsm_btn_group[key] = btn
-
-        self._update_gsm_segments_style()
-        return self._seg_frame
-
-    _build_top_segmented_bar = _build_top_brand_bar
-
-    def _update_gsm_segments_style(self) -> None:
-        """Update Brand Showcase header bar colors according to current theme."""
-        if not hasattr(self, "_seg_frame") or not hasattr(self, "_gsm_btn_group"):
-            return
-        theme = self._config.get("theme", "dark").lower()
-        if theme == "light":
-            self._seg_frame.setStyleSheet(
-                "background-color: #ECEFF4; border-bottom: 1px solid #DCE1E8; padding: 2px 8px;"
-            )
-            btn_style = (
-                "QPushButton { background: rgba(0, 0, 0, 0.04); border: 1px solid rgba(0, 0, 0, 0.10); "
-                "border-radius: 8px; padding: 4px 6px; font-size: 11px; font-weight: 600; color: #1C2024; } "
-                "QPushButton:checked { background: #007AFF; color: #FFFFFF; font-weight: 700; border-color: #007AFF; } "
-                "QPushButton:hover:!checked { background: rgba(0, 122, 255, 0.12); color: #007AFF; border-color: rgba(0, 122, 255, 0.4); }"
-            )
-        else:
-            self._seg_frame.setStyleSheet(
-                "background-color: #141820; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 2px 8px;"
-            )
-            btn_style = (
-                "QPushButton { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.10); "
-                "border-radius: 8px; padding: 4px 6px; font-size: 11px; font-weight: 600; color: #E6EDF3; } "
-                "QPushButton:checked { background: #0A84FF; color: #FFFFFF; font-weight: 700; border-color: #0A84FF; } "
-                "QPushButton:hover:!checked { background: rgba(10, 132, 255, 0.18); color: #0A84FF; border-color: rgba(10, 132, 255, 0.4); }"
-            )
-        for btn in self._gsm_btn_group.values():
-            btn.setStyleSheet(btn_style)
-
-    @Slot(str, str)
-    def _on_gsm_segment_selected(self, key: str, title: str) -> None:
-        """Filter tool catalog on the Home screen to that brand's relevant wizards."""
-        target_btn = self._gsm_btn_group.get(key)
-        is_already_active = target_btn and not target_btn.isChecked()
-
-        for k, btn in self._gsm_btn_group.items():
-            btn.setChecked(k == key and not is_already_active)
-
-        if is_already_active:
-            self._side_terminal.append_colored_stream("INFO", f"Cleared brand filter: {title}")
-            if hasattr(self, "_search_input"):
-                self._search_input.clear()
-            return
-
-        self._side_terminal.append_colored_stream("INFO", f"Brand Selected: {title} (Filtering catalog)")
-
-        # Switch to Home page so user sees the filtered catalog
-        if self._stack.currentIndex() != PAGE_HOME:
-            self._stack.setCurrentIndex(PAGE_HOME)
-            if hasattr(self, "_phone_panel"):
-                self._phone_panel.set_active_nav("home", self._config.get("theme", "dark"))
-
-        # Filter the search input to the brand name
-        brand_search_term = "pixel" if key == "google" else key
-        if hasattr(self, "_search_input"):
-            self._search_input.setText(brand_search_term)
+        self._update_terminal_toggle_ui(False)
 
     def _build_home_page(self) -> None:
-        """Build the home screen with search, category filtering, quick access presets and 16 action cards (Phase 24: 100% non-scrollable)."""
         page = QWidget()
-        page_layout = QVBoxLayout(page)
-        page_layout.setContentsMargins(18, 6, 18, 6)
-        page_layout.setSpacing(6)
+        page.setObjectName("glassHome")
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(18, 18, 18, 14)
+        layout.setSpacing(12)
 
-        # ---- Title Header Row with Theme Toggle ----
-        top_bar = QHBoxLayout()
-        top_bar.setContentsMargins(0, 0, 0, 0)
-        top_bar.setSpacing(10)
-
-        title_box = QHBoxLayout()
-        title_box.setSpacing(8)
-        app_logo_lbl = create_icon_label("app_logo", size=20)
-        title_box.addWidget(app_logo_lbl)
-        title = QLabel(__app_name__)
-        title.setProperty("cssClass", "heading")
-        title.setStyleSheet("font-size: 16px; font-weight: 700;")
-        title_box.addWidget(title)
-
-        subtitle = QLabel("• Unified personal workstation for rooting, flashing, and diagnostics.")
-        subtitle.setProperty("cssClass", "muted")
-        subtitle.setStyleSheet("font-size: 11.5px; color: #8B949E;")
-        title_box.addWidget(subtitle)
-        title_box.addStretch()
-        top_bar.addLayout(title_box, 1)
-
-        # Dark/Light Theme toggle button
-        current_theme = self._config.get("theme", "dark")
-        self._theme_btn = QPushButton(self._theme_btn_text(current_theme))
-        self._theme_btn.setIcon(get_icon("moon" if current_theme.lower() == "light" else "sun", 13))
-        self._theme_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._theme_btn.setToolTip("Toggle between Dark and Light mode")
-        self._theme_btn.setFixedHeight(28)
-        self._theme_btn.setStyleSheet("padding: 3px 10px; font-size: 11px;")
+        header = QHBoxLayout()
+        heading = QLabel("Workstation")
+        heading.setObjectName("glassHeading")
+        header.addWidget(heading, 1)
+        self._theme_btn = QPushButton()
         self._theme_btn.clicked.connect(self._toggle_theme)
-        top_bar.addWidget(self._theme_btn)
+        header.addWidget(self._theme_btn)
+        layout.addLayout(header)
 
-        page_layout.addLayout(top_bar)
-
-        # ---- Tool availability notice ----
-        tool_parts = []
-        if not self._adb.available:
-            tool_parts.append("ADB not found")
-        if not self._fastboot.available:
-            tool_parts.append("Fastboot not found")
-        if tool_parts:
-            tool_warn_frame = QFrame()
-            tool_warn_frame.setStyleSheet(
-                "background-color: rgba(255, 149, 0, 0.08); border: 1px solid rgba(255, 149, 0, 0.25); "
-                "border-radius: 8px; padding: 6px 12px;"
-            )
-            warn_lay = QHBoxLayout(tool_warn_frame)
-            warn_lay.setContentsMargins(2, 2, 2, 2)
-            warn_lay.setSpacing(8)
-            warn_icon = create_icon_label("warning", 14, color="#C96E00")
-            warn_lay.addWidget(warn_icon)
-            tool_warn = QLabel(
-                ", ".join(tool_parts) + ". "
-                "Install Android platform-tools or use Downloads & Updates > Tools Manager."
-            )
-            tool_warn.setWordWrap(True)
-            tool_warn.setStyleSheet("color: #C96E00; font-size: 11.5px; border: none; background: transparent;")
-            warn_lay.addWidget(tool_warn, 1)
-            page_layout.addWidget(tool_warn_frame)
-
-        # ---- Search Bar & Filter Navigation Hub ----
-        nav_hub = QFrame()
-        nav_hub.setStyleSheet("background: transparent;")
-        nav_hub_layout = QVBoxLayout(nav_hub)
-        nav_hub_layout.setContentsMargins(0, 0, 0, 0)
-        nav_hub_layout.setSpacing(6)
-
-        # 1. Search Bar with Clear Button & Keyboard Shortcut & Merged Quick Utility Buttons
-        search_row = QHBoxLayout()
-        search_row.setSpacing(8)
-
+        controls = QHBoxLayout()
         self._search_input = QLineEdit()
-        self._search_input.setPlaceholderText(
-            "Search tools, actions or keywords (e.g. bootloop, root, flash, debloat, drivers, unbrick)..."
-        )
+        self._search_input.setPlaceholderText("Search tools and workflows")
         self._search_input.setClearButtonEnabled(True)
-        self._search_input.setFixedHeight(32)
         self._search_input.textChanged.connect(self._filter_tools)
         self._search_input.returnPressed.connect(self._on_search_return_pressed)
-        search_row.addWidget(self._search_input, 1)
-
-        # Quick shortcut Ctrl+F to focus search
-        search_shortcut = QShortcut(QKeySequence("Ctrl+F"), self)
+        controls.addWidget(self._search_input, 1)
+        search_shortcut = QShortcut(QKeySequence("Ctrl+F"), page)
+        search_shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         search_shortcut.activated.connect(self._search_input.setFocus)
-
-        # Setup Laptop button (User Request)
-        setup_btn = QPushButton("Setup Laptop")
-        setup_btn.setIcon(get_icon("tools", 13))
-        setup_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        setup_btn.setToolTip("Configure laptop prerequisites, install ADB, Fastboot & OEM USB drivers")
-        setup_btn.setFixedHeight(32)
-        setup_btn.setStyleSheet("padding: 4px 10px; font-size: 11.5px; font-weight: 500;")
-        setup_btn.clicked.connect(self._show_setup_wizard)
-        search_row.addWidget(setup_btn)
-
-        # Phone Key Guide button (User Request)
-        key_guide_btn = QPushButton("Key Guide")
-        key_guide_btn.setIcon(get_icon("phone", 13))
-        key_guide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        key_guide_btn.setToolTip("Hardware button combinations (Vol+, Vol-, Power) for boot menus")
-        key_guide_btn.setFixedHeight(32)
-        key_guide_btn.setStyleSheet("padding: 4px 10px; font-size: 11.5px; font-weight: 500;")
-        key_guide_btn.clicked.connect(self._show_key_guide)
-        search_row.addWidget(key_guide_btn)
-
-        # Guide button (User Addition 7)
-        guide_btn = QPushButton("Workflow Guide")
-        guide_btn.setIcon(get_icon("book", 13))
-        guide_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        guide_btn.setToolTip("View recommended safe workflows and function explanations")
-        guide_btn.setFixedHeight(32)
-        guide_btn.setStyleSheet("padding: 4px 10px; font-size: 11.5px; font-weight: 500;")
-        guide_btn.clicked.connect(self._show_guide)
-        search_row.addWidget(guide_btn)
-
-        # Self-Test button (Phase 16)
-        selftest_btn = QPushButton("Self-Test")
-        selftest_btn.setIcon(get_icon("flash", 13))
-        selftest_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        selftest_btn.setToolTip("Run automated system diagnostics & toolchain integrity checks")
-        selftest_btn.setFixedHeight(32)
-        selftest_btn.setStyleSheet("padding: 4px 10px; font-size: 11.5px; font-weight: 500;")
-        selftest_btn.clicked.connect(self._show_selftest)
-        search_row.addWidget(selftest_btn)
-
-        nav_hub_layout.addLayout(search_row)
-        self._quick_buttons = [setup_btn, key_guide_btn, guide_btn, selftest_btn]
-
-        # 3. Category Filter Pills, Sort Dropdown & Count Badge
-        filter_row = QHBoxLayout()
-        filter_row.setSpacing(4)
-
-        self._active_category = "All"
-        self._cat_buttons = {}
-        all_count = len(MAIN_ACTIONS)
-        root_count = len([a for a in MAIN_ACTIONS if len(a) > 4 and a[4] == "Root"])
-        flash_count = len([a for a in MAIN_ACTIONS if len(a) > 4 and a[4] == "Flashing"])
-        rescue_count = len([a for a in MAIN_ACTIONS if len(a) > 4 and a[4] == "Rescue"])
-        dev_count = len([a for a in MAIN_ACTIONS if len(a) > 4 and a[4] == "Device"])
-
-        categories = [
-            ("All", "globe", f"All ({all_count})"),
-            ("Root", "root", f"Root ({root_count})"),
-            ("Flashing", "flash", f"Flashing ({flash_count})"),
-            ("Rescue", "unbrick", f"Rescue ({rescue_count})"),
-            ("Device", "diagnostics", f"Device ({dev_count})"),
-        ]
-
-        for cat_key, cat_icon, cat_label in categories:
-            c_btn = QPushButton(cat_label)
-            c_btn.setIcon(get_icon(cat_icon, 13))
-            c_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            c_btn.setStyleSheet("padding: 5px 10px; font-size: 11px;")
-            c_btn.clicked.connect(partial(self._on_category_clicked, cat_key))
-            filter_row.addWidget(c_btn)
-            self._cat_buttons[cat_key] = c_btn
-
-        filter_row.addSpacing(6)
-
-        # Sort selector (User Request: "in all tools sort them also")
-        sort_lbl = QLabel("Sort:")
-        sort_lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
-        filter_row.addWidget(sort_lbl)
-
         self._sort_combo = QComboBox()
-        self._sort_combo.setMinimumWidth(125)
         self._sort_combo.addItem("Recommended", "recommended")
-        self._sort_combo.addItem("Alphabetical (A → Z)", "az")
-        self._sort_combo.addItem("Alphabetical (Z → A)", "za")
-        self._sort_combo.addItem("Group by Category", "category")
-        self._sort_combo.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._sort_combo.setToolTip("Sort all tools alphabetically, by category, or recommended order")
+        self._sort_combo.addItem("Name A–Z", "az")
+        self._sort_combo.addItem("Name Z–A", "za")
         self._sort_combo.currentIndexChanged.connect(self._filter_tools)
-        filter_row.addWidget(self._sort_combo)
-
-        filter_row.addStretch(1)
-
-        self._tools_count_badge = QLabel(f"{all_count} tools available")
-        self._tools_count_badge.setStyleSheet("font-size: 12px; color: #8E8E93; font-weight: 500;")
-        filter_row.addWidget(self._tools_count_badge)
-
-        nav_hub_layout.addLayout(filter_row)
-        page_layout.addWidget(nav_hub)
-
-        # ---- Direct non-scrollable dynamic grid of action cards (Phase 24) ----
-        self._tools_grid = QGridLayout()
-        self._tools_grid.setSpacing(8)
-        self._tools_grid.setContentsMargins(0, 2, 0, 0)
-        page_layout.addLayout(self._tools_grid)
-
-        # Build each card
-        for item in MAIN_ACTIONS:
-            action_id = item[0]
-            icon = item[1]
-            label = item[2]
-            desc = item[3]
-            category = item[4] if len(item) > 4 else "Device"
-            self._make_action_button(action_id, icon, label, desc, category)
-
-        # Empty state display if search has 0 results
-        self._empty_state_widget = QFrame()
-        self._empty_state_widget.setStyleSheet(
-            "background-color: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.15); "
-            "border-radius: 12px; padding: 24px;"
-        )
-        empty_box = QVBoxLayout(self._empty_state_widget)
-        empty_box.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        empty_box.setSpacing(8)
-
-        empty_icon = create_icon_label("search", size=28, color="#8E8E93")
-        empty_box.addWidget(empty_icon, 0, Qt.AlignmentFlag.AlignCenter)
-
-        self._empty_state_msg = QLabel("No tools match your search or filter.")
-        self._empty_state_msg.setStyleSheet("font-size: 13px; color: #8E8E93; font-weight: 500;")
-        self._empty_state_msg.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        empty_box.addWidget(self._empty_state_msg)
-
-        clear_btn = QPushButton("Clear Search & Reset Filters")
-        clear_btn.setIcon(get_icon("refresh", 14, color="#FFFFFF"))
-        clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        clear_btn.setStyleSheet(
-            "background-color: #0A84FF; color: #FFFFFF; font-weight: 600; "
-            "padding: 6px 16px; border-radius: 8px;"
-        )
+        controls.addWidget(self._sort_combo)
+        layout.addLayout(controls)
+        self._tools_count_badge = QLabel()
+        layout.addWidget(self._tools_count_badge)
+        self._active_category = "All"
+        self._workflow_sheets = {}
+        sheets = QHBoxLayout()
+        sheets.setSpacing(10)
+        actions = {item[0]: item for item in MAIN_ACTIONS}
+        glass_icons = {
+            "check_phone": "check-phone", "checklist": "safety-checklist",
+            "backup": "backup-restore", "diagnostics": "diagnostics-tweaks",
+            "sideload": "sideload-apps", "scrcpy": "screen-mirror",
+            "root": "root-phone", "modules": "manage-modules",
+            "integrity": "fix-play-integrity", "unlock_bl": "unlock-bootloader",
+            "flash_rom": "flash-rom", "unbrick": "fix-bricked",
+            "mtk_unisoc": "mtk-unisoc", "return_stock": "return-stock",
+        }
+        for key, title, action_ids in WORKFLOWS:
+            sheet = LiquidGlassSheet()
+            sheet_layout = QVBoxLayout(sheet)
+            sheet_layout.setContentsMargins(6, 10, 6, 6)
+            sheet_layout.setSpacing(2)
+            label = QLabel(title)
+            label.setProperty("glassSectionTitle", True)
+            label.setWordWrap(True)
+            sheet_layout.addWidget(label)
+            self._workflow_sheets[key] = sheet
+            for action_id in action_ids:
+                _, icon, name, desc, category, _ = actions[action_id]
+                row = LiquidGlassActionRow(
+                    action_id, glass_icons.get(action_id, icon), name, desc, category, parent=sheet
+                )
+                row.clicked.connect(partial(self._on_action, action_id))
+                sheet.track_row(row)
+                self._action_buttons[action_id] = row
+                self._action_descs[action_id] = desc
+                sheet_layout.addWidget(row)
+            sheets.addWidget(sheet, 1, Qt.AlignmentFlag.AlignTop)
+        layout.addLayout(sheets)
+        self._empty_state_widget = LiquidGlassSheet()
+        empty_layout = QHBoxLayout(self._empty_state_widget)
+        self._empty_state_msg = QLabel("No tools match your search.")
+        empty_layout.addWidget(self._empty_state_msg, 1)
+        clear_btn = QPushButton("Reset filters")
         clear_btn.clicked.connect(self._reset_filters)
-        empty_box.addWidget(clear_btn, 0, Qt.AlignmentFlag.AlignCenter)
-
-        self._empty_state_widget.setVisible(False)
-        page_layout.addWidget(self._empty_state_widget)
-        page_layout.addStretch(1)
-
-        # Initial layout & style application
-        self._update_category_buttons_style()
-        self._update_quick_buttons_style()
-        self._update_search_style()
-        self._filter_tools()
-
-        # ---- First-run warning ----
-        if self._config.first_run:
-            warn_card = QFrame()
-            warn_card.setStyleSheet(
-                "background-color: #121008; border: 1px solid #332508; "
-                "border-radius: 8px; padding: 10px 14px;"
-            )
-            warn_card_lay = QHBoxLayout(warn_card)
-            warn_card_lay.setContentsMargins(4, 4, 4, 4)
-            warn_card_lay.setSpacing(8)
-            warn_icon_lbl = create_icon_label("warning", 16, color="#eab308")
-            warn_card_lay.addWidget(warn_icon_lbl)
-            warn = QLabel(
-                "This tool can modify your phone's firmware. "
-                "Always test on a spare phone first. "
-                "See Logs & Help for the full disclaimer."
-            )
-            warn.setWordWrap(True)
-            warn.setStyleSheet("color: #eab308; font-size: 12px; border: none; background: transparent;")
-            warn_card_lay.addWidget(warn, 1)
-            page_layout.addWidget(warn_card)
-
+        empty_layout.addWidget(clear_btn)
+        layout.addWidget(self._empty_state_widget)
+        layout.addStretch(1)
+        missing = [name for name, tool in (("ADB", self._adb), ("Fastboot", self._fastboot))
+                   if not tool.available]
+        if missing:
+            label = QLabel(f"{' and '.join(missing)} unavailable. Install platform-tools in Downloads & Tools.")
+            label.setWordWrap(True)
+            layout.addWidget(label)
         self._stack.addWidget(page)
+        self._filter_tools()
 
     def _make_back_button(self) -> QPushButton:
         """Create a standard navigation back button adhering to the active theme."""
@@ -1033,6 +499,8 @@ class MainWindow(QMainWindow):
         title_box.addWidget(title)
         title_box.addStretch()
         page_layout.addLayout(title_box)
+
+        page_layout.addWidget(self._live_hud)
 
         # Device card
         self._device_card = DeviceCard()
@@ -1296,232 +764,90 @@ class MainWindow(QMainWindow):
 
         self._stack.addWidget(page)
 
-    def _make_action_button(
-        self, action_id: str, icon: str, label: str, desc: str, category: str = "Device"
-    ) -> ActionCardButton:
-        """Create one of the main action card buttons."""
-        card = ActionCardButton(action_id, icon, label, desc, category)
-        card.clicked.connect(partial(self._on_action, action_id))
-        cur_theme = self._config.get("theme", "dark")
-        card.apply_theme(cur_theme)
-
-        self._action_buttons[action_id] = card
-        self._action_descs[action_id] = desc
-        return card
-
-    # ------------------------------------------------------------------
-    # Home Filter & Search Handlers
-    # ------------------------------------------------------------------
-
-    def _on_category_clicked(self, cat_key: str) -> None:
-        """Handle category filter pill click."""
-        self._active_category = cat_key
-        self._update_category_buttons_style()
+    def _on_category_clicked(self, key: str) -> None:
+        self._active_category = key
+        self._island.lens_control.set_active_segment(key)
+        self._on_action("home")
         self._filter_tools()
-
-    def _update_category_buttons_style(self) -> None:
-        """Apply HyperOS 2.0 / iOS 18 pill navigation styling to category buttons."""
-        cur_theme = self._config.get("theme", "dark").lower()
-        for key, btn in getattr(self, "_cat_buttons", {}).items():
-            is_active = (key == getattr(self, "_active_category", "All"))
-            if is_active:
-                if cur_theme == "light":
-                    btn.setStyleSheet(
-                        "QPushButton { background: #007AFF; color: #FFFFFF; border: 1px solid #007AFF; "
-                        "border-radius: 14px; padding: 6px 14px; font-size: 12px; font-weight: 600; min-height: 24px; }"
-                    )
-                else:
-                    btn.setStyleSheet(
-                        "QPushButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0A84FF, stop:1 #0056B3); "
-                        "color: #FFFFFF; border: 1px solid #3399FF; border-radius: 14px; padding: 6px 14px; font-size: 12px; "
-                        "font-weight: 600; min-height: 24px; }"
-                    )
-            else:
-                if cur_theme == "light":
-                    btn.setStyleSheet(
-                        "QPushButton { background-color: #E2E6EC; color: #1C2024; border: 1px solid #CBD1DC; "
-                        "border-radius: 14px; padding: 6px 14px; font-size: 12px; font-weight: 500; min-height: 24px; } "
-                        "QPushButton:hover { background-color: #ECEFF4; border-color: #9AA4B2; color: #1C2024; }"
-                    )
-                else:
-                    btn.setStyleSheet(
-                        "QPushButton { background-color: #181E26; color: #8B949E; border: 1px solid #2C3644; "
-                        "border-radius: 14px; padding: 6px 14px; font-size: 12px; font-weight: 500; min-height: 24px; } "
-                        "QPushButton:hover { background-color: #222A36; color: #FFFFFF; border-color: #3D4B5C; }"
-                    )
-
-    def _update_quick_buttons_style(self) -> None:
-        """Apply theme styling to quick access preset chips."""
-        cur_theme = self._config.get("theme", "dark").lower()
-        for btn in getattr(self, "_quick_buttons", []):
-            if cur_theme == "light":
-                btn.setStyleSheet(
-                    "QPushButton { background: rgba(0, 0, 0, 0.04); border: 1px solid rgba(0, 0, 0, 0.08); "
-                    "border-radius: 12px; padding: 4px 12px; font-size: 11px; color: #5A6572; min-height: 20px; font-weight: 500; } "
-                    "QPushButton:hover { background: rgba(0, 122, 255, 0.12); border-color: #007AFF; color: #007AFF; }"
-                )
-            else:
-                btn.setStyleSheet(
-                    "QPushButton { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); "
-                    "border-radius: 12px; padding: 4px 12px; font-size: 11px; color: #8B949E; min-height: 20px; font-weight: 500; } "
-                    "QPushButton:hover { background: rgba(10, 132, 255, 0.15); border-color: #0A84FF; color: #FFFFFF; }"
-                )
-
-    def _update_search_style(self) -> None:
-        """Apply recessed squircle styling to search input box."""
-        cur_theme = self._config.get("theme", "dark").lower()
-        if hasattr(self, "_search_input"):
-            if cur_theme == "light":
-                self._search_input.setStyleSheet(
-                    "QLineEdit { background-color: #DDE2EB; border: 1px solid #CBD1DC; border-radius: 12px; "
-                    "padding: 8px 14px; font-size: 13px; color: #1C2024; font-family: '-apple-system', 'Segoe UI', sans-serif; } "
-                    "QLineEdit:focus { border: 1px solid #007AFF; background-color: #ECEFF4; }"
-                )
-            else:
-                self._search_input.setStyleSheet(
-                    "QLineEdit { background-color: #0E1218; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; "
-                    "padding: 8px 14px; font-size: 13px; color: #E6EDF3; font-family: '-apple-system', 'Segoe UI', sans-serif; } "
-                    "QLineEdit:focus { border: 1px solid #0A84FF; background-color: #141820; }"
-                )
 
     def _filter_tools(self) -> None:
-        """Filter the action cards based on active category and search query."""
-        if not hasattr(self, "_tools_grid") or not hasattr(self, "_search_input"):
-            return
-
-        query = self._search_input.text().strip().lower()
-        selected_cat = getattr(self, "_active_category", "All")
-
-        visible_actions = []
-        for item in MAIN_ACTIONS:
-            action_id = item[0]
-            icon = item[1]
-            label = item[2]
-            desc = item[3]
-            category = item[4] if len(item) > 4 else "Device"
-            tags = item[5] if len(item) > 5 else []
-
-            # 1. Category match
-            if selected_cat != "All" and category != selected_cat:
-                continue
-
-            # 2. Search query match
-            if query:
-                text_match = (
-                    query in action_id.lower()
-                    or query in label.lower()
-                    or query in desc.lower()
-                    or query in category.lower()
-                    or any(query in tag.lower() for tag in tags)
+        query = self._search_input.text().strip().casefold()
+        sort = self._sort_combo.currentData()
+        actions = {item[0]: item for item in MAIN_ACTIONS}
+        count = 0
+        for key, _, action_ids in WORKFLOWS:
+            sheet = self._workflow_sheets[key]
+            sheet_layout = sheet.layout()
+            ordered = list(action_ids)
+            if sort in ("az", "za"):
+                ordered.sort(key=lambda aid: actions[aid][2].casefold(), reverse=sort == "za")
+            visible = 0
+            for aid in ordered:
+                row = self._action_buttons[aid]
+                sheet_layout.removeWidget(row)
+                sheet_layout.addWidget(row)
+                _, _, name, desc, category, tags = actions[aid]
+                matches = self._active_category in ("All", key) and any(
+                    query in term.casefold() for term in (aid, name, desc, category, *tags)
                 )
-                if not text_match:
-                    continue
-
-            visible_actions.append(action_id)
-
-        # 3. Sort visible actions (User Request: "in all tools sort them also")
-        sort_mode = self._sort_combo.currentData() if hasattr(self, "_sort_combo") else "recommended"
-        action_map = {item[0]: item for item in MAIN_ACTIONS}
-
-        if sort_mode == "az":
-            visible_actions.sort(key=lambda aid: action_map[aid][2].lower())
-        elif sort_mode == "za":
-            visible_actions.sort(key=lambda aid: action_map[aid][2].lower(), reverse=True)
-        elif sort_mode == "category":
-            visible_actions.sort(key=lambda aid: (action_map[aid][4].lower(), action_map[aid][2].lower()))
-        # "recommended" preserves the default curated workflow order in MAIN_ACTIONS
-
-        # Clear items from grid layout (without deleting widgets)
-        while self._tools_grid.count():
-            self._tools_grid.takeAt(0)
-
-        for act_id, btn in self._action_buttons.items():
-            if act_id in visible_actions:
-                btn.setVisible(True)
-            else:
-                btn.setVisible(False)
-
-        cols = 4
-        for idx, act_id in enumerate(visible_actions):
-            btn = self._action_buttons[act_id]
-            r = idx // cols
-            c = idx % cols
-            self._tools_grid.addWidget(btn, r, c)
-
-        # Fill trailing cells in the last row so buttons maintain uniform width
-        remainder = len(visible_actions) % cols
-        if remainder:
-            for c in range(remainder, cols):
-                spacer = QWidget()
-                spacer.setStyleSheet("background: transparent;")
-                self._tools_grid.addWidget(spacer, len(visible_actions) // cols, c)
-
-        # Empty state & counter handling
-        count = len(visible_actions)
-        total = len(MAIN_ACTIONS)
-        if count == total and not query and selected_cat == "All":
-            self._tools_count_badge.setText(f"{total} tools available")
-        else:
-            self._tools_count_badge.setText(f"Showing {count} of {total} tools")
-
-        if count == 0:
-            self._empty_state_widget.setVisible(True)
-            self._empty_state_msg.setText(
-                f"No tools found matching '{query}'.\n"
-                "Try searching for 'root', 'flash', 'bootloop', or click reset."
-            )
-        else:
-            self._empty_state_widget.setVisible(False)
+                row.setVisible(matches)
+                visible += matches
+            sheet.setVisible(bool(visible))
+            count += visible
+        self._tools_count_badge.setText(f"{count} of {len(MAIN_ACTIONS)} tools")
+        self._empty_state_widget.setVisible(not count)
 
     def _on_search_return_pressed(self) -> None:
-        """If exactly one tool is shown, launch it immediately upon Enter."""
-        query = self._search_input.text().strip().lower()
-        if not query:
-            return
-        visible_act_ids = [act_id for act_id, btn in self._action_buttons.items() if not btn.isHidden()]
-        if len(visible_act_ids) == 1:
-            self._on_action(visible_act_ids[0])
+        for row in self._action_buttons.values():
+            if row.isVisible() and row.isEnabled():
+                row.click()
+                break
 
     def _reset_filters(self) -> None:
-        """Reset search, sort and category filter back to default."""
-        self._search_input.clear()
-        if hasattr(self, "_sort_combo"):
-            self._sort_combo.blockSignals(True)
-            self._sort_combo.setCurrentIndex(0)
-            self._sort_combo.blockSignals(False)
         self._active_category = "All"
-        self._update_category_buttons_style()
+        self._island.lens_control.set_active_segment("All")
+        self._search_input.clear()
+        self._sort_combo.setCurrentIndex(0)
         self._filter_tools()
+
+    @Slot(bool)
+    def _apply_write_safety(self, armed: bool) -> None:
+        # Gate write-capable screens while retaining their existing preflight checks.
+        for screen in (
+            self._unlock_screen, self._backup_screen, self._root_screen,
+            self._modules_screen, self._integrity_screen, self._flash_rom_screen,
+            self._return_stock_screen, self._unbrick_screen, self._mtk_unisoc_screen,
+            self._sideload_screen,
+        ):
+            screen.setEnabled(armed)
+        self._live_hud.setEnabled(armed)
+        self._update_safety_hint(self._stack.currentIndex())
+
+    def _update_safety_hint(self, index: int) -> None:
+        write_pages = {
+            PAGE_UNLOCK, PAGE_BACKUP, PAGE_ROOT, PAGE_MODULES, PAGE_INTEGRITY,
+            PAGE_FLASH_ROM, PAGE_RETURN_STOCK, PAGE_UNBRICK, PAGE_MTK_UNISOC, PAGE_SIDELOAD,
+        }
+        self._safety_hint.setVisible(index in write_pages and not self._island.write_switch.is_armed)
 
     # ==================================================================
     # Signal wiring
     # ==================================================================
 
     def _connect_signals(self) -> None:
-        # Network monitor -> status bar (thread-safe via invokeMethod)
-        def _on_net_change(is_online: bool) -> None:
-            QMetaObject.invokeMethod(
-                self._status_bar,
-                "update_network",
-                Qt.ConnectionType.QueuedConnection,
-                Q_ARG(bool, is_online),
-            )
-            # Update online/offline button shading (User Addition 1)
-            QTimer.singleShot(0, lambda: self._update_network_buttons(is_online))
-
-        self._network.on_change = _on_net_change
+        self.network_changed.connect(self._status_bar.update_network, Qt.ConnectionType.QueuedConnection)
+        self.network_changed.connect(self._update_network_buttons, Qt.ConnectionType.QueuedConnection)
+        self._network.on_change = self.network_changed.emit
 
         # Wire logger to Side Terminal (User Addition 4)
         terminal_handler = SideTerminalHandler(self._side_terminal.append_line)
         self._side_terminal.set_handler(terminal_handler)
         logging.getLogger("flashdock").addHandler(terminal_handler)
 
-        # Device manager -> UI (thread-safe via QTimer.singleShot)
-        def _on_device_changed(info: Optional[DeviceInfo]) -> None:
-            # Marshal to the main thread
-            QTimer.singleShot(0, lambda: self._handle_device_change(info))
-
-        self._device_mgr.on_device_changed = _on_device_changed
+        # DeviceManager polls in a Python thread. Queue UI updates through Qt.
+        self.device_changed.connect(self._device_state.publish, Qt.ConnectionType.QueuedConnection)
+        self._device_state.state_updated.connect(self._handle_device_change)
+        self._device_mgr.on_device_changed = self.device_changed.emit
 
         # Phone control panel -> device manager & scrcpy & hardware keys
         self._phone_panel.reboot_requested.connect(self._on_reboot_requested)
@@ -1545,6 +871,8 @@ class MainWindow(QMainWindow):
         self._flash_worker.log_emitted.connect(lambda lvl, msg: self._side_terminal.append_colored_stream(lvl, msg))
         self._flash_worker.flash_finished.connect(self._on_flash_finished)
         self._flash_worker.started.connect(self._monitor_worker.pause_polling)
+        self._flash_worker.started.connect(lambda: self._island.write_switch.setEnabled(False))
+        self._flash_worker.finished.connect(lambda: self._island.write_switch.setEnabled(True))
         self._flash_worker.finished.connect(self._monitor_worker.resume_polling)
 
         # Device selector -> device manager & refresh
@@ -1567,32 +895,23 @@ class MainWindow(QMainWindow):
     def _on_hardware_device_connected(self, mode: str, ident: str, details: dict) -> None:
         """Handle hardware device connection from background monitor worker."""
         log.info("Hardware monitor detected %s [%s]", mode, ident)
-        self._status_bar.update_connection_badge(mode, ident, details)
+        self._hardware_info = DeviceInfo(
+            mode=mode, serial=ident, model=details.get("display_name", "")
+        )
+        self._update_island(self._device_mgr.device)
         self._phone_panel.set_mode(mode)
         self._side_terminal.append_colored_stream(
             "INFO", f"Device connected: {details.get('display_name', mode)} [{ident}]"
         )
-        if mode in ("mtk_brom", "qualcomm_edl", "unisoc_sprd"):
-            self._side_terminal.append_colored_stream(
-                "WARN", f"Emergency interface active: {mode.upper()} port ({ident})"
-            )
-            # Auto-highlight matching tab
-            if mode == "mtk_brom" and "mtk_brom" in self._gsm_btn_group:
-                self._gsm_btn_group["mtk_brom"].setChecked(True)
-            elif mode == "qualcomm_edl" and "qualcomm_edl" in self._gsm_btn_group:
-                self._gsm_btn_group["qualcomm_edl"].setChecked(True)
-            elif mode == "unisoc_sprd" and "unisoc_sprd" in self._gsm_btn_group:
-                self._gsm_btn_group["unisoc_sprd"].setChecked(True)
-
-        # Trigger immediate device manager query to update HUD, Phone Panel, and Device Selector
-        self._refresh_device()
 
     @Slot()
     def _on_hardware_device_disconnected(self) -> None:
         """Handle hardware disconnection from background monitor worker."""
-        self._status_bar.update_connection_badge("disconnected", "")
+        if is_flash_locked():
+            log.debug("Flash lock active: suppressing hardware disconnection event during active transfer.")
+            return
+        self._hardware_info = None
         self._side_terminal.append_colored_stream("WARN", "Device disconnected from USB/COM bus.")
-        self._device_mgr.refresh()
         self._handle_device_change(None)
 
     @Slot(str)
@@ -1631,66 +950,10 @@ class MainWindow(QMainWindow):
         dlg.exec()
 
     @Slot(str)
-    def _on_reboot_requested(self, mode: str) -> None:
-        """Handle reboot or slot switch requested from the Reboot Switchboard or Phone Panel."""
-        device = self._device_mgr.device
-        serial = device.serial if device else ""
-
-        if mode == "switch_slot":
-            current_slot = getattr(device, "active_slot", "a") if device else "a"
-            target_slot = "b" if current_slot == "a" else "a"
-            log.info("Switching active slot to %s for device %s", target_slot, serial)
-            res = self._fastboot._run([f"--set-active={target_slot}"], serial=serial, action="set_active_slot")
-            if res.success or "finished" in res.stdout.lower() or "ok" in res.stdout.lower():
-                self._side_terminal.append_colored_stream("SUCCESS", f"Switched active slot to '{target_slot}'.")
-                QMessageBox.information(
-                    self,
-                    "Slot Switched",
-                    f"Successfully switched active slot to '{target_slot}'.\n\nDevice will boot into slot {target_slot.upper()} upon reboot."
-                )
-                self._refresh_device()
-            else:
-                self._side_terminal.append_colored_stream("ERROR", f"Slot switch failed: {res.stderr or res.stdout}")
-                QMessageBox.warning(self, "Slot Switch Failed", f"Could not switch slot:\n\n{res.stderr or res.stdout}")
-            return
-
-        if mode == "poweroff":
-            if device and device.mode == "system":
-                self._adb.shell("reboot -p", serial=serial)
-            elif device and device.mode in ("bootloader", "fastbootd"):
-                self._fastboot._run(["oem", "poweroff"], serial=serial)
-            self._side_terminal.append_colored_stream("INFO", "Power off command dispatched.")
-            return
-
-        if device and device.mode == "system":
-            if mode == "bootloader":
-                self._adb.reboot_bootloader(serial=serial)
-            elif mode == "recovery":
-                self._adb.reboot_recovery(serial=serial)
-            elif mode == "edl":
-                self._adb.reboot_edl(serial=serial)
-            elif mode == "fastbootd":
-                self._adb.reboot_fastboot(serial=serial)
-            elif mode == "download":
-                self._adb.reboot_download(serial=serial)
-            else:
-                self._adb.reboot(serial=serial)
-        elif device and device.mode in ("bootloader", "fastbootd"):
-            if mode == "fastbootd":
-                self._fastboot._run(["reboot", "fastboot"], serial=serial)
-            elif mode == "bootloader":
-                self._fastboot._run(["reboot", "bootloader"], serial=serial)
-            elif mode == "recovery":
-                self._fastboot._run(["reboot", "recovery"], serial=serial)
-            elif mode == "edl":
-                self._fastboot._run(["oem", "edl"], serial=serial)
-            else:
-                self._fastboot.reboot(serial=serial)
-        self._side_terminal.append_colored_stream("INFO", f"Reboot to {mode.upper()} dispatched.")
-
-    @Slot(str)
     def _on_restore_preflash_requested(self, serial: str) -> None:
         """Execute 1-click Auto-Rescue restoration of pre-flash image dumps."""
+        if not self._island.write_switch.is_armed:
+            return
         reply = QMessageBox.warning(
             self,
             "Restore Pre-Flash State",
@@ -1710,9 +973,22 @@ class MainWindow(QMainWindow):
     # Device handling
     # ==================================================================
 
-    @Slot()
+    def _update_island(self, info: Optional[DeviceInfo]) -> None:
+        hardware = self._hardware_info
+        if not info or info.mode == "not_connected" or (
+            hardware and hardware.mode in {"mtk_brom", "qualcomm_edl", "unisoc_sprd", "mtk_preloader"}
+        ):
+            info = hardware
+        identity = (info.mode, info.serial) if info else None
+        if identity != self._displayed_device:
+            self._island.write_switch.set_armed(False)
+            self._displayed_device = identity
+        self._island.island_pill.update_device(info)
+
+    @Slot(object)
     def _handle_device_change(self, info: Optional[DeviceInfo]) -> None:
         """Called on the main thread when the device state changes."""
+        self._update_island(info)
         self._live_hud.update_device(info)
         if info and info.mode != "not_connected":
             # Update status bar
@@ -1728,40 +1004,6 @@ class MainWindow(QMainWindow):
                 self._device_mgr.all_devices,
                 self._device_mgr.locked_serial,
             )
-
-            # Auto-highlight top GSM Suite brand or chipset
-            brand_norm = (getattr(info, "brand_normalized", None) or info.brand or "").lower()
-            chip_norm = (info.chipset_family or "").lower()
-            mode_norm = (info.mode or "").lower()
-
-            target_key = ""
-            if "xiaomi" in brand_norm or "poco" in brand_norm or "redmi" in brand_norm:
-                target_key = "xiaomi"
-            elif "samsung" in brand_norm:
-                target_key = "samsung"
-            elif "tecno" in brand_norm:
-                target_key = "tecno"
-            elif "infinix" in brand_norm:
-                target_key = "infinix"
-            elif "itel" in brand_norm:
-                target_key = "itel"
-            elif "huawei" in brand_norm or "honor" in brand_norm:
-                target_key = "huawei"
-            elif "oppo" in brand_norm:
-                target_key = "oppo"
-            elif "vivo" in brand_norm or "iqoo" in brand_norm:
-                target_key = "vivo"
-            elif "realme" in brand_norm:
-                target_key = "realme"
-            elif "google" in brand_norm or "pixel" in brand_norm:
-                target_key = "google"
-            elif "oneplus" in brand_norm:
-                target_key = "oneplus"
-            elif "motorola" in brand_norm or "moto" in brand_norm:
-                target_key = "motorola"
-
-            for k, btn in self._gsm_btn_group.items():
-                btn.setChecked(bool(target_key and k == target_key))
 
             # If on the device card page, refresh it
             if self._stack.currentIndex() == PAGE_DEVICE_CARD:
@@ -1786,8 +1028,6 @@ class MainWindow(QMainWindow):
             self._phone_panel.set_summary("Connect a phone via USB")
             self._phone_panel.enable_buttons([])
             self._device_selector.update_devices([], None)
-            for btn in self._gsm_btn_group.values():
-                btn.setChecked(False)
 
 
     @Slot(str)
@@ -2024,7 +1264,7 @@ class MainWindow(QMainWindow):
             "<p>Handles rooting, bootloader unlocking, ROM flashing, "
             "firmware recovery, backup/restore, and returning to stock.</p>"
             "<hr>"
-            "<p style='color:#8b949e;'>For your own devices only.<br>"
+            "<p style='color:#939393;'>For your own devices only.<br>"
             "Test on a spare phone before using on your main device.</p>",
         )
 
@@ -2098,23 +1338,22 @@ class MainWindow(QMainWindow):
         self._config.set("theme", theme_name)
         app = QApplication.instance()
         if app:
-            app.setStyleSheet(get_stylesheet(theme_name))
+            stylesheet = get_stylesheet(theme_name)
+            if app.styleSheet() != stylesheet:
+                app.setStyleSheet(stylesheet)
         if hasattr(self, "_theme_btn"):
             self._theme_btn.setText(self._theme_btn_text(theme_name))
             self._theme_btn.setIcon(get_icon("moon" if theme_name.lower() == "light" else "sun", 14))
 
-        # Update action cards and filter widgets
+        dark = theme_name == "dark"
+        self.centralWidget().set_dark_mode(dark)
+        self._island.set_dark_mode(dark)
+        for sheet in (*self._workflow_sheets.values(), self._empty_state_widget):
+            sheet.set_dark_mode(dark)
         for btn in self._action_buttons.values():
-            if isinstance(btn, ActionCardButton):
-                btn.apply_theme(theme_name)
-        if hasattr(self, "_cat_buttons"):
-            self._update_category_buttons_style()
-        if hasattr(self, "_quick_buttons"):
-            self._update_quick_buttons_style()
-        if hasattr(self, "_search_input"):
-            self._update_search_style()
-        if hasattr(self, "_seg_frame"):
-            self._update_gsm_segments_style()
+            btn.apply_theme(theme_name)
+        if self.isVisible():
+            self._apply_native_backdrop()
         if hasattr(self, "_phone_panel"):
             self._phone_panel.apply_theme(theme_name)
         if hasattr(self, "_live_hud"):
@@ -2126,7 +1365,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_status_bar"):
             self._status_bar.apply_theme(theme_name)
         if hasattr(self, "_side_terminal"):
-            self._update_terminal_toggle_ui(self._side_terminal.isVisible())
+            self._update_terminal_toggle_ui(not self._side_terminal.isHidden())
 
         self._update_network_buttons(self._network.is_online)
         log.info("Theme switched to: %s", theme_name)
@@ -2144,65 +1383,10 @@ class MainWindow(QMainWindow):
         self._update_terminal_toggle_ui(new_state)
 
     def _update_terminal_toggle_ui(self, is_visible: bool | None = None) -> None:
-        """Update toggle button text, icon, and styling based on terminal visibility."""
-        if hasattr(self, "_btn_terminal_toggle"):
-            if is_visible is None:
-                is_visible = not self._side_terminal.isHidden() if hasattr(self, "_side_terminal") else True
-            theme = self._config.get("theme", "dark").lower()
-            if is_visible:
-                self._btn_terminal_toggle.setText("Hide Terminal")
-                self._btn_terminal_toggle.setIcon(get_icon("chevron_right", 12))
-                self._btn_terminal_toggle.setToolTip("Hide Live Telemetry Terminal to maximize workspace canvas")
-                self._btn_terminal_toggle.setStyleSheet("""
-                    QPushButton {
-                        background: rgba(10, 132, 255, 0.12);
-                        color: #0A84FF;
-                        border: 1px solid rgba(10, 132, 255, 0.35);
-                        border-radius: 7px;
-                        padding: 3px 12px;
-                        font-size: 11px;
-                        font-weight: 600;
-                    }
-                    QPushButton:hover {
-                        background: rgba(10, 132, 255, 0.22);
-                    }
-                """)
-            else:
-                self._btn_terminal_toggle.setText("Show Terminal")
-                self._btn_terminal_toggle.setIcon(get_icon("terminal", 12))
-                self._btn_terminal_toggle.setToolTip("Show Live Telemetry Terminal")
-                if theme == "light":
-                    self._btn_terminal_toggle.setStyleSheet("""
-                        QPushButton {
-                            background: rgba(0, 0, 0, 0.05);
-                            color: #555555;
-                            border: 1px solid #DCE1E8;
-                            border-radius: 7px;
-                            padding: 3px 12px;
-                            font-size: 11px;
-                            font-weight: 600;
-                        }
-                        QPushButton:hover {
-                            background: rgba(0, 0, 0, 0.1);
-                            color: #1C2024;
-                        }
-                    """)
-                else:
-                    self._btn_terminal_toggle.setStyleSheet("""
-                        QPushButton {
-                            background: rgba(255, 255, 255, 0.06);
-                            color: #8E8E93;
-                            border: 1px solid rgba(255, 255, 255, 0.14);
-                            border-radius: 7px;
-                            padding: 3px 12px;
-                            font-size: 11px;
-                            font-weight: 600;
-                        }
-                        QPushButton:hover {
-                            background: rgba(255, 255, 255, 0.12);
-                            color: #E6EDF3;
-                        }
-                    """)
+        if is_visible is None:
+            is_visible = not self._side_terminal.isHidden()
+        self._btn_terminal_toggle.setText("Hide Terminal" if is_visible else "Show Terminal")
+        self._btn_terminal_toggle.setToolTip("Toggle live activity and command logs")
 
     def _theme_btn_text(self, theme: str) -> str:
         return "Dark Mode" if theme.lower() == "light" else "Light Mode"
@@ -2210,41 +1394,9 @@ class MainWindow(QMainWindow):
     @Slot(bool)
     def _update_network_buttons(self, is_online: bool) -> None:
         """Shade or disable buttons requiring internet connection when offline (User Addition 1)."""
-        online_actions = {"downloads", "integrity"}
-        cur_theme = self._config.get("theme", "dark").lower()
-        for act_id in online_actions:
-            btn = self._action_buttons.get(act_id)
-            if not btn:
-                continue
-            if isinstance(btn, ActionCardButton):
-                btn.set_offline_state(not is_online, cur_theme)
-            else:
-                if is_online:
-                    btn.setEnabled(True)
-                    btn.setCursor(Qt.CursorShape.PointingHandCursor)
-                    desc = self._action_descs.get(act_id, "")
-                    btn.setToolTip(desc)
-                    btn.setStyleSheet("")
-                else:
-                    btn.setEnabled(False)
-                    btn.setCursor(Qt.CursorShape.ForbiddenCursor)
-                    btn.setToolTip("[OFFLINE] Internet connection required for this function.")
-                    if cur_theme == "light":
-                        btn.setStyleSheet(
-                            "QPushButton {"
-                            "  background-color: #f4f4f5; border: 1px dashed #d4d4d8;"
-                            "  border-radius: 6px; padding: 12px 16px; font-size: 13px;"
-                            "  font-weight: 500; text-align: left; color: #a1a1aa;"
-                            "}"
-                        )
-                    else:
-                        btn.setStyleSheet(
-                            "QPushButton {"
-                            "  background-color: #09090b; border: 1px dashed #1f1f23;"
-                            "  border-radius: 6px; padding: 12px 16px; font-size: 13px;"
-                            "  font-weight: 500; text-align: left; color: #3f3f46;"
-                            "}"
-                        )
+        theme = self._config.get("theme", "dark")
+        for action in ("downloads", "integrity"):
+            self._action_buttons[action].set_offline_state(not is_online, theme)
 
     def _mode_display_text(self) -> str:
         mode = self._config.get("app_mode", "simple").capitalize()
@@ -2256,9 +1408,16 @@ class MainWindow(QMainWindow):
     # Window lifecycle
     # ==================================================================
 
+    def _apply_native_backdrop(self) -> None:
+        enabled = enable_windows_acrylic_blur(
+            int(self.winId()), self._config.get("theme", "dark") == "dark"
+        )
+        self.centralWidget().set_native_backdrop(enabled)
+
     def showEvent(self, event) -> None:  # noqa: N802
         """Handle window show event: start non-blocking hardware polling."""
         super().showEvent(event)
+        self._apply_native_backdrop()
         if hasattr(self, "_monitor_worker") and not self._monitor_worker.isRunning():
             self._monitor_worker.start_polling()
 
@@ -2287,13 +1446,12 @@ class MainWindow(QMainWindow):
             self._monitor_worker.stop_polling()
         if hasattr(self, "_flash_worker") and self._flash_worker.isRunning():
             self._flash_worker.cancel()
+        self._device_mgr.on_device_changed = None
+        self._network.on_change = None
+        handler = self._side_terminal._handler_ref
+        if handler:
+            logging.getLogger("flashdock").removeHandler(handler)
         self._device_mgr.stop()
         self._network.stop()
         log.info("MainWindow closed -- geometry saved.")
         event.accept()
-
-
-# ============================================================================
-# v1.5.0 High-DPI Workspace & Splitter Hardening Hooks
-# ============================================================================
-from flashdock.ui.dpi_layout import apply_responsive_screen_geometry, harden_splitter_geometry

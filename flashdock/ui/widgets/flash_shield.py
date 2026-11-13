@@ -68,12 +68,12 @@ class FlashShieldDialog(QDialog):
 
         warn_title_row = QHBoxLayout()
         warn_title_row.setSpacing(8)
-        warn_icon = create_icon_label("warning", 20, color="#FF3B30")
+        warn_icon = create_icon_label("warning", 20, color="#646464")
         warn_title_row.addWidget(warn_icon)
 
         warn_title = QLabel("FLASH IN PROGRESS — DO NOT UNPLUG")
         warn_title.setProperty("cssClass", "error")
-        warn_title.setStyleSheet("font-size: 16px; font-weight: 800; color: #FF3B30;")
+        warn_title.setStyleSheet("font-size: 16px; font-weight: 800; color: #646464;")
         warn_title_row.addWidget(warn_title, 1)
         banner_layout.addLayout(warn_title_row)
 

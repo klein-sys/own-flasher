@@ -93,22 +93,22 @@ class SetupWizardDialog(QDialog):
 
     def card_style(self) -> str:
         if self.is_dark:
-            return "background: #181E26; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px;"
-        return "background: #FFFFFF; border: 1px solid #DCE1E8; border-radius: 10px; padding: 14px;"
+            return "background: #1D1D1D; border: none; border-radius: 10px; padding: 14px;"
+        return "background: #FFFFFF; border: none; border-radius: 10px; padding: 14px;"
 
     def primary_text_style(self, size: int = 14, weight: int = 600) -> str:
-        color = "#E6EDF3" if self.is_dark else "#1C2024"
+        color = "#ECECEC" if self.is_dark else "#1F1F1F"
         return f"font-size: {size}px; font-weight: {weight}; color: {color};"
 
     def secondary_text_style(self, size: int = 12) -> str:
-        color = "#8B949E" if self.is_dark else "#5A6572"
+        color = "#939393" if self.is_dark else "#646464"
         return f"font-size: {size}px; color: {color};"
 
     def _setup_ui(self) -> None:
         if self.is_dark:
-            self.setStyleSheet("QDialog { background-color: #0D1117; color: #E6EDF3; }")
+            self.setStyleSheet("QDialog { background-color: #111111; color: #ECECEC; }")
         else:
-            self.setStyleSheet("QDialog { background-color: #ECEFF4; color: #1C2024; }")
+            self.setStyleSheet("QDialog { background-color: #EFEFEF; color: #1F1F1F; }")
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(24, 20, 24, 20)
@@ -161,13 +161,13 @@ class SetupWizardDialog(QDialog):
         self._btn_prev = QPushButton("Back")
         if self.is_dark:
             self._btn_prev.setStyleSheet(
-                "QPushButton { background: #181E26; color: #E6EDF3; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 18px; font-weight: 600; } "
-                "QPushButton:hover { background: #222C3D; }"
+                "QPushButton { background: #1D1D1D; color: #ECECEC; border: none; border-radius: 8px; padding: 8px 18px; font-weight: 600; } "
+                "QPushButton:hover { background: #2B2B2B; }"
             )
         else:
             self._btn_prev.setStyleSheet(
-                "QPushButton { background: #E5E7EB; color: #374151; border-radius: 8px; padding: 8px 18px; font-weight: 600; } "
-                "QPushButton:hover { background: #D1D5DB; }"
+                "QPushButton { background: #E7E7E7; color: #404040; border-radius: 8px; padding: 8px 18px; font-weight: 600; } "
+                "QPushButton:hover { background: #D5D5D5; }"
             )
         self._btn_prev.clicked.connect(self._go_prev)
         footer.addWidget(self._btn_prev)
@@ -176,8 +176,8 @@ class SetupWizardDialog(QDialog):
 
         self._btn_next = QPushButton("Next")
         self._btn_next.setStyleSheet(
-            "QPushButton { background: #007AFF; color: #FFFFFF; border-radius: 8px; padding: 8px 24px; font-weight: 600; } "
-            "QPushButton:hover { background: #0062CC; }"
+            "QPushButton { background: #6A6A6A; color: #FFFFFF; border-radius: 8px; padding: 8px 24px; font-weight: 600; } "
+            "QPushButton:hover { background: #555555; }"
         )
         self._btn_next.clicked.connect(self._go_next)
         footer.addWidget(self._btn_next)
@@ -192,19 +192,19 @@ class SetupWizardDialog(QDialog):
         else:
             self._btn_next.setText("Next")
 
-        inactive_bg = "rgba(255,255,255,0.06)" if self.is_dark else "#F3F4F6"
-        inactive_fg = "#8B949E" if self.is_dark else "#9CA3AF"
+        inactive_bg = "rgba(255, 255, 255, 0.06)" if self.is_dark else "#F4F4F4"
+        inactive_fg = "#939393" if self.is_dark else "#A2A2A2"
 
         for idx, lbl in enumerate(self._step_widgets):
             if idx == self._current_step:
                 lbl.setStyleSheet(
                     "padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; "
-                    "background: #007AFF; color: #FFFFFF;"
+                    "background: #6A6A6A; color: #FFFFFF;"
                 )
             elif idx < self._current_step:
                 lbl.setStyleSheet(
                     "padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; "
-                    "background: rgba(48, 209, 88, 0.2); color: #30D158;"
+                    "background: rgba(166, 166, 166, 0.2); color: #A6A6A6;"
                 )
             else:
                 lbl.setStyleSheet(
@@ -264,8 +264,8 @@ class SetupWizardDialog(QDialog):
         self._btn_dl_tools = QPushButton("Download & Install Platform-Tools")
         self._btn_dl_tools.setIcon(get_icon("downloads", 16))
         self._btn_dl_tools.setStyleSheet(
-            "QPushButton { background: #10B981; color: #FFFFFF; font-weight: 700; border-radius: 8px; padding: 10px 18px; } "
-            "QPushButton:hover { background: #059669; }"
+            "QPushButton { background: #919191; color: #FFFFFF; font-weight: 700; border-radius: 8px; padding: 10px 18px; } "
+            "QPushButton:hover { background: #747474; }"
         )
         self._btn_dl_tools.clicked.connect(self._download_tools)
         btn_row.addWidget(self._btn_dl_tools)
@@ -282,12 +282,12 @@ class SetupWizardDialog(QDialog):
         fb_ok = self._fastboot.available
         if adb_ok and fb_ok:
             self._tools_status_lbl.setText("Platform-Tools are installed and ready to use.")
-            self._tools_status_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #059669;")
+            self._tools_status_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #747474;")
             self._btn_dl_tools.setText("Re-install / Update Platform-Tools")
             self._btn_dl_tools.setIcon(get_icon("refresh", 16))
         else:
             self._tools_status_lbl.setText("Platform-Tools are missing or not detected.")
-            self._tools_status_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #D97706;")
+            self._tools_status_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #848484;")
             self._btn_dl_tools.setText("Download & Install Platform-Tools")
             self._btn_dl_tools.setIcon(get_icon("downloads", 16))
 
@@ -341,7 +341,7 @@ class SetupWizardDialog(QDialog):
             card.setStyleSheet(self.card_style())
             h = QHBoxLayout(card)
             info = QVBoxLayout()
-            lbl = QLabel(f"<b>{d.name}</b> <span style='color:#8E8E93;'>({d.brand})</span>")
+            lbl = QLabel(f"<b>{d.name}</b> <span style='color:#8E8E8E;'>({d.brand})</span>")
             lbl.setStyleSheet(self.primary_text_style(13))
             sub = QLabel(d.description)
             sub.setStyleSheet(self.secondary_text_style(11))
@@ -352,8 +352,8 @@ class SetupWizardDialog(QDialog):
 
             btn = QPushButton("Install / Portal")
             btn.setStyleSheet(
-                "QPushButton { background: #007AFF; color: #FFFFFF; font-weight: 600; border-radius: 6px; padding: 6px 14px; font-size: 12px; } "
-                "QPushButton:hover { background: #0062CC; }"
+                "QPushButton { background: #6A6A6A; color: #FFFFFF; font-weight: 600; border-radius: 6px; padding: 6px 14px; font-size: 12px; } "
+                "QPushButton:hover { background: #555555; }"
             )
             btn.clicked.connect(lambda _, did=d.id: self._install_driver(did))
             h.addWidget(btn)
@@ -412,17 +412,17 @@ class SetupWizardDialog(QDialog):
         lay.setSpacing(14)
 
         card = QFrame()
-        card_bg = "rgba(48, 209, 88, 0.12)" if self.is_dark else "#F0FDF4"
-        card_border = "rgba(48, 209, 88, 0.3)" if self.is_dark else "#BBF7D0"
-        card.setStyleSheet(f"background: {card_bg}; border: 1px solid {card_border}; border-radius: 10px; padding: 16px;")
+        card_bg = "rgba(166, 166, 166, 0.12)" if self.is_dark else "#FAFAFA"
+        card_border = "rgba(166, 166, 166, 0.3)" if self.is_dark else "#E7E7E7"
+        card.setStyleSheet(f"background: {card_bg}; border: none; border-radius: 10px; padding: 16px;")
         c_lay = QVBoxLayout(card)
         c_lay.setSpacing(8)
 
         t_row = QHBoxLayout()
         t_row.setSpacing(8)
-        t_row.addWidget(create_icon_label("check", 20, color="#30D158"))
+        t_row.addWidget(create_icon_label("check", 20, color="#A6A6A6"))
         t = QLabel("Workstation Setup Complete!")
-        t.setStyleSheet("font-size: 16px; font-weight: 700; color: #30D158;")
+        t.setStyleSheet("font-size: 16px; font-weight: 700; color: #A6A6A6;")
         t_row.addWidget(t)
         t_row.addStretch()
         c_lay.addLayout(t_row)
@@ -431,7 +431,7 @@ class SetupWizardDialog(QDialog):
             "Your laptop is now configured with the proper tools and guidelines. "
             "Connect your Android phone with a quality USB cable to begin servicing."
         )
-        d_color = "#30D158" if self.is_dark else "#15803D"
+        d_color = "#A6A6A6" if self.is_dark else "#646464"
         d.setStyleSheet(f"font-size: 13px; color: {d_color};")
         d.setWordWrap(True)
         c_lay.addWidget(d)
@@ -459,8 +459,8 @@ class SetupWizardDialog(QDialog):
         btn_test = QPushButton("Test Connection (ADB & Fastboot)")
         btn_test.setIcon(get_icon("refresh", 16))
         btn_test.setStyleSheet(
-            "QPushButton { background: #007AFF; color: #FFFFFF; font-weight: 600; border-radius: 6px; padding: 8px 18px; } "
-            "QPushButton:hover { background: #0062CC; }"
+            "QPushButton { background: #6A6A6A; color: #FFFFFF; font-weight: 600; border-radius: 6px; padding: 8px 18px; } "
+            "QPushButton:hover { background: #555555; }"
         )
         btn_test.clicked.connect(self._run_connection_test)
         t_lay.addWidget(btn_test)
@@ -480,7 +480,7 @@ class SetupWizardDialog(QDialog):
 
         if found_devices:
             self._test_status_lbl.setText("Detected device(s):\n" + "\n".join(found_devices))
-            self._test_status_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #059669;")
+            self._test_status_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #747474;")
         else:
             self._test_status_lbl.setText("No devices detected yet. Ensure USB debugging is ON and cable is firmly connected.")
-            self._test_status_lbl.setStyleSheet("font-size: 12px; color: #D97706;")
+            self._test_status_lbl.setStyleSheet("font-size: 12px; color: #848484;")

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from PySide6.QtWidgets import QApplication
 
+from flashdock import __version__
 from flashdock.config import Config
 from flashdock.core.device import DeviceInfo
 from flashdock.core.device_manager import DeviceManager
@@ -53,7 +54,12 @@ def mock_main_window(tmp_path):
         adb=adb,
         fastboot=fastboot,
     )
-    return win
+    yield win
+    win.close()
+    win.deleteLater()
+    from PySide6.QtCore import QCoreApplication, QEvent
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    QApplication.instance().processEvents()
 
 
 class TestMainWindow:
@@ -158,29 +164,15 @@ class TestMainWindow:
         visible_initial = [aid for aid, b in win._action_buttons.items() if not b.isHidden()]
         assert len(visible_initial) == 16
 
-        # Filter by Rescue
-        win._on_category_clicked("Rescue")
-        visible_rescue = [aid for aid, b in win._action_buttons.items() if not b.isHidden()]
-        assert "unbrick" in visible_rescue
-        assert "backup" in visible_rescue
-        assert "checklist" in visible_rescue
-        assert "root" not in visible_rescue
-        assert len(visible_rescue) == 3
-
-        # Filter by Root
+        win._on_category_clicked("Flash")
+        visible = {aid for aid, row in win._action_buttons.items() if not row.isHidden()}
+        assert visible == {"flash_rom", "unbrick", "mtk_unisoc", "return_stock"}
         win._on_category_clicked("Root")
-        visible_root = [aid for aid, b in win._action_buttons.items() if not b.isHidden()]
-        assert "root" in visible_root
-        assert "modules" in visible_root
-        assert "integrity" in visible_root
-        assert len(visible_root) == 3
-
-        # Filter by Device (includes scrcpy and sideload)
-        win._on_category_clicked("Device")
-        visible_dev = [aid for aid, b in win._action_buttons.items() if not b.isHidden()]
-        assert "scrcpy" in visible_dev
-        assert "sideload" in visible_dev
-        assert len(visible_dev) == 6
+        visible = {aid for aid, row in win._action_buttons.items() if not row.isHidden()}
+        assert visible == {"root", "modules", "integrity", "unlock_bl"}
+        win._on_category_clicked("Daily")
+        visible = {aid for aid, row in win._action_buttons.items() if not row.isHidden()}
+        assert visible == {"sideload", "scrcpy", "downloads", "logs_help"}
 
     def test_tool_filter_by_search_query(self, qapp, mock_main_window):
         win = mock_main_window
@@ -229,37 +221,36 @@ class TestMainWindow:
         win._reset_filters()
         assert win._sort_combo.currentData() == "recommended"
 
-    def test_device_selector_footer_and_stretched_brand_bar(self, qapp, mock_main_window):
-        """Fix 16 & Fix 17: DeviceSelector sits in bottom bar, brand showcase stretches evenly."""
-        win = mock_main_window
-        # Check brand bar stretches 12 OEM buttons
-        assert hasattr(win, "_seg_frame")
-        assert len(win._gsm_btn_group) == 12
-        for key, btn in win._gsm_btn_group.items():
-            assert btn.sizePolicy().horizontalPolicy().name == "Expanding"
+    def test_workflow_sheets_replace_oem_strip(self, qapp, mock_main_window):
+        from PySide6.QtWidgets import QScrollArea
+        from flashdock.ui.widgets.liquid_glass_widget import LiquidGlassSheet
 
-        # Check DeviceSelector is initialized in bottom bar with action widgets
-        assert hasattr(win, "_device_selector")
-        assert hasattr(win, "_btn_driver_fix")
-        assert hasattr(win, "_btn_terminal_toggle")
+        win = mock_main_window
+        assert len(win._workflow_sheets) == 4
+        assert all(isinstance(sheet, LiquidGlassSheet) for sheet in win._workflow_sheets.values())
+        assert win._island.lens_control._active_key == "All"
+        assert not win._phone_panel.findChildren(QScrollArea)
+        assert len(win._action_buttons) == 16
 
     def test_terminal_clean_toggle_and_fixed_width(self, qapp, mock_main_window):
         """Fix 18: Terminal is fixed 320px width when visible, toggles smoothly without layout glitches."""
         win = mock_main_window
-        assert win._side_terminal.isHidden() is False
-        assert "Hide Terminal" in win._btn_terminal_toggle.text()
-
-        # Toggle terminal to hidden
-        win._toggle_terminal_visibility()
-        assert win._side_terminal.isHidden() is True
+        assert win._side_terminal.isHidden()
         assert "Show Terminal" in win._btn_terminal_toggle.text()
 
-        # Toggle terminal back to visible
         win._toggle_terminal_visibility()
-        assert win._side_terminal.isHidden() is False
+        assert not win._side_terminal.isHidden()
+        assert "Hide Terminal" in win._btn_terminal_toggle.text()
         assert win._side_terminal.minimumWidth() == 240
         assert win._side_terminal.maximumWidth() == 600
-        assert "Hide Terminal" in win._btn_terminal_toggle.text()
+
+        # Header and footer use the same visibility action.
+        win._side_terminal._toggle_btn.click()
+        assert win._side_terminal.isHidden()
+        win._toggle_terminal_visibility()
+        assert not win._side_terminal.isHidden()
+        assert win._side_terminal.minimumWidth() == 240
+        assert win._side_terminal.maximumWidth() == 600
 
     def test_unified_single_row_bottom_bar(self, qapp, mock_main_window):
         """Fix 18 & v1.3.3: Bottom bar unifies Status badges and Device Controls into single horizontal row."""
@@ -270,9 +261,57 @@ class TestMainWindow:
         assert win._status_bar._device_selector is win._device_selector
         assert win._status_bar.height() == 38 or win._status_bar.maximumHeight() == 38
         assert not win._status_bar._net_label.isHidden()
-        assert not win._status_bar._connection_badge.isHidden()
+        assert win._status_bar._connection_badge.isHidden()
         assert not win._status_bar._mode_label.isHidden()
         assert not win._status_bar._version_label.isHidden()
-        assert any(v in win._status_bar._version_label.text() for v in ("1.6.1", "1.6.0", "1.5.0", "1.4.0"))
+        assert win._status_bar._version_label.text() == f"v{__version__}"
 
 
+
+    def test_safety_gates_write_screens_and_disarms_on_device_change(self, qapp, mock_main_window):
+        win = mock_main_window
+        assert not win._island.write_switch.is_armed
+        assert not win._flash_rom_screen.isEnabled()
+        win._island.write_switch.set_armed(True)
+        assert win._flash_rom_screen.isEnabled()
+        dev = DeviceInfo(serial="PHONE_A", mode="system", battery_level=84, active_slot="a")
+        win._handle_device_change(dev)
+        assert not win._island.write_switch.is_armed
+        assert "84%" in win._island.island_pill.telemetry_lbl.text()
+        win._island.write_switch.set_armed(True)
+        dev.battery_level = 83
+        win._handle_device_change(dev)
+        assert win._island.write_switch.is_armed
+        assert "83%" in win._island.island_pill.telemetry_lbl.text()
+        win._handle_device_change(None)
+        assert not win._island.write_switch.is_armed
+        assert not win._flash_rom_screen.isEnabled()
+
+    def test_background_device_and_network_updates_reach_ui(self, qapp, mock_main_window):
+        from threading import Thread
+
+        win = mock_main_window
+        dev = DeviceInfo(serial="QUEUED_PHONE", mode="bootloader", active_slot="_b")
+        def publish():
+            win._device_mgr.on_device_changed(dev)
+            win._network.on_change(False)
+
+        worker = Thread(target=publish)
+        worker.start()
+        worker.join()
+        qapp.processEvents()
+        assert "QUEUED_PHONE" in win._island.island_pill.primary_lbl.text()
+        assert "Slot _B" in win._island.island_pill.telemetry_lbl.text()
+        assert not win._action_buttons["downloads"].isEnabled()
+        win._network.on_change(True)
+        qapp.processEvents()
+        assert win._action_buttons["downloads"].isEnabled()
+
+    def test_hardware_emergency_mode_has_priority(self, qapp, mock_main_window):
+        win = mock_main_window
+        win._on_hardware_device_connected("mtk_brom", "COM4", {"display_name": "MediaTek BROM"})
+        win._handle_device_change(DeviceInfo(serial="STALE_ADB", mode="system"))
+        assert "MTK BROM" in win._island.island_pill.primary_lbl.text()
+        assert "COM4" in win._island.island_pill.primary_lbl.text()
+        win._on_hardware_device_disconnected()
+        assert win._island.island_pill.primary_lbl.text() == "No Device Connected"

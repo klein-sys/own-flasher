@@ -64,14 +64,14 @@ class SettingsDialog(QDialog):
         # Header Row
         head_row = QHBoxLayout()
         head_row.setSpacing(10)
-        head_row.addWidget(create_icon_label("tools", 24, color="#007AFF"))
+        head_row.addWidget(create_icon_label("tools", 24, color="#6A6A6A"))
 
         head_col = QVBoxLayout()
         head_col.setSpacing(2)
         title_lbl = QLabel("Workstation Settings")
-        title_lbl.setStyleSheet("font-size: 16px; font-weight: 700; color: #E6EDF3;")
+        title_lbl.setStyleSheet("font-size: 16px; font-weight: 700; color: #ECECEC;")
         desc_lbl = QLabel("Configure appearance, paths, safety locks, and port polling behavior.")
-        desc_lbl.setStyleSheet("font-size: 11px; color: #8B949E;")
+        desc_lbl.setStyleSheet("font-size: 11px; color: #939393;")
         head_col.addWidget(title_lbl)
         head_col.addWidget(desc_lbl)
         head_row.addLayout(head_col, 1)
@@ -100,7 +100,7 @@ class SettingsDialog(QDialog):
         save_btn.setIcon(get_icon("integrity", 13, color="#FFFFFF"))
         save_btn.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #007AFF, stop:1 #0056B3);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6A6A6A, stop:1 #4A4A4A);
                 color: #FFFFFF;
                 font-weight: 700;
                 padding: 6px 14px;
@@ -280,11 +280,11 @@ class SettingsDialog(QDialog):
         lay.setSpacing(10)
 
         title = QLabel("FlashDock — Personal Android Service Workstation")
-        title.setStyleSheet("font-size: 14px; font-weight: 700; color: #E6EDF3;")
+        title.setStyleSheet("font-size: 14px; font-weight: 700; color: #ECECEC;")
         lay.addWidget(title)
 
         ver = QLabel("Version 1.2.1 • GSM Suite Architecture • Built for Windows 10/11 x64")
-        ver.setStyleSheet("font-size: 11px; color: #0A84FF; font-weight: 600;")
+        ver.setStyleSheet("font-size: 11px; color: #737373; font-weight: 600;")
         lay.addWidget(ver)
 
         desc = QLabel(
@@ -293,11 +293,11 @@ class SettingsDialog(QDialog):
             "Google Pixel, OnePlus, MediaTek BROM, Qualcomm EDL, and Unisoc SPRD devices."
         )
         desc.setWordWrap(True)
-        desc.setStyleSheet("font-size: 11px; color: #8B949E; line-height: 1.4;")
+        desc.setStyleSheet("font-size: 11px; color: #939393; line-height: 1.4;")
         lay.addWidget(desc)
 
         license_lbl = QLabel("Distributed under the MIT License • © 2024-2026 Klein Systems")
-        license_lbl.setStyleSheet("font-size: 10px; color: #8E8E93;")
+        license_lbl.setStyleSheet("font-size: 10px; color: #8E8E8E;")
         lay.addWidget(license_lbl)
 
         lay.addStretch(1)

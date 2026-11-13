@@ -104,12 +104,12 @@ class SideTerminalWidget(QWidget):
 
         # Routine Polling Filter toggle button (silences spam every 2s)
         self._poll_toggle_btn = QPushButton("Quiet")
-        self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#0A84FF"))
+        self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#737373"))
         self._poll_toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._poll_toggle_btn.setToolTip("Quiet mode: Hides repetitive background device polls when idle")
         self._poll_toggle_btn.setStyleSheet(
             "padding: 2px 7px; font-size: 10px; min-height: 18px; border-radius: 4px; "
-            "background: rgba(10, 132, 255, 0.15); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3);"
+            "background: rgba(115, 115, 115, 0.15); color: #737373; border: none;"
         )
         self._poll_toggle_btn.clicked.connect(self._toggle_poll_filtering)
         h_lay.addWidget(self._poll_toggle_btn)
@@ -132,14 +132,14 @@ class SideTerminalWidget(QWidget):
                 font-size: 13px;
                 padding: 0;
                 background: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.14);
+                border: none;
                 border-radius: 4px;
-                color: #8E8E93;
+                color: #8E8E8E;
             }
             QPushButton:hover {
-                background: rgba(10, 132, 255, 0.2);
-                color: #0A84FF;
-                border-color: #0A84FF;
+                background: rgba(115, 115, 115, 0.2);
+                color: #737373;
+                border-color: #737373;
             }
         """)
         self._toggle_btn.clicked.connect(self._on_toggle_clicked)
@@ -153,10 +153,10 @@ class SideTerminalWidget(QWidget):
         self._text_edit.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self._text_edit.setMaximumBlockCount(5000)  # Capped buffer to prevent memory bloat / layout freeze
         self._text_edit.setStyleSheet(
-            "QPlainTextEdit { background-color: #080B10; border: 1px solid rgba(255, 255, 255, 0.08); "
-            "border-radius: 12px; margin: 4px 8px 8px 8px; padding: 8px; color: #E6EDF3; "
+            "QPlainTextEdit { background-color: #0B0B0B; border: none; "
+            "border-radius: 12px; margin: 4px 8px 8px 8px; padding: 8px; color: #ECECEC; "
             "font-family: 'JetBrains Mono', 'Cascadia Code', 'SF Pro Display', Consolas, monospace; "
-            "font-size: 11.5px; selection-background-color: #0A84FF; }"
+            "font-size: 11.5px; selection-background-color: #737373; }"
         )
         layout.addWidget(self._text_edit, 1)
 
@@ -171,20 +171,20 @@ class SideTerminalWidget(QWidget):
 
         if self._filter_polls:
             self._poll_toggle_btn.setText("Quiet")
-            self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#0A84FF"))
+            self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#737373"))
             self._poll_toggle_btn.setToolTip("Quiet mode: Hides repetitive background device polls when idle")
             self._poll_toggle_btn.setStyleSheet(
                 "padding: 3px 10px; font-size: 10px; min-height: 20px; border-radius: 10px; "
-                "background: rgba(10, 132, 255, 0.15); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3);"
+                "background: rgba(115, 115, 115, 0.15); color: #737373; border: none;"
             )
             self.append_line("Routine background polling filtered.", level="info")
         else:
             self._poll_toggle_btn.setText("Verbose")
-            self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#FF9F0A"))
+            self._poll_toggle_btn.setIcon(get_icon("info", 11, color="#A9A9A9"))
             self._poll_toggle_btn.setToolTip("Verbose mode: Shows all background health checks and raw device polls")
             self._poll_toggle_btn.setStyleSheet(
                 "padding: 3px 10px; font-size: 10px; min-height: 20px; border-radius: 10px; "
-                "background: rgba(255, 159, 10, 0.15); color: #FF9F0A; border: 1px solid rgba(255, 159, 10, 0.3);"
+                "background: rgba(169, 169, 169, 0.15); color: #A9A9A9; border: none;"
             )
             self.append_line("Verbose mode enabled (showing all background device polls).", level="info")
 
@@ -193,7 +193,6 @@ class SideTerminalWidget(QWidget):
 
     def _on_toggle_clicked(self) -> None:
         self.collapse_requested.emit()
-        self._toggle_collapse()
 
     def _toggle_collapse(self) -> None:
         self._is_collapsed = not self._is_collapsed
@@ -229,32 +228,32 @@ class SideTerminalWidget(QWidget):
     @Slot(str, str)
     def _append_formatted(self, text: str, level: str) -> None:
         now = datetime.now().strftime("%H:%M:%S")
-        time_tag = f"<span style='color:#8B949E;'>[{now}]</span>"
+        time_tag = f"<span style='color:#939393;'>[{now}]</span>"
         lvl_key = level.upper().strip()
 
         # Prefix color mapping & Glowing Status Pills:
         # Electric Blue [INFO], Warm Amber [WARN], Emerald Green [SUCCESS], Crimson Red [ERROR]
         prefix_styles = {
-            "INFO": ("#0a84ff", "rgba(10, 132, 255, 0.18)", "rgba(10, 132, 255, 0.35)", "[INFO]"),
-            "WARN": ("#ff9f0a", "rgba(255, 159, 10, 0.18)", "rgba(255, 159, 10, 0.35)", "[WARN]"),
-            "WARNING": ("#ff9f0a", "rgba(255, 159, 10, 0.18)", "rgba(255, 159, 10, 0.35)", "[WARN]"),
-            "SUCCESS": ("#30d158", "rgba(48, 209, 88, 0.18)", "rgba(48, 209, 88, 0.35)", "[SUCCESS]"),
-            "ERROR": ("#ff453a", "rgba(255, 69, 58, 0.18)", "rgba(255, 69, 58, 0.35)", "[ERROR]"),
-            "CRITICAL": ("#ff453a", "rgba(255, 69, 58, 0.18)", "rgba(255, 69, 58, 0.35)", "[CRITICAL]"),
-            "COMMAND": ("#bf5af2", "rgba(191, 90, 242, 0.18)", "rgba(191, 90, 242, 0.35)", "[CMD]"),
+            "INFO": ("#737373", "rgba(115, 115, 115, 0.18)", "rgba(115, 115, 115, 0.35)", "[INFO]"),
+            "WARN": ("#A9A9A9", "rgba(169, 169, 169, 0.18)", "rgba(169, 169, 169, 0.35)", "[WARN]"),
+            "WARNING": ("#A9A9A9", "rgba(169, 169, 169, 0.18)", "rgba(169, 169, 169, 0.35)", "[WARN]"),
+            "SUCCESS": ("#A6A6A6", "rgba(166, 166, 166, 0.18)", "rgba(166, 166, 166, 0.35)", "[SUCCESS]"),
+            "ERROR": ("#6C6C6C", "rgba(108, 108, 108, 0.18)", "rgba(108, 108, 108, 0.35)", "[ERROR]"),
+            "CRITICAL": ("#6C6C6C", "rgba(108, 108, 108, 0.18)", "rgba(108, 108, 108, 0.35)", "[CRITICAL]"),
+            "COMMAND": ("#7A7A7A", "rgba(122, 122, 122, 0.18)", "rgba(122, 122, 122, 0.35)", "[CMD]"),
         }
 
         fg_color, bg_pill, border_pill, tag_text = prefix_styles.get(
-            lvl_key, ("#8b949e", "rgba(139, 148, 158, 0.15)", "rgba(139, 148, 158, 0.3)", f"[{lvl_key}]")
+            lvl_key, ("#939393", "rgba(147, 147, 147, 0.15)", "rgba(147, 147, 147, 0.3)", f"[{lvl_key}]")
         )
         prefix_badge = (
-            f"<span style='background: {bg_pill}; color: {fg_color}; border: 1px solid {border_pill}; "
+            f"<span style='background: {bg_pill}; color: {fg_color}; border: none; "
             f"border-radius: 4px; padding: 1px 4px; font-weight: 700; font-size: 10px;'>{tag_text}</span>"
         )
 
         # HTML formatting for colored log lines
         clean_text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        html_line = f"{time_tag} {prefix_badge} <span style='color:#E6EDF3;'>{clean_text}</span>"
+        html_line = f"{time_tag} {prefix_badge} <span style='color:#ECECEC;'>{clean_text}</span>"
         self._text_edit.appendHtml(html_line)
 
         # Auto-scroll to bottom

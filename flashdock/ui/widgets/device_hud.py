@@ -47,17 +47,17 @@ class LiveDeviceHud(QFrame):
     restore_preflash_requested = Signal(str)  # Emits device serial
 
     _MODE_CONFIGS = {
-        "system":       ("ADB Authorized", "#34C759", "phone"),
-        "recovery":     ("Recovery Mode", "#AF52DE", "tools"),
-        "bootloader":   ("Fastboot (Bootloader)", "#007AFF", "flash"),
-        "fastbootd":    ("FastbootD (Userspace)", "#00E5FF", "flash"),
-        "download":     ("Samsung Odin Mode", "#00B4D8", "downloads"),
-        "edl":          ("Qualcomm EDL 9008", "#FF3B30", "usb"),
-        "brom":         ("MediaTek BROM", "#FF9500", "mtk_unisoc"),
-        "sideload":     ("ADB Sideload", "#FF9500", "refresh"),
-        "unauthorized": ("Unauthorized (RSA)", "#FF9500", "warning"),
-        "offline":      ("Device Offline", "#8E8E93", "info"),
-        "not_connected":("No Device Connected", "#8E8E93", "info"),
+        "system":       ("ADB Authorized", "#A0A0A0", "phone"),
+        "recovery":     ("Recovery Mode", "#707070", "tools"),
+        "bootloader":   ("Fastboot (Bootloader)", "#6A6A6A", "flash"),
+        "fastbootd":    ("FastbootD (Userspace)", "#B6B6B6", "flash"),
+        "download":     ("Samsung Odin Mode", "#909090", "downloads"),
+        "edl":          ("Qualcomm EDL 9008", "#646464", "usb"),
+        "brom":         ("MediaTek BROM", "#A1A1A1", "mtk_unisoc"),
+        "sideload":     ("ADB Sideload", "#A1A1A1", "refresh"),
+        "unauthorized": ("Unauthorized (RSA)", "#A1A1A1", "warning"),
+        "offline":      ("Device Offline", "#8E8E8E", "info"),
+        "not_connected":("No Device Connected", "#8E8E8E", "info"),
     }
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
@@ -130,12 +130,12 @@ class LiveDeviceHud(QFrame):
 
         # Root State Pill
         self._gauge_root = QLabel("ROOT: —")
-        self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93;")
+        self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E8E;")
         self._gauge_container.addWidget(self._gauge_root)
 
         # ROM State Pill
         self._gauge_rom = QLabel("ROM: —")
-        self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93;")
+        self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E8E;")
         self._gauge_container.addWidget(self._gauge_rom)
 
         self._top_row.addLayout(self._gauge_container)
@@ -147,16 +147,16 @@ class LiveDeviceHud(QFrame):
         self._btn_rescue.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_rescue.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #EF4444, stop:1 #B91C1C);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #686868, stop:1 #3D3D3D);
                 color: #FFFFFF;
                 font-weight: 700;
                 font-size: 11px;
                 padding: 4px 10px;
                 border-radius: 8px;
-                border: 1px solid rgba(255, 255, 255, 0.2);
+                border: none;
             }
             QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #DC2626, stop:1 #991B1B);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4D4D4D, stop:1 #363636);
             }
         """)
         self._btn_rescue.setToolTip("1-click restore of critical partitions (boot, init_boot, vbmeta, persist, efs) saved before flashing")
@@ -179,7 +179,7 @@ class LiveDeviceHud(QFrame):
         ]
         for name in step_names:
             lbl = QLabel(name)
-            lbl.setStyleSheet("font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.15); color: #8E8E93;")
+            lbl.setStyleSheet("font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(0, 0, 0, 0.15); color: #8E8E8E;")
             self._step_labels.append(lbl)
             self._bottom_row.addWidget(lbl)
 
@@ -190,19 +190,19 @@ class LiveDeviceHud(QFrame):
         self._prog_bar.setValue(0)
         self._prog_bar.setStyleSheet("""
             QProgressBar {
-                background: rgba(0,0,0,0.2);
+                background: rgba(0, 0, 0, 0.2);
                 border: none;
                 border-radius: 3px;
             }
             QProgressBar::chunk {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #007AFF, stop:1 #00F2FE);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6A6A6A, stop:1 #BFBFBF);
                 border-radius: 3px;
             }
         """)
         self._bottom_row.addWidget(self._prog_bar, 1)
 
         self._stage_status_text = QLabel("Standby")
-        self._stage_status_text.setStyleSheet("font-size: 10px; color: #8E8E93; font-weight: 500;")
+        self._stage_status_text.setStyleSheet("font-size: 10px; color: #8E8E8E; font-weight: 500;")
         self._bottom_row.addWidget(self._stage_status_text)
 
         root_lay.addLayout(self._bottom_row)
@@ -225,9 +225,9 @@ class LiveDeviceHud(QFrame):
             self._gauge_knox.setText("Knox: —")
             self._gauge_patch.setText("Patch: —")
             self._gauge_root.setText("ROOT: —")
-            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93;")
+            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E8E;")
             self._gauge_rom.setText("ROM: —")
-            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93;")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E8E;")
             self._btn_rescue.setVisible(False)
             return
 
@@ -241,55 +241,55 @@ class LiveDeviceHud(QFrame):
                 batt_text += f" ({info.battery_temp_c}°C)"
             if info.battery_voltage_mv > 0:
                 batt_text += f" {info.battery_voltage_mv}mV"
-            color = "#34C759" if info.battery_level >= 30 else "#EF4444"
+            color = "#A0A0A0" if info.battery_level >= 30 else "#686868"
             self._gauge_batt.setText(batt_text)
             self._gauge_batt.setStyleSheet(f"font-size: 11px; font-weight: 600; color: {color};")
         else:
             self._gauge_batt.setText("Batt: Unknown")
-            self._gauge_batt.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+            self._gauge_batt.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
 
         # 3. Chipset / SoC
         soc_display = info.chipset_family.title() if info.chipset_family != "unknown" else (info.hardware or info.chipset)
         if soc_display and soc_display != "unknown":
             self._gauge_soc.setText(f"SoC: {soc_display}")
-            self._gauge_soc.setStyleSheet("font-size: 11px; font-weight: 600; color: #007AFF;")
+            self._gauge_soc.setStyleSheet("font-size: 11px; font-weight: 600; color: #6A6A6A;")
         else:
             self._gauge_soc.setText("SoC: Unknown")
-            self._gauge_soc.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+            self._gauge_soc.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
 
         # 4. Bootloader Lock State
         if info.bootloader_state == "unlocked":
             self._gauge_bl.setText("BL: UNLOCKED")
-            self._gauge_bl.setStyleSheet("font-size: 11px; font-weight: 700; color: #34C759;")
+            self._gauge_bl.setStyleSheet("font-size: 11px; font-weight: 700; color: #A0A0A0;")
         elif info.bootloader_state == "locked":
             self._gauge_bl.setText("BL: LOCKED")
-            self._gauge_bl.setStyleSheet("font-size: 11px; font-weight: 700; color: #EF4444;")
+            self._gauge_bl.setStyleSheet("font-size: 11px; font-weight: 700; color: #686868;")
         else:
             self._gauge_bl.setText("BL: Unknown")
-            self._gauge_bl.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93;")
+            self._gauge_bl.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E8E;")
 
         # 5. Active Slot
         if info.slot_scheme == "a/b":
             active = f"_{info.active_slot}" if info.active_slot else "A/B"
             self._gauge_slot.setText(f"Slot: {active}")
-            self._gauge_slot.setStyleSheet("font-size: 11px; font-weight: 600; color: #AF52DE;")
+            self._gauge_slot.setStyleSheet("font-size: 11px; font-weight: 600; color: #707070;")
         elif info.slot_scheme == "a_only":
             self._gauge_slot.setText("Slot: A-only")
-            self._gauge_slot.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+            self._gauge_slot.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
         else:
             self._gauge_slot.setText("Slot: —")
-            self._gauge_slot.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+            self._gauge_slot.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
 
         # 6. Knox Warranty Bit
         if info.knox_warranty_bit == "0x1":
             self._gauge_knox.setText("Knox: 0x1 (Tripped)")
-            self._gauge_knox.setStyleSheet("font-size: 11px; font-weight: 600; color: #EF4444;")
+            self._gauge_knox.setStyleSheet("font-size: 11px; font-weight: 600; color: #686868;")
         elif info.knox_warranty_bit == "0x0" and info.brand.lower() == "samsung":
             self._gauge_knox.setText("Knox: 0x0 (Clean)")
-            self._gauge_knox.setStyleSheet("font-size: 11px; font-weight: 600; color: #34C759;")
+            self._gauge_knox.setStyleSheet("font-size: 11px; font-weight: 600; color: #A0A0A0;")
         else:
             self._gauge_knox.setText("Knox: 0x0")
-            self._gauge_knox.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+            self._gauge_knox.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
 
         # 7. Security Patch
         patch = info.security_patch or "—"
@@ -299,13 +299,13 @@ class LiveDeviceHud(QFrame):
         if info.is_rooted:
             method_str = f" ({info.root_method.title()})" if info.root_method else ""
             self._gauge_root.setText(f"ROOT: YES{method_str}")
-            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 700; color: #34C759; background: rgba(52, 199, 89, 0.15); border: 1px solid rgba(52, 199, 89, 0.3); border-radius: 4px; padding: 1px 6px;")
+            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 700; color: #A0A0A0; background: rgba(160, 160, 160, 0.15); border: none; border-radius: 4px; padding: 1px 6px;")
         elif info.mode in ("system", "recovery"):
             self._gauge_root.setText("ROOT: NO")
-            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 4px; padding: 1px 6px;")
+            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E; background: rgba(255, 255, 255, 0.04); border: none; border-radius: 4px; padding: 1px 6px;")
         else:
             self._gauge_root.setText("ROOT: —")
-            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+            self._gauge_root.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
 
         # 9. ROM / Firmware Type Indicator Pill
         is_gsi = info.os_type == "gsi" or "treble" in info.build_display.lower() or "gsi" in info.build_fingerprint.lower()
@@ -314,19 +314,19 @@ class LiveDeviceHud(QFrame):
 
         if is_gsi:
             self._gauge_rom.setText("ROM: CUSTOM GSI")
-            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #AF52DE; background: rgba(175, 82, 222, 0.15); border: 1px solid rgba(175, 82, 222, 0.3); border-radius: 4px; padding: 1px 6px;")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #707070; background: rgba(112, 112, 112, 0.15); border: none; border-radius: 4px; padding: 1px 6px;")
         elif is_custom:
             self._gauge_rom.setText("ROM: CUSTOM ROM")
-            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #FF9F0A; background: rgba(255, 159, 10, 0.15); border: 1px solid rgba(255, 159, 10, 0.3); border-radius: 4px; padding: 1px 6px;")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #A9A9A9; background: rgba(169, 169, 169, 0.15); border: none; border-radius: 4px; padding: 1px 6px;")
         elif is_stock:
             self._gauge_rom.setText("ROM: OFFICIAL STOCK")
-            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #007AFF; background: rgba(0, 122, 255, 0.15); border: 1px solid rgba(0, 122, 255, 0.3); border-radius: 4px; padding: 1px 6px;")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 700; color: #6A6A6A; background: rgba(106, 106, 106, 0.15); border: none; border-radius: 4px; padding: 1px 6px;")
         elif info.mode in ("system", "recovery"):
             self._gauge_rom.setText(f"ROM: {info.os_display.upper()}")
-            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 600; color: #007AFF; background: rgba(0, 122, 255, 0.1); border-radius: 4px; padding: 1px 6px;")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 600; color: #6A6A6A; background: rgba(106, 106, 106, 0.1); border-radius: 4px; padding: 1px 6px;")
         else:
             self._gauge_rom.setText("ROM: —")
-            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+            self._gauge_rom.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
 
         # 10. Check if emergency pre-flash backup exists for this device
         self._check_emergency_backup_available(info.serial)
@@ -343,13 +343,13 @@ class LiveDeviceHud(QFrame):
         for i, lbl in enumerate(self._step_labels, start=1):
             if i < stage_idx:
                 # Completed
-                lbl.setStyleSheet("font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(52, 199, 89, 0.2); color: #34C759;")
+                lbl.setStyleSheet("font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(160, 160, 160, 0.2); color: #A0A0A0;")
             elif i == stage_idx:
                 # Active
-                lbl.setStyleSheet("font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(0, 122, 255, 0.3); color: #007AFF; border: 1px solid #007AFF;")
+                lbl.setStyleSheet("font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(106, 106, 106, 0.3); color: #6A6A6A; border: none;")
             else:
                 # Pending
-                lbl.setStyleSheet("font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.15); color: #8E8E93;")
+                lbl.setStyleSheet("font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(0, 0, 0, 0.15); color: #8E8E8E;")
 
     def reset_pipeline(self, final_msg: str = "Standby") -> None:
         """Reset stepped pipeline to idle."""
@@ -357,15 +357,15 @@ class LiveDeviceHud(QFrame):
         self._stage_status_text.setText(final_msg)
         self._prog_bar.setValue(0)
         for lbl in self._step_labels:
-            lbl.setStyleSheet("font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.15); color: #8E8E93;")
+            lbl.setStyleSheet("font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(0, 0, 0, 0.15); color: #8E8E8E;")
 
     def trigger_failure_alert(self, err_msg: str) -> None:
         """Indicate operation failure and present emergency restore option."""
         self._stage_status_text.setText(f"Operation Aborted: {err_msg[:45]}")
-        self._stage_status_text.setStyleSheet("font-size: 10px; color: #EF4444; font-weight: 700;")
+        self._stage_status_text.setStyleSheet("font-size: 10px; color: #686868; font-weight: 700;")
         self._prog_bar.setStyleSheet("""
-            QProgressBar { background: rgba(239, 68, 68, 0.2); border-radius: 3px; }
-            QProgressBar::chunk { background: #EF4444; border-radius: 3px; }
+            QProgressBar { background: rgba(104, 104, 104, 0.2); border-radius: 3px; }
+            QProgressBar::chunk { background: #686868; border-radius: 3px; }
         """)
         if self._current_device and self._current_device.serial:
             self._btn_rescue.setVisible(True)
@@ -376,21 +376,21 @@ class LiveDeviceHud(QFrame):
         if self._current_theme == "light":
             self.setStyleSheet("""
                 QFrame#liveDeviceHud {
-                    background-color: #F8F9FA;
-                    border: 1px solid #DCE1E8;
+                    background-color: #F9F9F9;
+                    border: none;
                     border-radius: 12px;
                 }
             """)
-            self._gauge_patch.setStyleSheet("font-size: 11px; font-weight: 500; color: #5A6572;")
+            self._gauge_patch.setStyleSheet("font-size: 11px; font-weight: 500; color: #646464;")
         else:
             self.setStyleSheet("""
                 QFrame#liveDeviceHud {
-                    background-color: #141820;
-                    border: 1px solid #252D38;
+                    background-color: #181818;
+                    border: none;
                     border-radius: 12px;
                 }
             """)
-            self._gauge_patch.setStyleSheet("font-size: 11px; font-weight: 500; color: #8B949E;")
+            self._gauge_patch.setStyleSheet("font-size: 11px; font-weight: 500; color: #939393;")
 
         if self._current_device:
             self.update_device(self._current_device)
@@ -400,7 +400,7 @@ class LiveDeviceHud(QFrame):
     # -----------------------------------------------------------------------
 
     def _set_mode_ui(self, mode: str) -> None:
-        label, color, icon_name = self._MODE_CONFIGS.get(mode, (mode.title(), "#8E8E93", "info"))
+        label, color, icon_name = self._MODE_CONFIGS.get(mode, (mode.title(), "#8E8E8E", "info"))
         self._mode_dot.setStyleSheet(f"color: {color}; font-size: 11px; border: none; background: transparent;")
         self._mode_text.setText(label)
         self._mode_text.setStyleSheet(f"color: {color}; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; border: none; background: transparent;")
@@ -410,7 +410,7 @@ class LiveDeviceHud(QFrame):
         self._mode_pill.setStyleSheet(f"""
             QFrame {{
                 background: rgba({r}, {g}, {b}, 0.15);
-                border: 1px solid {color};
+                border: none;
                 border-radius: 14px;
             }}
             QLabel {{
@@ -434,6 +434,6 @@ class LiveDeviceHud(QFrame):
 
 
 # ============================================================================
-# v1.5.0 Bootloader (#007AFF Cobalt) vs FastbootD (#00E5FF Cyan) Mode Tokens
+# v1.5.0 Bootloader (#6A6A6A Cobalt) vs FastbootD (#B6B6B6 Cyan) Mode Tokens
 # ============================================================================
 from flashdock.ui.theme_tokens import get_mode_badge_palette, get_theme_tokens

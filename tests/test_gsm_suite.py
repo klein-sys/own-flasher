@@ -562,40 +562,18 @@ class TestUIArchitectureAndBigSurStyles:
         assert "[SUCCESS]" in text
         assert "[ERROR]" in text
         html = term._text_edit.document().toHtml().lower()
-        # Check colored CSS hex references
-        assert "#007aff" in html or "#0a84ff" in html  # Blue
-        assert "#ff9500" in html or "#ff9f0a" in html  # Amber
-        assert "#34c759" in html or "#30d158" in html  # Green
-        assert "#ff3b30" in html or "#ff453a" in html  # Red
+        # Severity remains explicit in the stream's text with monochrome ink.
+        assert "#0a84ff" not in html
+        assert "#ff453a" not in html
 
-    def test_macos_big_sur_stylesheets_load(self):
-        """macOS Big Sur stylesheets contain required tokens for segmented controls and cards."""
+    def test_monochrome_stylesheets_load(self):
+        import re
         light_qss = get_stylesheet("light")
         dark_qss = get_stylesheet("dark")
-
-        assert "segmented_control" in light_qss
-        assert "segmented_control" in dark_qss
-        assert "operations_panel" in light_qss
-        assert "operations_panel" in dark_qss
-        assert "connection_badge" in light_qss
-        assert "connection_badge" in dark_qss
-        assert "#007AFF" in light_qss  # Apple Accent Blue
-        assert "#0A84FF" in dark_qss   # Apple Dark Accent Blue
-
-        # Ergonomic Light Mode Tokens (SKILL.md standard)
-        assert "#F0F2F5" in light_qss  # Slate-Mica Canvas
-        assert "#F8F9FA" in light_qss  # Soft Frost Cards
-        assert "#DCE1E8" in light_qss  # Soft Card Border
-        assert "#E9EEF5" in light_qss  # Sidebar & Segmented Control Tint
-        assert "#1C2024" in light_qss  # Deep Slate Charcoal Text
-        assert "#5A6572" in light_qss  # Muted Secondary Text
-
-        # Ergonomic Dark Mode Tokens (SKILL.md standard)
-        assert "#0D1117" in dark_qss   # Deep Space Obsidian Canvas
-        assert "#181E26" in dark_qss   # Elevated Slate Cards
-        assert "#2C3644" in dark_qss   # Elevated Slate Border
-        assert "#141820" in dark_qss   # Sidebar & Segmented Control Surface
-        assert "#252D38" in dark_qss   # Sidebar Border
-        assert "#E6EDF3" in dark_qss   # Soft Platinum Text
-        assert "#8B949E" in dark_qss   # Muted Steel Text
-        assert "#0B0E14" in dark_qss   # Deep Midnight Terminal Canvas
+        assert light_qss != dark_qss
+        for sheet in (light_qss, dark_qss):
+            assert "liquidSegment" in sheet
+            assert "iosSidebar" in sheet
+            assert "@TEXT@" not in sheet
+            for color in re.findall(r"#([0-9a-fA-F]{6})", sheet):
+                assert color[:2] == color[2:4] == color[4:]

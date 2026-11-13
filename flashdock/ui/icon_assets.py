@@ -63,7 +63,7 @@ ICON_SVGS: Dict[str, str] = {
     "play": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>""",
     "unroot": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>""",
     "save": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>""",
-    "app_logo": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><defs><linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#484F58"/><stop offset="50%" stop-color="#21262D"/><stop offset="100%" stop-color="#0D1117"/></linearGradient><linearGradient id="innerGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#161B22"/><stop offset="100%" stop-color="#090D12"/></linearGradient><linearGradient id="chipGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#21262D"/><stop offset="100%" stop-color="#111418"/></linearGradient><linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00F2FE"/><stop offset="100%" stop-color="#4FACFE"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="url(#rimGrad)" stroke="#586069" stroke-width="0.8"/><rect x="4" y="4" width="56" height="56" rx="14" fill="url(#innerGrad)"/><rect x="14" y="14" width="36" height="36" rx="6" fill="url(#chipGrad)" stroke="#30363D" stroke-width="1"/><path d="M20 11v3 M26 11v3 M32 11v3 M38 11v3 M44 11v3 M20 50v3 M26 50v3 M32 50v3 M38 50v3 M44 50v3 M11 20h3 M11 26h3 M11 32h3 M11 38h3 M11 44h3 M50 20h3 M50 26h3 M50 32h3 M50 38h3 M50 44h3" stroke="#484F58" stroke-width="1.2" stroke-linecap="round"/><path d="M35 15L23 34h9l-4 15 17-21h-10l7-13z" fill="url(#boltGrad)"/><path d="M34 18L26 33h7l-3 11 12-16h-8l5-8z" fill="#E0F7FF" opacity="0.85"/></svg>""",
+    "app_logo": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><defs><linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4E4E4E"/><stop offset="50%" stop-color="#252525"/><stop offset="100%" stop-color="#111111"/></linearGradient><linearGradient id="innerGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#1A1A1A"/><stop offset="100%" stop-color="#0D0D0D"/></linearGradient><linearGradient id="chipGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#252525"/><stop offset="100%" stop-color="#141414"/></linearGradient><linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#BFBFBF"/><stop offset="100%" stop-color="#9E9E9E"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="url(#rimGrad)" stroke="#5F5F5F" stroke-width="0.8"/><rect x="4" y="4" width="56" height="56" rx="14" fill="url(#innerGrad)"/><rect x="14" y="14" width="36" height="36" rx="6" fill="url(#chipGrad)" stroke="#353535" stroke-width="1"/><path d="M20 11v3 M26 11v3 M32 11v3 M38 11v3 M44 11v3 M20 50v3 M26 50v3 M32 50v3 M38 50v3 M44 50v3 M11 20h3 M11 26h3 M11 32h3 M11 38h3 M11 44h3 M50 20h3 M50 26h3 M50 32h3 M50 38h3 M50 44h3" stroke="#4E4E4E" stroke-width="1.2" stroke-linecap="round"/><path d="M35 15L23 34h9l-4 15 17-21h-10l7-13z" fill="url(#boltGrad)"/><path d="M34 18L26 33h7l-3 11 12-16h-8l5-8z" fill="#F3F3F3" opacity="0.85"/></svg>""",
 }
 
 APP_LOGO_SVG: str = ICON_SVGS["app_logo"]
@@ -86,19 +86,32 @@ def get_icon_pixmap(
         height = width
 
     key_name = (icon_name or "").lower().strip()
-    color_val = color or "#007AFF"
+    ink = QColor(color or "#858585")
+    gray = round(.2126 * ink.red() + .7152 * ink.green() + .0722 * ink.blue())
+    color_val = QColor(gray, gray, gray).name()
     cache_key = (key_name, width, height, color_val)
 
     if cache_key in _PIXMAP_CACHE:
         return _PIXMAP_CACHE[cache_key]
 
     svg_data = ICON_SVGS.get(key_name)
+    if svg_data is None and key_name in {
+        "check-phone", "safety-checklist", "backup-restore", "diagnostics-tweaks",
+        "sideload-apps", "screen-mirror", "wireless-adb", "payload-dumper",
+        "root-phone", "manage-modules", "fix-play-integrity", "fix-bricked",
+        "unlock-bootloader", "flash-rom", "mtk-unisoc", "return-stock",
+    }:
+        from pathlib import Path
+
+        icon_path = Path(__file__).resolve().parents[2] / "assets" / "icons" / f"{key_name}_light.svg"
+        if icon_path.is_file():
+            svg_data = icon_path.read_text(encoding="utf-8").replace("#FFFFFF", "currentColor")
     if not svg_data:
         # Fallback to info or check
         svg_data = ICON_SVGS.get("info", ICON_SVGS["flash"])
 
     # Tint stroke or fill: ensure vivid accent or specified color is always applied
-    effective_color = color or "#0A84FF"
+    effective_color = color_val
     svg_data = svg_data.replace('stroke="currentColor"', f'stroke="{effective_color}"')
     svg_data = svg_data.replace('fill="currentColor"', f'fill="{effective_color}"')
 

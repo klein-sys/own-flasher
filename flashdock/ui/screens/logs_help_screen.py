@@ -96,7 +96,7 @@ class LogsHelpScreen(QWidget):
         self._subtitle = QLabel(
             "Inspect application telemetry, stream device logcat, and solve connection or boot issues."
         )
-        self._subtitle.setStyleSheet("color: #8E8E93; font-size: 12px;")
+        self._subtitle.setStyleSheet("color: #8E8E8E; font-size: 12px;")
         title_box.addWidget(self._subtitle)
         header_row.addLayout(title_box, 1)
 
@@ -112,9 +112,9 @@ class LogsHelpScreen(QWidget):
         restart_adb_btn.setIcon(get_icon("refresh", 14))
         restart_adb_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         restart_adb_btn.setStyleSheet(
-            "QPushButton { background-color: rgba(10, 132, 255, 0.12); color: #0A84FF; "
-            "border: 1px solid rgba(10, 132, 255, 0.3); border-radius: 8px; padding: 6px 14px; font-weight: 600; } "
-            "QPushButton:hover { background-color: rgba(10, 132, 255, 0.22); }"
+            "QPushButton { background-color: rgba(115, 115, 115, 0.12); color: #737373; "
+            "border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; } "
+            "QPushButton:hover { background-color: rgba(115, 115, 115, 0.22); }"
         )
         restart_adb_btn.clicked.connect(self._restart_adb_server)
         header_row.addWidget(restart_adb_btn)
@@ -157,7 +157,7 @@ class LogsHelpScreen(QWidget):
         toolbar.setSpacing(10)
 
         f_lbl = QLabel("File:")
-        f_lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+        f_lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
         toolbar.addWidget(f_lbl)
 
         self._file_combo = QComboBox()
@@ -176,7 +176,7 @@ class LogsHelpScreen(QWidget):
         toolbar.addSpacing(10)
 
         lvl_lbl = QLabel("Level:")
-        lvl_lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+        lvl_lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
         toolbar.addWidget(lvl_lbl)
 
         self._level_combo = QComboBox()
@@ -195,7 +195,7 @@ class LogsHelpScreen(QWidget):
         toolbar.addWidget(self._search_input, 1)
 
         self._match_badge = QLabel("0 lines")
-        self._match_badge.setStyleSheet("font-size: 11px; color: #8E8E93; font-weight: 500;")
+        self._match_badge.setStyleSheet("font-size: 11px; color: #8E8E8E; font-weight: 500;")
         toolbar.addWidget(self._match_badge)
 
         self._autoscroll_cb = QCheckBox("Auto-scroll")
@@ -209,8 +209,8 @@ class LogsHelpScreen(QWidget):
         self._log_viewer.setReadOnly(True)
         self._log_viewer.setFont(QFont("Consolas", 10))
         self._log_viewer.setStyleSheet(
-            "QPlainTextEdit { background-color: #121214; color: #E5E5EA; "
-            "border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 10px; }"
+            "QPlainTextEdit { background-color: #121212; color: #E5E5E5; "
+            "border: none; border-radius: 8px; padding: 10px; }"
         )
         layout.addWidget(self._log_viewer, 1)
 
@@ -240,7 +240,7 @@ class LogsHelpScreen(QWidget):
         bot_row.addStretch(1)
 
         self._log_status_lbl = QLabel("Loaded.")
-        self._log_status_lbl.setStyleSheet("font-size: 11px; color: #8E8E93;")
+        self._log_status_lbl.setStyleSheet("font-size: 11px; color: #8E8E8E;")
         bot_row.addWidget(self._log_status_lbl)
 
         layout.addLayout(bot_row)
@@ -262,7 +262,7 @@ class LogsHelpScreen(QWidget):
         ctrl_row.setSpacing(10)
 
         b_lbl = QLabel("Buffer:")
-        b_lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+        b_lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
         ctrl_row.addWidget(b_lbl)
 
         self._logcat_buffer_combo = QComboBox()
@@ -273,7 +273,7 @@ class LogsHelpScreen(QWidget):
         ctrl_row.addSpacing(6)
 
         l_lbl = QLabel("Lines:")
-        l_lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
+        l_lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
         ctrl_row.addWidget(l_lbl)
 
         self._logcat_lines_spin = QSpinBox()
@@ -295,9 +295,9 @@ class LogsHelpScreen(QWidget):
         self._capture_logcat_btn.setIcon(get_icon("play", 14))
         self._capture_logcat_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._capture_logcat_btn.setStyleSheet(
-            "QPushButton { background-color: #0A84FF; color: #FFFFFF; font-weight: 600; "
+            "QPushButton { background-color: #737373; color: #FFFFFF; font-weight: 600; "
             "border-radius: 6px; padding: 6px 14px; min-height: 20px; } "
-            "QPushButton:hover { background-color: #0071E3; }"
+            "QPushButton:hover { background-color: #616161; }"
         )
         self._capture_logcat_btn.clicked.connect(self._run_logcat_capture)
         ctrl_row.addWidget(self._capture_logcat_btn)
@@ -316,8 +316,8 @@ class LogsHelpScreen(QWidget):
         self._logcat_viewer.setReadOnly(True)
         self._logcat_viewer.setFont(QFont("Consolas", 10))
         self._logcat_viewer.setStyleSheet(
-            "QPlainTextEdit { background-color: #121214; color: #30D158; "
-            "border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 10px; }"
+            "QPlainTextEdit { background-color: #121212; color: #A6A6A6; "
+            "border: none; border-radius: 8px; padding: 10px; }"
         )
         layout.addWidget(self._logcat_viewer, 1)
 
@@ -340,7 +340,7 @@ class LogsHelpScreen(QWidget):
         lc_bot.addStretch(1)
 
         self._logcat_status_lbl = QLabel("Connect a device in System mode and click 'Capture Dump'.")
-        self._logcat_status_lbl.setStyleSheet("font-size: 11px; color: #8E8E93;")
+        self._logcat_status_lbl.setStyleSheet("font-size: 11px; color: #8E8E8E;")
         lc_bot.addWidget(self._logcat_status_lbl)
 
         layout.addLayout(lc_bot)
@@ -357,7 +357,7 @@ class LogsHelpScreen(QWidget):
         # Phase 16 Self-Test Diagnostics Banner Card
         st_card = QFrame()
         st_card.setStyleSheet(
-            "QFrame { background-color: rgba(10, 132, 255, 0.08); border: 1px solid rgba(10, 132, 255, 0.25); "
+            "QFrame { background-color: rgba(115, 115, 115, 0.08); border: none; "
             "border-radius: 10px; padding: 12px; }"
         )
         st_lay = QHBoxLayout(st_card)
@@ -370,9 +370,9 @@ class LogsHelpScreen(QWidget):
         st_text_col = QVBoxLayout()
         st_text_col.setSpacing(2)
         st_title = QLabel("System Environment & Toolchain Self-Test")
-        st_title.setStyleSheet("font-size: 13px; font-weight: 700; color: #0A84FF;")
+        st_title.setStyleSheet("font-size: 13px; font-weight: 700; color: #737373;")
         st_desc = QLabel("Automated verification of ADB/Fastboot binaries, user data permissions, and network readiness.")
-        st_desc.setStyleSheet("font-size: 11px; color: #8E8E93;")
+        st_desc.setStyleSheet("font-size: 11px; color: #8E8E8E;")
         st_text_col.addWidget(st_title)
         st_text_col.addWidget(st_desc)
         st_lay.addLayout(st_text_col, 1)
@@ -381,9 +381,9 @@ class LogsHelpScreen(QWidget):
         run_st_btn.setIcon(get_icon("play", 14))
         run_st_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         run_st_btn.setStyleSheet(
-            "QPushButton { background-color: #0A84FF; color: #FFFFFF; font-weight: 600; "
+            "QPushButton { background-color: #737373; color: #FFFFFF; font-weight: 600; "
             "border-radius: 6px; padding: 6px 14px; font-size: 12px; } "
-            "QPushButton:hover { background-color: #0071E3; }"
+            "QPushButton:hover { background-color: #616161; }"
         )
         run_st_btn.clicked.connect(self._open_selftest)
         st_lay.addWidget(run_st_btn)
@@ -393,7 +393,7 @@ class LogsHelpScreen(QWidget):
         desc = QLabel(
             "Select a common issue below for step-by-step solutions and 1-click automated rescue actions."
         )
-        desc.setStyleSheet("color: #8E8E93; font-size: 12px;")
+        desc.setStyleSheet("color: #8E8E8E; font-size: 12px;")
         layout.addWidget(desc)
 
         scroll = QScrollArea()
@@ -417,7 +417,7 @@ class LogsHelpScreen(QWidget):
     def _create_troubleshoot_card(self, item: TroubleshootingItem) -> QFrame:
         frame = QFrame()
         frame.setStyleSheet(
-            "QFrame { background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); "
+            "QFrame { background-color: rgba(255, 255, 255, 0.04); border: none; "
             "border-radius: 10px; padding: 14px; }"
         )
         lay = QVBoxLayout(frame)
@@ -450,9 +450,9 @@ class LogsHelpScreen(QWidget):
             act_btn.setIcon(get_icon(btn_icon_name, 14))
             act_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             act_btn.setStyleSheet(
-                "QPushButton { background-color: rgba(10, 132, 255, 0.15); color: #0A84FF; "
-                "border: 1px solid rgba(10, 132, 255, 0.3); border-radius: 6px; padding: 5px 12px; font-weight: 600; font-size: 12px; } "
-                "QPushButton:hover { background-color: rgba(10, 132, 255, 0.25); }"
+                "QPushButton { background-color: rgba(115, 115, 115, 0.15); color: #737373; "
+                "border: none; border-radius: 6px; padding: 5px 12px; font-weight: 600; font-size: 12px; } "
+                "QPushButton:hover { background-color: rgba(115, 115, 115, 0.25); }"
             )
             act_btn.clicked.connect(lambda _, it=item: self._on_troubleshoot_action(it))
             h_row.addWidget(act_btn)
@@ -461,21 +461,21 @@ class LogsHelpScreen(QWidget):
 
         # Symptom
         s_lbl = QLabel(f"<b>Symptom:</b> {item.symptom}")
-        s_lbl.setStyleSheet("font-size: 12px; color: #E5E5EA;")
+        s_lbl.setStyleSheet("font-size: 12px; color: #E5E5E5;")
         s_lbl.setWordWrap(True)
         lay.addWidget(s_lbl)
 
         # Causes
         c_text = "<b>Likely Causes:</b><br>• " + "<br>• ".join(item.causes)
         c_lbl = QLabel(c_text)
-        c_lbl.setStyleSheet("font-size: 11px; color: #8E8E93; line-height: 1.3;")
+        c_lbl.setStyleSheet("font-size: 11px; color: #8E8E8E; line-height: 1.3;")
         c_lbl.setWordWrap(True)
         lay.addWidget(c_lbl)
 
         # Steps
         steps_text = "<b>Recommended Steps to Fix:</b><br>" + "<br>".join(item.steps)
         st_lbl = QLabel(steps_text)
-        st_lbl.setStyleSheet("font-size: 12px; color: #30D158; line-height: 1.4;")
+        st_lbl.setStyleSheet("font-size: 12px; color: #A6A6A6; line-height: 1.4;")
         st_lbl.setWordWrap(True)
         lay.addWidget(st_lbl)
 
@@ -537,7 +537,7 @@ class LogsHelpScreen(QWidget):
         for icon_key, title, body in topics:
             box = QFrame()
             box.setStyleSheet(
-                "background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); "
+                "background-color: rgba(255, 255, 255, 0.04); border: none; "
                 "border-radius: 10px; padding: 14px;"
             )
             b_layout = QVBoxLayout(box)
@@ -552,7 +552,7 @@ class LogsHelpScreen(QWidget):
             b_layout.addLayout(h_box)
 
             b = QLabel(body.replace("\n", "<br>"))
-            b.setStyleSheet("font-size: 12px; color: #8E8E93; line-height: 1.4;")
+            b.setStyleSheet("font-size: 12px; color: #8E8E8E; line-height: 1.4;")
             b.setWordWrap(True)
             b_layout.addWidget(b)
 

@@ -62,14 +62,14 @@ class PartitionHeaderInspectorDialog(QDialog):
         # Header Row
         head_row = QHBoxLayout()
         head_row.setSpacing(10)
-        head_row.addWidget(create_icon_label("flash", 24, color="#007AFF"))
+        head_row.addWidget(create_icon_label("flash", 24, color="#6A6A6A"))
 
         head_col = QVBoxLayout()
         head_col.setSpacing(2)
         title_lbl = QLabel("Partition Header & AVB Inspector")
-        title_lbl.setStyleSheet("font-size: 16px; font-weight: 700; color: #E6EDF3;")
+        title_lbl.setStyleSheet("font-size: 16px; font-weight: 700; color: #ECECEC;")
         fn_lbl = QLabel(f"File: {self.file_path.name}")
-        fn_lbl.setStyleSheet("font-size: 11px; color: #8B949E;")
+        fn_lbl.setStyleSheet("font-size: 11px; color: #939393;")
         head_col.addWidget(title_lbl)
         head_col.addWidget(fn_lbl)
         head_row.addLayout(head_col, 1)
@@ -86,11 +86,11 @@ class PartitionHeaderInspectorDialog(QDialog):
         safe_lay.setSpacing(10)
 
         is_safe = info.get("is_safe", True)
-        status_color = "#34C759" if is_safe else "#EF4444"
+        status_color = "#A0A0A0" if is_safe else "#686868"
         safe_card.setStyleSheet(f"""
             QFrame {{
                 background-color: rgba({int(status_color[1:3], 16)}, {int(status_color[3:5], 16)}, {int(status_color[5:7], 16)}, 0.12);
-                border: 1px solid {status_color};
+                border: none;
                 border-radius: 10px;
             }}
         """)
@@ -128,14 +128,14 @@ class PartitionHeaderInspectorDialog(QDialog):
 
         for label, val in fields:
             row = QFrame()
-            row.setStyleSheet("background: #181E26; border-radius: 6px; padding: 4px 8px;")
+            row.setStyleSheet("background: #1D1D1D; border-radius: 6px; padding: 4px 8px;")
             r_lay = QHBoxLayout(row)
             r_lay.setContentsMargins(6, 4, 6, 4)
             l_lbl = QLabel(label)
-            l_lbl.setStyleSheet("font-size: 11px; color: #8B949E; font-weight: 600;")
+            l_lbl.setStyleSheet("font-size: 11px; color: #939393; font-weight: 600;")
             l_lbl.setFixedWidth(150)
             v_lbl = QLabel(str(val))
-            v_lbl.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #E6EDF3;")
+            v_lbl.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #ECECEC;")
             v_lbl.setWordWrap(True)
             r_lay.addWidget(l_lbl)
             r_lay.addWidget(v_lbl, 1)

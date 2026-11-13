@@ -10,22 +10,31 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.6.1-0A84FF.svg?style=flat-square" alt="Version 1.6.1"></a>
+  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.7.0-555555.svg?style=flat-square" alt="Version 1.7.0"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-30D158.svg?style=flat-square" alt="License MIT"></a>
-  <a href="tests/"><img src="https://img.shields.io/badge/tests-684%20%2F%20684%20passing-30D158.svg?style=flat-square" alt="Tests 684/684 Passing"></a>
-  <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-macOS%20Big%20Sur%20%2B%20HyperOS%202.0-BF5AF2.svg?style=flat-square" alt="macOS Big Sur + HyperOS 2.0"></a>
+  <a href="tests/"><img src="https://img.shields.io/badge/tests-696%20%2F%20696%20passing-30D158.svg?style=flat-square" alt="Tests 696/696 Passing"></a>
+  <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-Monochrome%20Liquid%20Glass-555555.svg?style=flat-square" alt="Monochrome Liquid Glass"></a>
   <a href="flashdock/ui/icon_assets.py"><img src="https://img.shields.io/badge/UI%20Assets-100%25%20Vector%20SVG-FF9500.svg?style=flat-square" alt="100% Vector SVG"></a>
 </p>
 
 ---
+
+## Monochrome Liquid Glass workstation
+
+Version 1.7.0 groups the existing 16 tools into four inset glass workflow sheets. Pearl Light and Obsidian Dark share a painted ambient field, cursor-reactive highlights, smoked icon droplets, and a unified device island. The home workspace and compact sidebar fit without scrolling. The activity console opens from the footer.
+
+The write switch starts Safe and locks write-capable screens until armed. Changing the device serial or connection mode returns it to Safe. Each workflow retains its existing preflight checks and simulation settings. The island displays reported telemetry and leaves unknown slots unset.
+
+The SVG source pack can be regenerated with `python scripts/generate_bw_icons.py`. Its assets and the glass stylesheet are included in the Windows bundle.
+
 
 ## Tech Stack
 
 | Area | Technology | Purpose |
 | :--- | :--- | :--- |
 | **Language & Runtime** | Python 3.10 – 3.14 (`3.14.7` tested) | Standard-library pure-Python engine: RSA PKCS#1 v1.5 signer, LZ4 decompressor, and Protobuf OTA payload unpacker without external C-extensions. |
-| **Desktop UI Framework** | PySide6 (`Qt 6.10`) | Native Windows desktop GUI, non-blocking `QThread` workers, and high-DPI responsive rendering. |
-| **Design System & HiDPI** | macOS Big Sur & Xiaomi HyperOS 2.0 | `theme_tokens.py`, `dpi_layout.py`, Slate Obsidian / Soft Frost themes, squircle badges, and 100% dynamic vector SVG icon factory. |
+| **Desktop UI Framework** | PySide6 (`Qt 6.12`) | Native Windows desktop GUI, non-blocking `QThread` workers, and high-DPI responsive rendering. |
+| **Design System & HiDPI** | Monochrome Liquid Glass | Pearl Light and Obsidian Dark, painted specular sheets, a device island, and a dynamic SVG icon factory. |
 | **Device Communication** | ADB, Fastboot, FastbootD | Android userspace communication, sparse chunk flashing, and dynamic partition management. |
 | **Low-Level Hardware** | Qualcomm EDL 9008, MediaTek BROM, Unisoc FDL | Emergency COM serial handshake, bootloader bypass, and deep unbrick flashing. |
 | **Protocol Handshakes** | Pure-Python Win32 Transport (`ctypes`) | Zero-dependency Qualcomm Sahara Hello (`0x01`), MediaTek BROM 4-byte echo (`0xA0..0x05` -> `0x5F..0xFA`), and Unisoc HDLC (`0x7E` + CRC-16/XMODEM). |
@@ -47,7 +56,7 @@ Designed specifically for personal device ownership, development, and enthusiast
 
 ### 1. Device Diagnostics & FastbootD Live HUD
 * **Real-Time Mode Resolution**: Instantly classifies connected hardware across ADB (System), Bootloader (Fastboot), FastbootD (Userspace dynamic partitions), Recovery, Qualcomm EDL 9008, MediaTek BROM, and Unisoc SPRD.
-* **FastbootD Differentiation**: Displays distinct visual badges for standard Bootloader (`#007AFF` Cobalt) versus FastbootD Userspace (`#00E5FF` Cyan) so dynamic partition writes are never dispatched to incompatible bootloaders.
+* **FastbootD Differentiation**: Explicit Bootloader and FastbootD Userspace labels distinguish the connection modes in the monochrome interface.
 * **Hardware & Battery Telemetry**: Queries active slot (`_a` or `_b`), Knox warranty bit, bootloader unlock state, battery level, SoC chipset architecture, and baseband version.
 * **Automated Pre-Flight Checklist**: 18-point safety verification suite ensuring battery reserve, authorized USB debugging, free disk space ($\ge 2\text{ GB}$), and driver handshakes.
 
@@ -85,7 +94,7 @@ Designed specifically for personal device ownership, development, and enthusiast
 
 ```mermaid
 flowchart TD
-    subgraph UI_Layer["User Interface Layer (PySide6 & macOS Big Sur)"]
+    subgraph UI_Layer["User Interface Layer (PySide6 & Monochrome Liquid Glass)"]
         HUD["Live Device HUD (FastbootD / ADB / EDL Indicator)"]
         CANVAS["Non-Scrolling 4-Column Home Canvas (16 Workstation Cards)"]
         OPS["Left Operations Panel (Phone Control Panel)"]
@@ -194,7 +203,7 @@ FlashDock/
 │   │   │   └── workflow_guide.py     # Interactive 16-tool clickable guide dialog
 │   │   ├── icon_assets.py    # 100% Vector SVG graphics factory
 │   │   ├── main_window.py    # Main workstation canvas & navigation coordinator
-│   │   └── styles.py         # macOS Big Sur & HyperOS design tokens
+│   │   └── styles.py         # Pearl Light / Obsidian Dark stylesheet loader
 │   └── workers/              # Asynchronous QThread background workers
 │       ├── device_monitor.py # Windows Registry & daemon polling loop
 │       └── flash_engine.py   # Flashing and backup worker threads
@@ -221,13 +230,9 @@ FlashDock/
 
 ---
 
-### Option A: Standalone Windows Binary (Recommended)
+### Option A: Standalone Windows Binary
 
-1. **Download Release**: Grab the latest release package (`FlashDock-v1.4.0-windows-x64.zip`) from the [Releases](https://github.com/klein-sys/own-flasher/releases) page.
-2. **Extract Archive**: Extract the ZIP archive to a local folder (e.g., `C:\Tools\FlashDock\`).
-3. **Launch Workstation**:
-   * Double-click **`Run-FlashDock.bat`** (automatically strips Windows Mark-of-the-Web `Zone.Identifier` download flags and launches `FlashDock.exe`).
-   * *(Optional)* Double-click **`Install-Certificate.bat`** once to add FlashDock's Authenticode SHA-256 certificate to your local *Trusted Publishers* store to satisfy Windows Smart App Control.
+Download and extract a Windows package from [GitHub Releases](https://github.com/klein-sys/own-flasher/releases), then open `FlashDock.exe`. If Windows Smart App Control blocks the executable, use the source setup below. A standalone build for Smart App Control needs a signature from a trusted publisher.
 
 ---
 
@@ -246,8 +251,10 @@ python -m venv .venv
 pip install -r requirements.txt
 
 # 4. Launch FlashDock
-python main.py
+.\Run-Via-Python.bat
 ```
+
+After setup, double-click `Run-Via-Python.bat` to open FlashDock from the checkout. The launcher prefers the project's `.venv`, then checks the Windows Python launcher and the Python on your PATH.
 
 ---
 
@@ -301,11 +308,14 @@ python -m pytest tests/ -q
 python scripts/release_build.py
 ```
 
-### Verification Results (v1.6.1)
-* **Test Suite**: **684 passed tests** across 56 test modules (100% pass rate).
-* **Compiled Distribution**: `dist/FlashDock_Dist/FlashDock.exe` (Authenticode SHA-256 signed).
-* **Release Archive**: `dist/FlashDock-v1.6.1-windows-x64.zip`.
-* **Integrity Hashes**: Recorded in `dist/SHA256SUMS.txt`.
+### Verification Results (v1.7.0)
+
+* The published source snapshot contains 696 tests across 57 test modules.
+* The unsigned Windows build is at `dist/liquid-glass-v1.7.0/FlashDock_Dist/FlashDock.exe`. Its normal startup reached the main window in an offscreen check.
+* The release archive is `dist/FlashDock-v1.7.0-windows-x64.zip`. SHA-256 hashes are recorded in `dist/SHA256SUMS.txt`.
+* Both themes were visually checked at 1260×780 and the dashboard at 900×600. Previews use sample device telemetry.
+* Native compositor appearance requires a live Windows visual check. Long tool forms and data lists retain scrolling.
+
 
 ---
 

@@ -98,8 +98,8 @@ class UnbrickScreen(QWidget):
         # Device Indicator Badge
         self._device_badge = QLabel("No device connected")
         self._device_badge.setStyleSheet(
-            "background-color: #242426; border: 1px solid #38383A; "
-            "border-radius: 6px; padding: 6px 12px; font-size: 12px; color: #8E8E93;"
+            "background-color: #242424; border: none; "
+            "border-radius: 6px; padding: 6px 12px; font-size: 12px; color: #8E8E8E;"
         )
         header_row.addWidget(self._device_badge)
 
@@ -137,7 +137,7 @@ class UnbrickScreen(QWidget):
         banner.setProperty("cssClass", "card_subtle")
         b_box = QVBoxLayout(banner)
         b_title = QLabel("Bootloop Troubleshooting & Triage Guide")
-        b_title.setStyleSheet("font-weight: 600; font-size: 13px; color: #FF9F0A;")
+        b_title.setStyleSheet("font-weight: 600; font-size: 13px; color: #A9A9A9;")
         b_desc = QLabel(
             "• <b>90% of bootloops after rooting</b> are caused by incompatible Magisk / KernelSU / APatch modules.\n"
             "• Click <b>'Disable All Active Modules'</b> below — this instantly disables modules without touching photos or apps.\n"

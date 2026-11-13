@@ -43,11 +43,11 @@ log = get_logger(__name__)
 # Colour palette for statuses
 # ---------------------------------------------------------------------------
 _STATUS_COLORS = {
-    CheckStatus.PASS: "#3fb950",
-    CheckStatus.FAIL: "#f85149",
-    CheckStatus.WARN: "#d29922",
-    CheckStatus.SKIP: "#8b949e",
-    CheckStatus.INFO: "#58a6ff",
+    CheckStatus.PASS: "#979797",
+    CheckStatus.FAIL: "#747474",
+    CheckStatus.WARN: "#9D9D9D",
+    CheckStatus.SKIP: "#939393",
+    CheckStatus.INFO: "#9C9C9C",
 }
 
 _CATEGORY_LABELS = {
@@ -63,11 +63,11 @@ _CATEGORY_ICONS = {
 }
 
 _STATUS_ICON_NAMES = {
-    CheckStatus.PASS: ("check", "#3fb950"),
-    CheckStatus.FAIL: ("cross", "#f85149"),
-    CheckStatus.WARN: ("warning", "#d29922"),
-    CheckStatus.SKIP: ("info", "#8b949e"),
-    CheckStatus.INFO: ("info", "#58a6ff"),
+    CheckStatus.PASS: ("check", "#979797"),
+    CheckStatus.FAIL: ("cross", "#747474"),
+    CheckStatus.WARN: ("warning", "#9D9D9D"),
+    CheckStatus.SKIP: ("info", "#939393"),
+    CheckStatus.INFO: ("info", "#9C9C9C"),
 }
 
 _CATEGORY_ORDER = ["phone_settings", "files", "safety"]
@@ -91,7 +91,7 @@ class _CheckItemWidget(QFrame):
         top = QHBoxLayout()
         top.setSpacing(8)
 
-        icon_name, icon_col = _STATUS_ICON_NAMES.get(item.status, ("check", "#3fb950"))
+        icon_name, icon_col = _STATUS_ICON_NAMES.get(item.status, ("check", "#979797"))
         icon_lbl = create_icon_label(icon_name, 18, color=icon_col)
         top.addWidget(icon_lbl)
 

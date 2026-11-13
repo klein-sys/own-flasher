@@ -197,7 +197,7 @@ class BackupScreen(QWidget):
         part_group.setProperty("cssClass", "card")
         part_group.setStyleSheet(
             "QFrame[cssClass='card'] { background-color: rgba(255, 255, 255, 0.04); "
-            "border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px; }"
+            "border: none; border-radius: 10px; padding: 14px; }"
         )
         part_grid = QGridLayout(part_group)
         part_grid.setContentsMargins(14, 12, 14, 12)
@@ -206,16 +206,16 @@ class BackupScreen(QWidget):
 
         # Header labels for columns
         lbl_col1 = QLabel("STANDARD FIRMWARE PARTITIONS")
-        lbl_col1.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E93; letter-spacing: 0.5px;")
+        lbl_col1.setStyleSheet("font-size: 11px; font-weight: 700; color: #8E8E8E; letter-spacing: 0.5px;")
         part_grid.addWidget(lbl_col1, 0, 0)
 
         lbl_col2 = QLabel("RADIO & CALIBRATION (NV/EFS)")
-        lbl_col2.setStyleSheet("font-size: 11px; font-weight: 700; color: #FF9F0A; letter-spacing: 0.5px;")
+        lbl_col2.setStyleSheet("font-size: 11px; font-weight: 700; color: #A9A9A9; letter-spacing: 0.5px;")
         part_grid.addWidget(lbl_col2, 0, 1)
 
         self._part_checkboxes: dict[str, QCheckBox] = {}
         cb_style = (
-            "QCheckBox { min-height: 28px; padding: 4px 8px; margin: 2px; font-size: 12px; font-weight: 600; color: #E6EDF3; } "
+            "QCheckBox { min-height: 28px; padding: 4px 8px; margin: 2px; font-size: 12px; font-weight: 600; color: #ECECEC; } "
             "QCheckBox::indicator { width: 16px; height: 16px; border-radius: 4px; } "
             "QCheckBox:hover { background-color: rgba(255, 255, 255, 0.04); border-radius: 6px; }"
         )

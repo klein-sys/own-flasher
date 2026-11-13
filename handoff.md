@@ -1,9 +1,9 @@
 # FlashDock — Engineering Handoff & Session State
 
-- **Current Version**: `v1.6.1` (Patch Milestone 1.6.1 — Pure-Python APK Pre-Flight Verifier, Atomic Staging & Android 14 APK Signature Scheme v3 Diagnostics)
+- **Current Version**: `v1.7.0` (Monochrome Liquid Glass workstation)
 - **Repository**: `https://github.com/klein-sys/own-flasher`
-- **Runtime**: Python 3.10–3.14 (verified on Python 3.14.7) | PySide6 (Qt 6.10) | Windows 10/11 x64
-- **Test Suite Status**: `100% Passing` (`tests/` — 56 test modules, 684 passing tests with zero regressions)
+- **Runtime**: Python 3.10–3.14 (verified on Python 3.14.7) | PySide6 (Qt 6.12) | Windows 10/11 x64
+- **Test Suite Status**: 696 tests in the publication snapshot across 57 test modules.
 
 ---
 
@@ -88,16 +88,30 @@
 ## 2. Version Synchronization & Release Verification
 
 - **Version Synchronized**:
-  - `flashdock/__init__.py`: `__version__ = "1.6.1"`
-  - `flashdock/constants.py`: `APP_VERSION = "1.6.1"`
-  - `version_info.txt`: `filevers=(1, 6, 1, 0)`, `prodvers=(1, 6, 1, 0)`
-  - `scripts/version_info.txt`: `filevers=(1, 6, 1, 0)`, `prodvers=(1, 6, 1, 0)`
+  - `flashdock/__init__.py`: `__version__ = "1.7.0"`
+  - `flashdock/constants.py`: `APP_VERSION = "1.7.0"`
+  - `version_info.txt`: `filevers=(1, 7, 0, 0)`, `prodvers=(1, 7, 0, 0)`
+  - `scripts/version_info.txt`: `filevers=(1, 7, 0, 0)`, `prodvers=(1, 7, 0, 0)`
   - `flashdock.spec`: Registered `flashdock.core.apk_verifier` in `hidden_imports`.
 - **Release Commands**:
   ```powershell
-  # 1. Run complete test suite (684 tests)
+  # 1. Run the complete test suite
   python -m pytest tests/ -q
 
   # 2. Compile standalone Windows executable & ZIP distribution
   python scripts/release_build.py
   ```
+
+### Milestone 1.7.0 — Monochrome Liquid Glass
+
+- Phase 0 inspected the root `.agents` catalog and loaded the FlashDock workstation instructions before edits. The architecture maps `MainWindow` to the existing screen stack, `DeviceMonitorWorker` and `FlashEngineWorker`, with theme selection in `ui/styles.py` and vector rendering in `ui/icon_assets.py`.
+- Four workflow sheets replace the individual home cards and OEM strip. Existing tool routes include Downloads and Logs & Help. Wireless ADB remains in Diagnostics and firmware extraction remains in its existing workflow.
+- The island consumes existing `DeviceInfo` snapshots through queued Qt signals and `DeviceStateBroadcaster`. Hardware emergency modes take priority. Slot telemetry is read-only.
+- Write-capable screen controls start locked and return to Safe after a device identity or mode change. Workflow validation remains in the existing engines.
+- The compact sidebar has no scroll area. The activity console starts collapsed and retains the footer/header toggle.
+- DWM Acrylic is requested through pointer-safe Windows calls. Unsupported systems use the painted ambient canvas.
+- The icon generator produces 32 SVG files. The stylesheet and icons are included in `flashdock.spec`.
+- The test fixtures close test-owned windows within the shared Qt application's lifetime. The local package starts through the normal application entry point in an offscreen check and reports FileVersion/ProductVersion 1.7.0.0.
+- The build is unsigned and stored at `dist/liquid-glass-v1.7.0/FlashDock_Dist/FlashDock.exe`. The 52.1 MiB ZIP is `dist/FlashDock-v1.7.0-windows-x64.zip`. Source and bundled copies of the stylesheet and all 32 SVG files match byte for byte. The ZIP CRC check passed.
+- Native DWM appearance has not been visually checked on the live desktop. Long tool forms and data lists still scroll. Dashboard previews use sample telemetry.
+- The local working tree contains separate APK verifier, device-manager, and sideload edits. The publication snapshot covers Liquid Glass and the source launcher.

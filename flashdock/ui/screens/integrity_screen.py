@@ -98,7 +98,7 @@ class IntegrityScreen(QWidget):
         self._subtitle = QLabel(
             "Diagnose Play Integrity status, inject certified fingerprints, and protect banking apps."
         )
-        self._subtitle.setStyleSheet("color: #8E8E93; font-size: 12px;")
+        self._subtitle.setStyleSheet("color: #8E8E8E; font-size: 12px;")
         title_box.addWidget(self._subtitle)
         header_row.addLayout(title_box, 1)
 
@@ -106,9 +106,9 @@ class IntegrityScreen(QWidget):
         self._redetect_btn.setIcon(get_icon("refresh", 14))
         self._redetect_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._redetect_btn.setStyleSheet(
-            "QPushButton { background-color: rgba(10, 132, 255, 0.12); color: #0A84FF; "
-            "border: 1px solid rgba(10, 132, 255, 0.3); border-radius: 8px; padding: 6px 14px; font-weight: 600; } "
-            "QPushButton:hover { background-color: rgba(10, 132, 255, 0.22); }"
+            "QPushButton { background-color: rgba(115, 115, 115, 0.12); color: #737373; "
+            "border: none; border-radius: 8px; padding: 6px 14px; font-weight: 600; } "
+            "QPushButton:hover { background-color: rgba(115, 115, 115, 0.22); }"
         )
         self._redetect_btn.clicked.connect(self._run_diagnostics)
         header_row.addWidget(self._redetect_btn)
@@ -166,7 +166,7 @@ class IntegrityScreen(QWidget):
         frame = QFrame()
         frame.setFixedHeight(70)
         frame.setStyleSheet(
-            "QFrame { background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); "
+            "QFrame { background-color: rgba(255, 255, 255, 0.04); border: none; "
             "border-radius: 10px; padding: 6px 12px; }"
         )
         vbox = QVBoxLayout(frame)
@@ -177,7 +177,7 @@ class IntegrityScreen(QWidget):
         top_row.setSpacing(6)
 
         t_lbl = QLabel(title)
-        t_lbl.setStyleSheet("font-size: 10px; font-weight: 700; color: #8E8E93; text-transform: uppercase;")
+        t_lbl.setStyleSheet("font-size: 10px; font-weight: 700; color: #8E8E8E; text-transform: uppercase;")
         top_row.addWidget(t_lbl, 1)
 
         val_lbl = QLabel(initial_val)
@@ -187,7 +187,7 @@ class IntegrityScreen(QWidget):
         vbox.addLayout(top_row)
 
         desc_lbl = QLabel(desc)
-        desc_lbl.setStyleSheet("font-size: 10.5px; color: #8E8E93;")
+        desc_lbl.setStyleSheet("font-size: 10.5px; color: #8E8E8E;")
         desc_lbl.setWordWrap(True)
         vbox.addWidget(desc_lbl)
 
@@ -196,16 +196,16 @@ class IntegrityScreen(QWidget):
     def _update_card_verdict(self, card: dict, verdict: str, note: str = "") -> None:
         v_upper = verdict.upper()
         if "PASS" in v_upper:
-            color = "#30D158"  # Apple HIG Green
+            color = "#A6A6A6"  # Apple HIG Green
             icon = "PASS"
         elif "FAIL" in v_upper:
-            color = "#FF453A"  # Apple HIG Red
+            color = "#6C6C6C"  # Apple HIG Red
             icon = "FAIL"
         elif "WARNING" in v_upper or "WARN" in v_upper:
-            color = "#FF9F0A"  # Apple HIG Orange
+            color = "#A9A9A9"  # Apple HIG Orange
             icon = "WARNING"
         else:
-            color = "#8E8E93"  # Gray
+            color = "#8E8E8E"  # Gray
             icon = f"{verdict}"
 
         card["value"].setText(icon)
@@ -302,7 +302,7 @@ class IntegrityScreen(QWidget):
         self._json_edit = QPlainTextEdit()
         self._json_edit.setStyleSheet(
             "font-family: Consolas, 'Courier New', monospace; font-size: 11.5px; "
-            "background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 6px;"
+            "background-color: rgba(0, 0, 0, 0.25); border: none; border-radius: 6px; padding: 6px;"
         )
         jb_layout.addWidget(self._json_edit, 1)
         right_col.addWidget(json_box, 1)
@@ -327,10 +327,10 @@ class IntegrityScreen(QWidget):
         self._inject_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._inject_btn.setMinimumHeight(36)
         self._inject_btn.setStyleSheet(
-            "QPushButton { background-color: #30D158; color: #FFFFFF; font-weight: 700; font-size: 12.5px; "
+            "QPushButton { background-color: #A6A6A6; color: #FFFFFF; font-weight: 700; font-size: 12.5px; "
             "border-radius: 8px; padding: 6px 16px; } "
-            "QPushButton:hover { background-color: #28B94E; } "
-            "QPushButton:disabled { background-color: #2C2C2E; color: #555558; }"
+            "QPushButton:hover { background-color: #929292; } "
+            "QPushButton:disabled { background-color: #2C2C2C; color: #555555; }"
         )
         self._inject_btn.clicked.connect(self._inject_pif)
         btn_row.addWidget(self._inject_btn, 1)
@@ -340,9 +340,9 @@ class IntegrityScreen(QWidget):
         self._flush_cache_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._flush_cache_btn.setMinimumHeight(36)
         self._flush_cache_btn.setStyleSheet(
-            "QPushButton { background-color: rgba(255, 159, 10, 0.15); color: #FF9F0A; font-weight: 600; "
-            "border: 1px solid rgba(255, 159, 10, 0.3); border-radius: 8px; padding: 6px 12px; } "
-            "QPushButton:hover { background-color: rgba(255, 159, 10, 0.25); }"
+            "QPushButton { background-color: rgba(169, 169, 169, 0.15); color: #A9A9A9; font-weight: 600; "
+            "border: none; border-radius: 8px; padding: 6px 12px; } "
+            "QPushButton:hover { background-color: rgba(169, 169, 169, 0.25); }"
         )
         self._flush_cache_btn.clicked.connect(self._clear_gms_cache)
         btn_row.addWidget(self._flush_cache_btn)
@@ -353,7 +353,7 @@ class IntegrityScreen(QWidget):
         self._read_pif_btn.setMinimumHeight(36)
         self._read_pif_btn.setStyleSheet(
             "QPushButton { background-color: rgba(255, 255, 255, 0.08); color: #FFFFFF; font-weight: 600; "
-            "border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 6px 12px; } "
+            "border: none; border-radius: 8px; padding: 6px 12px; } "
             "QPushButton:hover { background-color: rgba(255, 255, 255, 0.15); }"
         )
         self._read_pif_btn.clicked.connect(self._read_active_pif)
@@ -362,7 +362,7 @@ class IntegrityScreen(QWidget):
         ab_layout.addLayout(btn_row)
 
         self._inject_log_lbl = QLabel("Ready. Select a profile and click 'Apply & Inject pif.json'.")
-        self._inject_log_lbl.setStyleSheet("font-size: 11px; color: #8E8E93;")
+        self._inject_log_lbl.setStyleSheet("font-size: 11px; color: #8E8E8E;")
         self._inject_log_lbl.setWordWrap(True)
         ab_layout.addWidget(self._inject_log_lbl)
 
@@ -398,7 +398,7 @@ class IntegrityScreen(QWidget):
             "Prevent banking, payments, and high-security apps from detecting unlocked bootloaders or root.\n"
             "FlashDock configures Magisk DenyList / Zygisk process unmounting for maximum stealth."
         )
-        desc.setStyleSheet("color: #8E8E93; font-size: 12px;")
+        desc.setStyleSheet("color: #8E8E8E; font-size: 12px;")
         desc.setWordWrap(True)
         layout.addWidget(desc)
 
@@ -416,7 +416,7 @@ class IntegrityScreen(QWidget):
         for idx, (pkg, name) in enumerate(RECOMMENDED_PROTECTED_PACKAGES):
             app_card = QFrame()
             app_card.setStyleSheet(
-                "QFrame { background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); "
+                "QFrame { background-color: rgba(255, 255, 255, 0.04); border: none; "
                 "border-radius: 8px; padding: 6px 10px; min-height: 44px; }"
             )
             c_lay = QHBoxLayout(app_card)
@@ -428,7 +428,7 @@ class IntegrityScreen(QWidget):
             name_lbl = QLabel(name)
             name_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #FFFFFF;")
             pkg_lbl = QLabel(pkg)
-            pkg_lbl.setStyleSheet("font-size: 10px; color: #8E8E93;")
+            pkg_lbl.setStyleSheet("font-size: 10px; color: #8E8E8E;")
             info_col.addWidget(name_lbl)
             info_col.addWidget(pkg_lbl)
             c_lay.addLayout(info_col, 1)
@@ -437,9 +437,9 @@ class IntegrityScreen(QWidget):
             btn.setIcon(get_icon("shield", 12))
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(
-                "QPushButton { background-color: rgba(10, 132, 255, 0.15); color: #0A84FF; font-weight: 600; font-size: 11px; "
-                "border: 1px solid rgba(10, 132, 255, 0.3); border-radius: 6px; padding: 5px 12px; } "
-                "QPushButton:hover { background-color: #0A84FF; color: #FFFFFF; }"
+                "QPushButton { background-color: rgba(115, 115, 115, 0.15); color: #737373; font-weight: 600; font-size: 11px; "
+                "border: none; border-radius: 6px; padding: 5px 12px; } "
+                "QPushButton:hover { background-color: #737373; color: #FFFFFF; }"
             )
             btn.clicked.connect(lambda _, p=pkg: self._add_denylist_pkg(p))
             c_lay.addWidget(btn)
@@ -467,9 +467,9 @@ class IntegrityScreen(QWidget):
         add_custom_btn.setIcon(get_icon("plus", 14))
         add_custom_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_custom_btn.setStyleSheet(
-            "QPushButton { background-color: #0A84FF; color: #FFFFFF; font-weight: 600; "
+            "QPushButton { background-color: #737373; color: #FFFFFF; font-weight: 600; "
             "border-radius: 6px; padding: 8px 16px; min-height: 20px; } "
-            "QPushButton:hover { background-color: #0071E3; }"
+            "QPushButton:hover { background-color: #616161; }"
         )
         add_custom_btn.clicked.connect(self._add_custom_denylist_pkg)
         cb_layout.addWidget(add_custom_btn)
@@ -478,7 +478,7 @@ class IntegrityScreen(QWidget):
 
         # Log
         self._banking_log = QLabel("Ready. Click any app above to add it to Magisk DenyList.")
-        self._banking_log.setStyleSheet("font-size: 12px; color: #8E8E93;")
+        self._banking_log.setStyleSheet("font-size: 12px; color: #8E8E8E;")
         self._banking_log.setWordWrap(True)
         layout.addWidget(self._banking_log)
 
@@ -530,7 +530,7 @@ class IntegrityScreen(QWidget):
         for title, text in guide_cards:
             box = QFrame()
             box.setStyleSheet(
-                "background-color: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); "
+                "background-color: rgba(255, 255, 255, 0.04); border: none; "
                 "border-radius: 10px; padding: 14px;"
             )
             b_layout = QVBoxLayout(box)
@@ -541,7 +541,7 @@ class IntegrityScreen(QWidget):
             b_layout.addWidget(t)
 
             b = QLabel(text)
-            b.setStyleSheet("font-size: 12px; color: #8E8E93; line-height: 1.4;")
+            b.setStyleSheet("font-size: 12px; color: #8E8E8E; line-height: 1.4;")
             b.setWordWrap(True)
             b_layout.addWidget(b)
 

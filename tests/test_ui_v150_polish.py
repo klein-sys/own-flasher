@@ -3,8 +3,7 @@ Unit & Qt6 UI/UX Verification Suite for FlashDock v1.5.0 (Pillar 1).
 
 Tests:
  1. Slate Obsidian (Dark) & Soft Frost (Light) semantic token completeness.
- 2. Unmistakable visual differentiation between Bootloader (#007AFF Cobalt)
-    and FastbootD Userspace (#00E5FF Electric Cyan).
+ 2. Unmistakable visual differentiation between Bootloader and FastbootD Userspace through distinct labels and gray levels.
  3. High-DPI `QScrollArea`, `QSplitter`, and modal dialog geometry helpers.
  4. HiDPI vector SVG icon generation across `icon_assets.py` and `brand_assets.py`.
 """
@@ -61,15 +60,15 @@ class TestThemeTokensAndModeBadges:
         assert light == SOFT_FROST_TOKENS
         assert dark.is_dark is True
         assert light.is_dark is False
-        assert dark.accent_primary == "#007AFF"
-        assert light.accent_primary == "#007AFF"
+        assert dark.accent_primary == "#6A6A6A"
+        assert light.accent_primary == "#6A6A6A"
 
     def test_bootloader_vs_fastbootd_distinct_colors(self) -> None:
         fb_boot = get_mode_badge_palette("fastboot", "dark")
         fb_user = get_mode_badge_palette("fastbootd", "dark")
 
-        assert fb_boot["fg"] == "#007AFF"
-        assert fb_user["fg"] == "#00E5FF"
+        assert fb_boot["fg"] == "#6A6A6A"
+        assert fb_user["fg"] == "#B6B6B6"
         assert fb_boot["fg"] != fb_user["fg"]
         assert "BOOTLOADER" in fb_boot["label"]
         assert "USERSPACE" in fb_user["label"]
@@ -78,7 +77,8 @@ class TestThemeTokensAndModeBadges:
         qss = build_workstation_supplemental_qss("dark")
         assert "QScrollArea" in qss
         assert "QSplitter::handle" in qss
-        assert "#007AFF" in qss
+        assert "#6A6A6A" in qss
+        assert "#007AFF" not in qss
 
 
 class TestHighDpiLayoutAndSplitterHardening:

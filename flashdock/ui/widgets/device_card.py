@@ -52,13 +52,13 @@ class _InfoRow(QFrame):
 
         if status:
             status_colors = {
-                "ok": "#22c55e",
-                "warning": "#eab308",
-                "error": "#ef4444",
-                "info": "#3b82f6",
-                "unknown": "#86868b",
+                "ok": "#9B9B9B",
+                "warning": "#B2B2B2",
+                "error": "#686868",
+                "info": "#7B7B7B",
+                "unknown": "#868686",
             }
-            color = status_colors.get(status, "#86868b")
+            color = status_colors.get(status, "#868686")
             status_label = QLabel("●")
             status_label.setStyleSheet(f"color: {color}; font-size: 9px;")
             layout.addWidget(status_label)

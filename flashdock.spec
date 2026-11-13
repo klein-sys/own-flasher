@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller Specification for FlashDock v1.6.1 (Windows x64).
+PyInstaller Specification for FlashDock v1.7.0 (Windows x64).
 Bundles all UI/UX theme token & High-DPI modules, core engines, pure-Python
 binary parsers, Win32 USB/Event transports, and PySide6 Qt6Svg vector plugins.
 """
@@ -11,6 +11,8 @@ block_cipher = None
 project_root = Path(SPECPATH)
 
 added_files = [
+    (str(project_root / "flashdock" / "ui" / "liquid_glass_bw.qss"), "flashdock/ui"),
+    (str(project_root / "assets" / "icons"), "assets/icons"),
     (str(project_root / "flashdock" / "resources"), "flashdock/resources"),
 ]
 if (project_root / "resources").exists():
@@ -39,6 +41,7 @@ hidden_imports = [
     "flashdock.core.crash_reporter",
     "flashdock.core.device",
     "flashdock.core.device_manager",
+    "flashdock.core.device_state_sync",
     "flashdock.core.device_monitor",
     "flashdock.core.diagnostics",
     "flashdock.core.diagnostics_engine",
@@ -95,6 +98,8 @@ hidden_imports = [
     "flashdock.ui.widgets.crash_dialog",
     "flashdock.ui.widgets.device_card",
     "flashdock.ui.widgets.device_hud",
+    "flashdock.ui.widgets.dynamic_island",
+    "flashdock.ui.widgets.liquid_glass_widget",
     "flashdock.ui.widgets.device_selector",
     "flashdock.ui.widgets.emergency_loader_card",
     "flashdock.ui.widgets.flash_shield",
@@ -141,10 +146,8 @@ version_path = project_root / "version_info.txt"
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
     [],
+    exclude_binaries=True,
     name="FlashDock",
     debug=False,
     bootloader_ignore_signals=False,
@@ -160,4 +163,14 @@ exe = EXE(
     entitlements_file=None,
     icon=str(icon_path) if icon_path.exists() else None,
     version=str(version_path) if version_path.exists() else None,
+)
+
+# Match the release builder's FlashDock_Dist/FlashDock.exe package layout.
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    name="FlashDock_Dist",
 )

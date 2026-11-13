@@ -1432,9 +1432,23 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 
 def get_stylesheet(theme: str = "dark") -> str:
     """Return the active stylesheet based on theme selection ('dark' or 'light')."""
-    if theme.lower() == "light":
-        return LIGHT_STYLESHEET
-    return DARK_STYLESHEET
+    from pathlib import Path
+
+    dark = theme.lower() == "dark"
+    values = {
+        "@TEXT@": "#F5F5F5" if dark else "#171717",
+        "@MUTED@": "#AEAEAE" if dark else "#555555",
+        "@SURFACE@": "rgba(38, 38, 38, 205)" if dark else "rgba(255, 255, 255, 185)",
+        "@HOVER@": "rgba(255, 255, 255, 24)" if dark else "rgba(0, 0, 0, 18)",
+        "@CONTROL@": "rgba(255, 255, 255, 16)" if dark else "rgba(0, 0, 0, 10)",
+        "@SELECTED@": "rgba(255, 255, 255, 47)" if dark else "rgba(255, 255, 255, 225)",
+        "@SOLID@": "#262626" if dark else "#F3F3F3",
+        "@SELECTION@": "#777777" if dark else "#444444",
+    }
+    sheet = Path(__file__).with_name("liquid_glass_bw.qss").read_text(encoding="utf-8")
+    for token, value in values.items():
+        sheet = sheet.replace(token, value)
+    return sheet
 
 
 # ============================================================================

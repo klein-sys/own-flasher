@@ -21,12 +21,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollArea,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
+from flashdock.constants import APP_VERSION
 from flashdock.logger import get_logger
 from flashdock.ui.icon_assets import create_icon_label, get_icon, get_icon_pixmap
 
@@ -37,17 +37,17 @@ class _ModeIndicator(QFrame):
     """Coloured pill that shows the phone's current mode."""
 
     _COLORS = {
-        "system":       ("#34C759", "System"),
-        "recovery":     ("#FF9500", "Recovery"),
-        "bootloader":   ("#007AFF", "Bootloader"),
-        "fastbootd":    ("#007AFF", "FastbootD"),
-        "download":     ("#AF52DE", "Download"),
-        "edl":          ("#FF3B30", "EDL"),
-        "brom":         ("#FF3B30", "BROM"),
-        "sideload":     ("#FF9500", "Sideload"),
-        "unauthorized": ("#FF9500", "Unauthorized"),
-        "offline":      ("#8E8E93", "Offline"),
-        "not_connected":("#8E8E93", "Not connected"),
+        "system":       ("#A0A0A0", "System"),
+        "recovery":     ("#A1A1A1", "Recovery"),
+        "bootloader":   ("#6A6A6A", "Bootloader"),
+        "fastbootd":    ("#6A6A6A", "FastbootD"),
+        "download":     ("#707070", "Download"),
+        "edl":          ("#646464", "EDL"),
+        "brom":         ("#646464", "BROM"),
+        "sideload":     ("#A1A1A1", "Sideload"),
+        "unauthorized": ("#A1A1A1", "Unauthorized"),
+        "offline":      ("#8E8E8E", "Offline"),
+        "not_connected":("#8E8E8E", "Not connected"),
     }
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -65,7 +65,7 @@ class _ModeIndicator(QFrame):
         self.set_mode("not_connected")
 
     def set_mode(self, mode: str) -> None:
-        color, label = self._COLORS.get(mode, ("#8E8E93", mode.title()))
+        color, label = self._COLORS.get(mode, ("#8E8E8E", mode.title()))
         self._dot.setStyleSheet(
             f"background-color: {color}; border-radius: 4px; "
             "min-width: 8px; max-width: 8px; "
@@ -139,8 +139,8 @@ class _NavPillButton(QPushButton):
             if theme == "light":
                 self.setStyleSheet("""
                     QPushButton {
-                        background-color: #9AA2B0;
-                        border: 1px solid #828B9B;
+                        background-color: #A1A1A1;
+                        border: none;
                         border-radius: 12px;
                         color: #FFFFFF;
                         font-weight: 700;
@@ -150,8 +150,8 @@ class _NavPillButton(QPushButton):
             else:
                 self.setStyleSheet("""
                     QPushButton {
-                        background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #253346, stop:1 #1C2736);
-                        border: 1px solid #0A84FF;
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #313131, stop:1 #262626);
+                        border: none;
                         border-radius: 12px;
                         color: #FFFFFF;
                         font-weight: 700;
@@ -162,35 +162,35 @@ class _NavPillButton(QPushButton):
             if theme == "light":
                 self.setStyleSheet("""
                     QPushButton {
-                        background-color: #E2E6EC;
-                        border: 1px solid #CBD1DC;
+                        background-color: #E6E6E6;
+                        border: none;
                         border-radius: 12px;
-                        color: #1C2024;
+                        color: #1F1F1F;
                         font-weight: 600;
                     }
                     QPushButton:hover {
-                        background-color: #ECEFF4;
-                        border-color: #9AA4B2;
-                        color: #1C2024;
+                        background-color: #EFEFEF;
+                        border-color: #A3A3A3;
+                        color: #1F1F1F;
                     }
                 """)
-                self.title_lbl.setStyleSheet("color: #1C2024; font-size: 11.5px; font-weight: 600; background: transparent;")
+                self.title_lbl.setStyleSheet("color: #1F1F1F; font-size: 11.5px; font-weight: 600; background: transparent;")
             else:
                 self.setStyleSheet("""
                     QPushButton {
-                        background-color: #161D28;
-                        border: 1px solid rgba(255, 255, 255, 0.07);
+                        background-color: #1C1C1C;
+                        border: none;
                         border-radius: 12px;
-                        color: #E6EDF3;
+                        color: #ECECEC;
                         font-weight: 600;
                     }
                     QPushButton:hover {
-                        background-color: #1E2736;
-                        border-color: #3D4B5C;
+                        background-color: #262626;
+                        border-color: #494949;
                         color: #FFFFFF;
                     }
                 """)
-                self.title_lbl.setStyleSheet("color: #E6EDF3; font-size: 11.5px; font-weight: 600; background: transparent;")
+                self.title_lbl.setStyleSheet("color: #ECECEC; font-size: 11.5px; font-weight: 600; background: transparent;")
 
 
 class PhoneControlPanel(QFrame):
@@ -208,7 +208,7 @@ class PhoneControlPanel(QFrame):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setFixedWidth(240)
+        self.setFixedWidth(212)
         self.setProperty("cssClass", "operations_panel")
 
         root = QVBoxLayout(self)
@@ -221,7 +221,7 @@ class PhoneControlPanel(QFrame):
         brand_frame.setStyleSheet("""
             QFrame {
                 background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                border: none;
                 border-radius: 16px;
             }
         """)
@@ -233,7 +233,7 @@ class PhoneControlPanel(QFrame):
         brand_icon_chip = QFrame()
         brand_icon_chip.setFixedSize(36, 36)
         brand_icon_chip.setStyleSheet("""
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00F2FE, stop:1 #4FACFE);
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #BFBFBF, stop:1 #9E9E9E);
             border-radius: 10px;
             border: none;
         """)
@@ -250,64 +250,27 @@ class PhoneControlPanel(QFrame):
         brand_text_box.setSpacing(2)
         brand_title = QLabel("FlashDock")
         brand_title.setStyleSheet("font-size: 14px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.1; margin: 0; padding: 0;")
-        brand_sub = QLabel("v1.4.0 Service Suite")
-        brand_sub.setStyleSheet("font-size: 11px; color: #8E8E93; line-height: 1.1; margin: 0; padding: 0;")
+        brand_sub = QLabel(f"v{APP_VERSION} Service Suite")
+        brand_sub.setStyleSheet("font-size: 11px; color: #8E8E8E; line-height: 1.1; margin: 0; padding: 0;")
         brand_text_box.addWidget(brand_title)
         brand_text_box.addWidget(brand_sub)
         brand_lay.addLayout(brand_text_box, 1)
         root.addWidget(brand_frame)
 
-        # ---- Primary Navigation Pills wrapped in sleek QScrollArea (Section 3.2) ----
-        nav_scroll = QScrollArea()
-        nav_scroll.setWidgetResizable(True)
-        nav_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        nav_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        nav_scroll.setStyleSheet("""
-            QScrollArea { background: transparent; border: none; }
-            QScrollBar:vertical {
-                background: transparent;
-                width: 4px;
-                margin: 0px;
-            }
-            QScrollBar::handle:vertical {
-                background: rgba(142, 142, 147, 0.3);
-                border-radius: 2px;
-                min-height: 20px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background: rgba(142, 142, 147, 0.6);
-            }
-        """)
-
-        nav_container = QWidget()
-        nav_container.setStyleSheet("background: transparent;")
-        nav_lay = QVBoxLayout(nav_container)
-        nav_lay.setContentsMargins(0, 0, 0, 0)
-        nav_lay.setSpacing(4)
-
-        self._nav_pills: dict[str, _NavPillButton] = {}
-        nav_defs = [
-            ("home",         "Overview / Tools",    "flash",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7)"),
-            ("check_phone",  "ADB & Device",        "phone",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00B4D8, stop:1 #0077B6)"),
-            ("sideload",     "Sideload & Apps",     "box",         "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00C6FF, stop:1 #0072FF)"),
-            ("flash_rom",    "Fastboot Tools",      "flash",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2563EB, stop:1 #1D4ED8)"),
-            ("root",         "Root & Modules",      "root",        "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #A855F7, stop:1 #7E22CE)"),
-            ("unbrick",      "Unbrick & Rescue",    "unbrick",     "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EF4444, stop:1 #B91C1C)"),
-            ("diagnostics",  "Diagnostics & Tweaks","diagnostics", "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #10B981, stop:1 #059669)"),
-            ("mtk_unisoc",   "MTK & Unisoc",        "mtk_unisoc",  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F97316, stop:1 #C2410C)"),
-            ("settings",     "Display & Settings",  "tools",       "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EC4899, stop:1 #BE185D)"),
-            ("about",        "About Workstation",   "info",        "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EA580C, stop:1 #9A3412)"),
-        ]
-
-        for action_id, label, icon_name, grad in nav_defs:
-            pill = _NavPillButton(action_id, label, icon_name, grad)
-            pill.clicked.connect(lambda checked=False, a=action_id: self._on_nav_pill_clicked(a))
+        self._nav_pills = {}
+        for action_id, label, icon in (
+            ("home", "Workstation", "flash"),
+            ("settings", "Display & Settings", "tools"),
+            ("about", "About FlashDock", "info"),
+        ):
+            pill = _NavPillButton(
+                action_id, label, icon,
+                "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2C2C2C, stop:1 #050505)",
+            )
+            pill.clicked.connect(lambda checked=False, aid=action_id: self._on_nav_pill_clicked(aid))
+            root.addWidget(pill)
             self._nav_pills[action_id] = pill
-            nav_lay.addWidget(pill)
-
-        nav_lay.addStretch(1)
-        nav_scroll.setWidget(nav_container)
-        root.addWidget(nav_scroll, 1)
+        root.addStretch(1)
 
         # Set Home active initially
         self._active_nav_id = "home"
@@ -318,7 +281,7 @@ class PhoneControlPanel(QFrame):
         dev_card.setStyleSheet("""
             QFrame {
                 background: rgba(0, 0, 0, 0.12);
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                border: none;
                 border-radius: 14px;
                 padding: 4px;
             }
@@ -329,13 +292,13 @@ class PhoneControlPanel(QFrame):
 
         # Mode indicator row
         self._mode = _ModeIndicator()
-        dev_lay.addWidget(self._mode)
+        self._mode.hide()
 
         self._summary = QLabel("Connect a phone via USB")
         self._summary.setWordWrap(True)
         self._summary.setProperty("cssClass", "muted")
         self._summary.setStyleSheet("font-size: 11px; line-height: 1.3;")
-        dev_lay.addWidget(self._summary)
+        self._summary.hide()
 
         # Quick Reboot Actions: 2 clean rows instead of squished 1-row
         reboot_row1 = QHBoxLayout()
@@ -362,7 +325,7 @@ class PhoneControlPanel(QFrame):
                 padding: 5px 8px;
                 border-radius: 8px;
                 background: rgba(255, 255, 255, 0.06);
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                border: none;
             }
             QPushButton:hover:enabled {
                 background: rgba(255, 255, 255, 0.12);
@@ -415,12 +378,12 @@ class PhoneControlPanel(QFrame):
                 font-weight: 600;
                 padding: 5px 8px;
                 border-radius: 8px;
-                background: rgba(10, 132, 255, 0.12);
-                border: 1px solid rgba(10, 132, 255, 0.3);
-                color: #0A84FF;
+                background: rgba(115, 115, 115, 0.12);
+                border: none;
+                color: #737373;
             }
             QPushButton:hover {
-                background: rgba(10, 132, 255, 0.22);
+                background: rgba(115, 115, 115, 0.22);
             }
         """)
         self._btn_more_reboot.clicked.connect(self.switchboard_requested.emit)
@@ -439,7 +402,7 @@ class PhoneControlPanel(QFrame):
         # Connection Helper Card
         self._helper_card = QFrame()
         self._helper_card.setStyleSheet(
-            "background-color: rgba(255, 149, 0, 0.08); border: 1px solid rgba(255, 149, 0, 0.25); "
+            "background-color: rgba(161, 161, 161, 0.08); border: none; "
             "border-radius: 8px; padding: 6px;"
         )
         helper_lay = QVBoxLayout(self._helper_card)
@@ -448,16 +411,16 @@ class PhoneControlPanel(QFrame):
 
         helper_title_row = QHBoxLayout()
         helper_title_row.setSpacing(6)
-        self._helper_icon = create_icon_label("info", 13, color="#C96E00")
+        self._helper_icon = create_icon_label("info", 13, color="#797979")
         helper_title_row.addWidget(self._helper_icon)
 
         self._helper_title = QLabel("Device Offline")
-        self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #C96E00;")
+        self._helper_title.setStyleSheet("font-size: 11px; font-weight: 700; color: #797979;")
         helper_title_row.addWidget(self._helper_title, 1)
         helper_lay.addLayout(helper_title_row)
 
         self._helper_text = QLabel("Plug USB cable & enable USB Debugging.")
-        self._helper_text.setStyleSheet("font-size: 10px; color: #8E8E93;")
+        self._helper_text.setStyleSheet("font-size: 10px; color: #8E8E8E;")
         self._helper_text.setWordWrap(True)
         helper_lay.addWidget(self._helper_text)
 
@@ -491,7 +454,7 @@ class PhoneControlPanel(QFrame):
         self._mirror_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._mirror_btn.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #007AFF, stop:1 #5856D6);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6A6A6A, stop:1 #606060);
                 color: #FFFFFF;
                 font-weight: 600;
                 font-size: 11px;
@@ -579,12 +542,12 @@ class PhoneControlPanel(QFrame):
 
         if mode == "not_connected":
             self._helper_card.setVisible(True)
-            self._helper_icon.setPixmap(get_icon_pixmap("info", 13, color="#C96E00"))
+            self._helper_icon.setPixmap(get_icon_pixmap("info", 13, color="#797979"))
             self._helper_title.setText("Device Offline")
             self._helper_text.setText("Plug USB cable & enable USB Debugging.")
         elif mode == "unauthorized":
             self._helper_card.setVisible(True)
-            self._helper_icon.setPixmap(get_icon_pixmap("warning", 13, color="#FF9500"))
+            self._helper_icon.setPixmap(get_icon_pixmap("warning", 13, color="#A1A1A1"))
             self._helper_title.setText("Accept RSA Prompt")
             self._helper_text.setText("Tap 'Always allow' on device screen.")
         else:
@@ -603,6 +566,6 @@ class PhoneControlPanel(QFrame):
 
 
 # ============================================================================
-# v1.5.0 Bootloader (#007AFF Cobalt) vs FastbootD (#00E5FF Cyan) Mode Tokens
+# v1.5.0 Bootloader (#6A6A6A Cobalt) vs FastbootD (#B6B6B6 Cyan) Mode Tokens
 # ============================================================================
 from flashdock.ui.theme_tokens import get_mode_badge_palette, get_theme_tokens

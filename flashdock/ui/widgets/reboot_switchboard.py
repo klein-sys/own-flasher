@@ -46,14 +46,14 @@ class RebootSwitchboardDialog(QDialog):
     reboot_mode_selected = Signal(str)
 
     _REBOOT_MODES = [
-        ("system",      "Reboot System",           "Normal Android OS reboot",           "refresh",    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #10B981, stop:1 #059669)"),
-        ("bootloader",  "Fastboot (BL)",            "Fastboot Bootloader mode",           "flash",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #007AFF, stop:1 #0056B3)"),
-        ("fastbootd",   "FastbootD (Userspace)",    "Fastboot userspace dynamic mode",   "flash",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7)"),
-        ("recovery",    "Recovery Mode",           "Stock, TWRP, or OrangeFox recovery", "tools",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #AF52DE, stop:1 #7E22CE)"),
-        ("switch_slot", "Switch Active Slot (A/B)", "Rollback / toggle active slot (a <-> b)", "refresh", "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #F59E0B, stop:1 #D97706)"),
-        ("edl",         "Qualcomm EDL 9008",       "Emergency Download Sahara mode",     "usb",        "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #EF4444, stop:1 #B91C1C)"),
-        ("download",    "Samsung Odin Mode",       "Samsung Download Mode protocol",     "downloads",  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00B4D8, stop:1 #0077B6)"),
-        ("poweroff",    "Power Off",               "Immediate system shutdown",          "power",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #64748B, stop:1 #334155)"),
+        ("system",      "Reboot System",           "Normal Android OS reboot",           "refresh",    "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #919191, stop:1 #747474)"),
+        ("bootloader",  "Fastboot (BL)",            "Fastboot Bootloader mode",           "flash",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #6A6A6A, stop:1 #4A4A4A)"),
+        ("fastbootd",   "FastbootD (Userspace)",    "Fastboot userspace dynamic mode",   "flash",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #B6B6B6, stop:1 #787878)"),
+        ("recovery",    "Recovery Mode",           "Stock, TWRP, or OrangeFox recovery", "tools",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #707070, stop:1 #424242)"),
+        ("switch_slot", "Switch Active Slot (A/B)", "Rollback / toggle active slot (a <-> b)", "refresh", "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #A6A6A6, stop:1 #848484)"),
+        ("edl",         "Qualcomm EDL 9008",       "Emergency Download Sahara mode",     "usb",        "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #686868, stop:1 #3D3D3D)"),
+        ("download",    "Samsung Odin Mode",       "Samsung Download Mode protocol",     "downloads",  "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #909090, stop:1 #626262)"),
+        ("poweroff",    "Power Off",               "Immediate system shutdown",          "power",      "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #727272, stop:1 #3F3F3F)"),
     ]
 
     def __init__(
@@ -86,14 +86,14 @@ class RebootSwitchboardDialog(QDialog):
         # Header
         header_row = QHBoxLayout()
         header_row.setSpacing(10)
-        header_row.addWidget(create_icon_label("power", 24, color="#007AFF"))
+        header_row.addWidget(create_icon_label("power", 24, color="#6A6A6A"))
 
         header_col = QVBoxLayout()
         header_col.setSpacing(2)
         title_lbl = QLabel("Power & Reboot Switchboard")
-        title_lbl.setStyleSheet("font-size: 16px; font-weight: 700; color: #E6EDF3;")
+        title_lbl.setStyleSheet("font-size: 16px; font-weight: 700; color: #ECECEC;")
         desc_lbl = QLabel(f"Target: {serial or 'Connected Device'} (Current State: {current_mode.upper()})")
-        desc_lbl.setStyleSheet("font-size: 11px; color: #8B949E;")
+        desc_lbl.setStyleSheet("font-size: 11px; color: #939393;")
         header_col.addWidget(title_lbl)
         header_col.addWidget(desc_lbl)
         header_row.addLayout(header_col, 1)
@@ -112,18 +112,18 @@ class RebootSwitchboardDialog(QDialog):
             btn.setFixedHeight(72)
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #181E26;
-                    border: 1px solid #2C3644;
+                    background-color: #1D1D1D;
+                    border: none;
                     border-radius: 12px;
                     text-align: left;
                     padding: 8px 12px;
                 }
                 QPushButton:hover {
-                    background-color: #222C3D;
-                    border-color: #0A84FF;
+                    background-color: #2B2B2B;
+                    border-color: #737373;
                 }
                 QPushButton:pressed {
-                    background-color: #12171E;
+                    background-color: #161616;
                 }
             """)
             btn_lay = QHBoxLayout(btn)
@@ -149,10 +149,10 @@ class RebootSwitchboardDialog(QDialog):
             text_col.setContentsMargins(0, 0, 0, 0)
             text_col.setSpacing(2)
             t_lbl = QLabel(title)
-            t_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #E6EDF3; background: transparent;")
+            t_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #ECECEC; background: transparent;")
             t_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
             d_lbl = QLabel(desc)
-            d_lbl.setStyleSheet("font-size: 10px; color: #8B949E; background: transparent;")
+            d_lbl.setStyleSheet("font-size: 10px; color: #939393; background: transparent;")
             d_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
             text_col.addWidget(t_lbl)
             text_col.addWidget(d_lbl)

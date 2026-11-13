@@ -731,11 +731,11 @@ class FlashRomScreen(QWidget):
         # Tab 2 fastbootd mode indicator
         if device.mode == "fastbootd":
             self._lbl_fb_mode.setText("Current Mode: FASTBOOTD (Userspace) — Ready to flash dynamic system!")
-            self._lbl_fb_mode.setStyleSheet("font-size: 13px; font-weight: 700; color: #2ea043;")
+            self._lbl_fb_mode.setStyleSheet("font-size: 13px; font-weight: 700; color: #818181;")
             self._btn_switch_fastbootd.setEnabled(False)
         elif device.mode == "fastboot":
             self._lbl_fb_mode.setText("Current Mode: STANDARD FASTBOOT — Click switch to enter FastbootD for dynamic partitions.")
-            self._lbl_fb_mode.setStyleSheet("font-size: 13px; font-weight: 700; color: #d29922;")
+            self._lbl_fb_mode.setStyleSheet("font-size: 13px; font-weight: 700; color: #9D9D9D;")
             self._btn_switch_fastbootd.setEnabled(True)
         else:
             self._lbl_fb_mode.setText(f"Current Mode: {device.mode.title()} (Reboot to fastboot required)")

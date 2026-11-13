@@ -1,0 +1,92 @@
+﻿/* Monochrome Liquid Glass. Specular surfaces are painted by QPainter. */
+QWidget {
+    color: @TEXT@;
+    font-family: "SF Pro Text", "Inter", "Segoe UI Variable", "Segoe UI", sans-serif;
+    font-size: 12px;
+    selection-background-color: @SELECTION@;
+    selection-color: white;
+}
+QMainWindow, QWidget#centralWorkspace, QWidget#glassHome,
+QStackedWidget, QSplitter {
+    background: transparent;
+    border: none;
+}
+QDialog, QMessageBox { background: @SOLID@; }
+QLabel { background: transparent; border: none; }
+QLabel#glassHeading { font-size: 26px; font-weight: 600; letter-spacing: -1px; }
+QLabel[glassSectionTitle="true"] {
+    font-size: 11px; font-weight: 600; color: @MUTED@;
+    padding: 2px 7px 8px 7px;
+}
+QFrame#iosSidebar {
+    background: @SURFACE@;
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 65);
+}
+QPushButton, QToolButton {
+    background: @CONTROL@; color: @TEXT@;
+    border: none; border-radius: 10px; padding: 5px 10px;
+    font-weight: 500;
+}
+QPushButton:enabled:hover, QToolButton:enabled:hover { background: @HOVER@; }
+QPushButton:enabled:pressed, QPushButton:checked { background: @SELECTED@; }
+QPushButton:focus, QToolButton:focus { background: @SELECTED@; }
+QPushButton:disabled { color: @MUTED@; background: transparent; }
+QPushButton[liquidSegment="true"] {
+    background: transparent; color: @MUTED@; border: none;
+    border-radius: 11px; padding: 2px 8px;
+}
+QPushButton[liquidSegment="true"]:checked {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 @SELECTED@, stop:1 @CONTROL@);
+    color: @TEXT@; font-weight: 600;
+}
+QFrame#liquidSegmented {
+    background: @CONTROL@; border: none; border-radius: 14px;
+}
+QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {
+    background: @CONTROL@; border: none; border-radius: 10px;
+    padding: 7px 10px; color: @TEXT@;
+}
+QLineEdit:focus, QComboBox:focus { background: @SELECTED@; }
+QComboBox::drop-down { border: none; width: 18px; }
+QComboBox QAbstractItemView {
+    background: @SOLID@; color: @TEXT@; border: none; padding: 5px;
+    selection-background-color: @SELECTION@;
+}
+QTextEdit, QPlainTextEdit, QListWidget, QTreeWidget, QTableWidget {
+    background: @CONTROL@; color: @TEXT@; border: none;
+    border-radius: 12px; padding: 8px;
+}
+QGroupBox {
+    background: @CONTROL@; border: none; border-radius: 14px;
+    margin-top: 15px; padding: 14px;
+}
+QGroupBox::title { subcontrol-origin: margin; left: 12px; color: @MUTED@; }
+QCheckBox, QRadioButton { background: transparent; spacing: 7px; }
+QCheckBox::indicator {
+    width: 14px; height: 14px; border: 1px solid @MUTED@; border-radius: 4px;
+}
+QCheckBox::indicator:checked { background: @TEXT@; }
+QProgressBar { background: @CONTROL@; border: none; border-radius: 5px; }
+QProgressBar::chunk { background: @MUTED@; border-radius: 5px; }
+QTabWidget::pane { background: transparent; border: none; }
+QTabBar::tab {
+    background: transparent; color: @MUTED@; border: none;
+    border-radius: 9px; padding: 7px 12px;
+}
+QTabBar::tab:selected { background: @SELECTED@; color: @TEXT@; }
+QMenuBar { background: transparent; padding: 2px 8px; }
+QMenuBar::item { background: transparent; padding: 3px 8px; }
+QMenuBar::item:selected, QMenu::item:selected { background: @HOVER@; border-radius: 5px; }
+QMenu { background: @SOLID@; border: none; border-radius: 10px; padding: 6px; }
+QMenu::item { padding: 6px 18px; }
+QToolTip { background: @SOLID@; color: @TEXT@; border: none; padding: 6px; }
+QSplitter::handle { background: transparent; }
+QSplitter::handle:hover { background: @HOVER@; }
+QScrollBar:vertical { width: 6px; background: transparent; }
+QScrollBar::handle:vertical { background: @MUTED@; border-radius: 3px; min-height: 22px; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+QScrollBar:horizontal { height: 6px; background: transparent; }
+QScrollBar::handle:horizontal { background: @MUTED@; border-radius: 3px; min-width: 22px; }
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }

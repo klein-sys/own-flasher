@@ -7,8 +7,7 @@ radii, and hardware state badge styles for:
  2. Soft Frost (Light Mode — High-Contrast Daylight Service Theme)
 
 Guarantees zero hardcoded inline hex drift when toggling themes and enforces
-unmistakable visual differentiation between standard Bootloader (`#007AFF` Cobalt)
-and FastbootD Userspace (`#00E5FF` Electric Cyan).
+unmistakable visual differentiation between standard Bootloader and FastbootD Userspace through labels and gray levels.
 """
 
 from __future__ import annotations
@@ -59,63 +58,63 @@ class WorkstationThemeTokens:
 SLATE_OBSIDIAN_TOKENS = WorkstationThemeTokens(
     name="dark",
     is_dark=True,
-    bg_primary="#0B0F17",
-    bg_secondary="#111827",
-    bg_surface="#161F30",
-    bg_elevated="#1E293B",
-    bg_glass_card="#192234",
-    bg_terminal="#080B11",
-    text_primary="#F8FAFC",
-    text_secondary="#CBD5E1",
-    text_muted="#64748B",
-    border_subtle="#26334D",
-    border_strong="#334155",
-    border_focus="#007AFF",
-    accent_primary="#007AFF",
-    accent_hover="#2589FF",
-    accent_pressed="#005ECB",
-    accent_soft_bg="#13284C",
-    mode_adb_emerald="#10B981",
-    mode_fastboot_cobalt="#007AFF",
-    mode_fastbootd_cyan="#00E5FF",
-    mode_recovery_amber="#F59E0B",
-    mode_sideload_violet="#8B5CF6",
-    mode_edl_brom_crimson="#EF4444",
-    status_success="#10B981",
-    status_warning="#F59E0B",
-    status_danger="#EF4444",
-    status_info="#38BDF8",
+    bg_primary="#0F0F0F",
+    bg_secondary="#181818",
+    bg_surface="#1E1E1E",
+    bg_elevated="#282828",
+    bg_glass_card="#212121",
+    bg_terminal="#0B0B0B",
+    text_primary="#FAFAFA",
+    text_secondary="#D4D4D4",
+    text_muted="#727272",
+    border_subtle="#323232",
+    border_strong="#3F3F3F",
+    border_focus="#6A6A6A",
+    accent_primary="#6A6A6A",
+    accent_hover="#7C7C7C",
+    accent_pressed="#525252",
+    accent_soft_bg="#262626",
+    mode_adb_emerald="#919191",
+    mode_fastboot_cobalt="#6A6A6A",
+    mode_fastbootd_cyan="#B6B6B6",
+    mode_recovery_amber="#A6A6A6",
+    mode_sideload_violet="#717171",
+    mode_edl_brom_crimson="#686868",
+    status_success="#919191",
+    status_warning="#A6A6A6",
+    status_danger="#686868",
+    status_info="#A5A5A5",
 )
 
 SOFT_FROST_TOKENS = WorkstationThemeTokens(
     name="light",
     is_dark=False,
-    bg_primary="#F1F5F9",
-    bg_secondary="#E2E8F0",
+    bg_primary="#F4F4F4",
+    bg_secondary="#E7E7E7",
     bg_surface="#FFFFFF",
-    bg_elevated="#F8FAFC",
+    bg_elevated="#FAFAFA",
     bg_glass_card="#FFFFFF",
-    bg_terminal="#0F172A",
-    text_primary="#0F172A",
-    text_secondary="#334155",
-    text_muted="#64748B",
-    border_subtle="#CBD5E1",
-    border_strong="#94A3B8",
-    border_focus="#007AFF",
-    accent_primary="#007AFF",
-    accent_hover="#0062CC",
-    accent_pressed="#004999",
-    accent_soft_bg="#E0F2FE",
-    mode_adb_emerald="#059669",
-    mode_fastboot_cobalt="#007AFF",
-    mode_fastbootd_cyan="#00B8D4",
-    mode_recovery_amber="#D97706",
-    mode_sideload_violet="#7C3AED",
-    mode_edl_brom_crimson="#DC2626",
-    status_success="#059669",
-    status_warning="#D97706",
-    status_danger="#DC2626",
-    status_info="#0284C7",
+    bg_terminal="#171717",
+    text_primary="#171717",
+    text_secondary="#3F3F3F",
+    text_muted="#727272",
+    border_subtle="#D4D4D4",
+    border_strong="#A1A1A1",
+    border_focus="#6A6A6A",
+    accent_primary="#6A6A6A",
+    accent_hover="#555555",
+    accent_pressed="#3F3F3F",
+    accent_soft_bg="#EFEFEF",
+    mode_adb_emerald="#747474",
+    mode_fastboot_cobalt="#6A6A6A",
+    mode_fastbootd_cyan="#939393",
+    mode_recovery_amber="#848484",
+    mode_sideload_violet="#555555",
+    mode_edl_brom_crimson="#4D4D4D",
+    status_success="#747474",
+    status_warning="#848484",
+    status_danger="#4D4D4D",
+    status_info="#6D6D6D",
 )
 
 
@@ -130,8 +129,7 @@ def get_theme_tokens(theme: str = "dark") -> WorkstationThemeTokens:
 def get_mode_badge_palette(mode: str, theme: str = "dark") -> dict[str, str]:
     """
     Return `(fg_color, bg_color, border_color, label)` for any Android hardware mode.
-    Strictly distinguishes standard Bootloader (`#007AFF` Cobalt) from
-    FastbootD Userspace (`#00E5FF` Electric Cyan).
+    Strictly distinguishes standard Bootloader from FastbootD Userspace through labels and gray levels.
     """
     t = get_theme_tokens(theme)
     m = (mode or "disconnected").strip().lower()
@@ -139,42 +137,42 @@ def get_mode_badge_palette(mode: str, theme: str = "dark") -> dict[str, str]:
     if m == "fastbootd":
         return {
             "fg": t.mode_fastbootd_cyan,
-            "bg": "#083344" if t.is_dark else "#E0F7FA",
+            "bg": "#2B2B2B" if t.is_dark else "#F2F2F2",
             "border": t.mode_fastbootd_cyan,
             "label": "FASTBOOTD (USERSPACE)",
         }
     if m in ("fastboot", "bootloader"):
         return {
             "fg": t.mode_fastboot_cobalt,
-            "bg": "#13284C" if t.is_dark else "#DBEAFE",
+            "bg": "#262626" if t.is_dark else "#E8E8E8",
             "border": t.mode_fastboot_cobalt,
             "label": "FASTBOOT (BOOTLOADER)",
         }
     if m in ("adb", "system", "normal"):
         return {
             "fg": t.mode_adb_emerald,
-            "bg": "#064E3B" if t.is_dark else "#D1FAE5",
+            "bg": "#3D3D3D" if t.is_dark else "#F0F0F0",
             "border": t.mode_adb_emerald,
             "label": "ADB ONLINE",
         }
     if m == "recovery":
         return {
             "fg": t.mode_recovery_amber,
-            "bg": "#451A03" if t.is_dark else "#FEF3C7",
+            "bg": "#212121" if t.is_dark else "#F2F2F2",
             "border": t.mode_recovery_amber,
             "label": "RECOVERY",
         }
     if m == "sideload":
         return {
             "fg": t.mode_sideload_violet,
-            "bg": "#2E1065" if t.is_dark else "#EDE9FE",
+            "bg": "#1D1D1D" if t.is_dark else "#EBEBEB",
             "border": t.mode_sideload_violet,
             "label": "ADB SIDELOAD",
         }
     if m in ("edl", "brom", "preloader", "unisoc_brom", "odin", "emergency"):
         return {
             "fg": t.mode_edl_brom_crimson,
-            "bg": "#450A0A" if t.is_dark else "#FEE2E2",
+            "bg": "#171717" if t.is_dark else "#E8E8E8",
             "border": t.mode_edl_brom_crimson,
             "label": f"EMERGENCY ({m.upper()})",
         }
@@ -205,10 +203,10 @@ def build_workstation_supplemental_qss(theme: str = "dark") -> str:
         background-color: {t.accent_primary};
     }}
     QLineEdit:focus, QComboBox:focus, QPlainTextEdit:focus, QTextEdit:focus, QListWidget:focus {{
-        border: 1px solid {t.border_focus};
+        border: none;
     }}
     QProgressBar {{
-        border: 1px solid {t.border_subtle};
+        border: none;
         border-radius: 6px;
         background-color: {t.bg_secondary};
         text-align: center;
@@ -223,7 +221,7 @@ def build_workstation_supplemental_qss(theme: str = "dark") -> str:
     QToolTip {{
         background-color: {t.bg_elevated};
         color: {t.text_primary};
-        border: 1px solid {t.border_strong};
+        border: none;
         border-radius: 6px;
         padding: 5px 8px;
     }}

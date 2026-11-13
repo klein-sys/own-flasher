@@ -125,8 +125,8 @@ class DownloadsScreen(QWidget):
         # Device Indicator Badge
         self._device_badge = QLabel("No device connected")
         self._device_badge.setStyleSheet(
-            "background-color: #242426; border: 1px solid #38383A; "
-            "border-radius: 6px; padding: 6px 12px; font-size: 12px; color: #8E8E93;"
+            "background-color: #242424; border: none; "
+            "border-radius: 6px; padding: 6px 12px; font-size: 12px; color: #8E8E8E;"
         )
         header_row.addWidget(self._device_badge)
 
@@ -231,10 +231,10 @@ class DownloadsScreen(QWidget):
         self._btn_launch_scrcpy.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_launch_scrcpy.setFixedHeight(32)
         self._btn_launch_scrcpy.setStyleSheet(
-            "QPushButton { background: #0A84FF; color: #FFFFFF; font-weight: 600; font-size: 11px; "
+            "QPushButton { background: #737373; color: #FFFFFF; font-weight: 600; font-size: 11px; "
             "border-radius: 6px; padding: 4px 12px; border: none; } "
-            "QPushButton:hover { background: #0070E0; } "
-            "QPushButton:disabled { background: rgba(255, 255, 255, 0.08); color: #6E7681; }"
+            "QPushButton:hover { background: #606060; } "
+            "QPushButton:disabled { background: rgba(255, 255, 255, 0.08); color: #757575; }"
         )
         self._btn_launch_scrcpy.clicked.connect(self._on_launch_scrcpy)
         scrcpy_btn_row.addWidget(self._btn_launch_scrcpy, 1)
@@ -244,8 +244,8 @@ class DownloadsScreen(QWidget):
         self._btn_download_scrcpy.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_download_scrcpy.setFixedHeight(32)
         self._btn_download_scrcpy.setStyleSheet(
-            "QPushButton { background: rgba(255, 255, 255, 0.08); color: #E6EDF3; font-weight: 600; font-size: 11px; "
-            "border-radius: 6px; padding: 4px 12px; border: 1px solid rgba(255, 255, 255, 0.12); } "
+            "QPushButton { background: rgba(255, 255, 255, 0.08); color: #ECECEC; font-weight: 600; font-size: 11px; "
+            "border-radius: 6px; padding: 4px 12px; border: none; } "
             "QPushButton:hover { background: rgba(255, 255, 255, 0.15); }"
         )
         self._btn_download_scrcpy.clicked.connect(self._on_download_scrcpy)
@@ -298,7 +298,7 @@ class DownloadsScreen(QWidget):
         info_h_row.setSpacing(6)
         info_h_row.addWidget(create_icon_label("info", 16))
         info_title = QLabel("Platform-Tools Architecture & Port Information")
-        info_title.setStyleSheet("font-weight: 600; font-size: 13px; color: #0A84FF;")
+        info_title.setStyleSheet("font-weight: 600; font-size: 13px; color: #737373;")
         info_h_row.addWidget(info_title)
         info_h_row.addStretch()
         info_layout.addLayout(info_h_row)
@@ -657,10 +657,10 @@ class DownloadsScreen(QWidget):
         top_row.addWidget(name_lbl, 1)
 
         status_text = "Ready" if drv.is_installed else ("Downloaded" if drv.is_downloaded else "Available")
-        status_color = "#30D158" if drv.is_installed else ("#0A84FF" if drv.is_downloaded else "#8E8E93")
+        status_color = "#A6A6A6" if drv.is_installed else ("#737373" if drv.is_downloaded else "#8E8E8E")
         status_lbl = QLabel(f" {status_text} ")
         status_lbl.setStyleSheet(
-            f"background-color: rgba(255, 255, 255, 0.06); border: 1px solid {status_color}; "
+            f"background-color: rgba(255, 255, 255, 0.06); border: none; "
             f"border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: {status_color};"
         )
         top_row.addWidget(status_lbl)
@@ -873,7 +873,7 @@ class DownloadsScreen(QWidget):
 
         cat_badge = QLabel(f" {repo.category.upper()} ")
         cat_badge.setStyleSheet(
-            "background-color: rgba(10, 132, 255, 0.15); color: #0A84FF; "
+            "background-color: rgba(115, 115, 115, 0.15); color: #737373; "
             "border-radius: 4px; font-size: 11px; font-weight: 600; padding: 2px 6px;"
         )
         header_row.addWidget(cat_badge)
@@ -889,7 +889,7 @@ class DownloadsScreen(QWidget):
 
         if repo.guide_note:
             note = QLabel(f"<b>Flashing Tip:</b> {repo.guide_note}")
-            note.setStyleSheet("font-size: 11px; color: #FF9F0A;")
+            note.setStyleSheet("font-size: 11px; color: #A9A9A9;")
             box.addWidget(note)
 
         btn_row = QHBoxLayout()

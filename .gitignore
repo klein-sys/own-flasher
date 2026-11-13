@@ -16,6 +16,7 @@ htmlcov/
 
 # Local FlashDock Data & Runtime
 data/
+/Launch FlashDock.lnk
 
 # IDE & Editor files
 .vscode/

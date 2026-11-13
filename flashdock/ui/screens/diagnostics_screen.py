@@ -9,7 +9,7 @@ Provides:
    wireless ADB over TCP/IP 5555, and stay-awake toggle.
 
 Design Constraints:
-Strict anti-slop SaaS layout (Zinc monochromatic scale, single #2563eb blue accent,
+Strict anti-slop SaaS layout (Zinc monochromatic scale, single #606060 blue accent,
 monospaced tabular numbers for data/metrics, seamless dark/light theme adaptability).
 """
 

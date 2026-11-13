@@ -31,7 +31,7 @@ class StatusDot(QLabel):
         "min-height: 6px; max-height: 6px;"
     )
 
-    def __init__(self, color: str = "#52525b", parent: QWidget | None = None):
+    def __init__(self, color: str = "#535353", parent: QWidget | None = None):
         super().__init__(parent)
         self.set_color(color)
 
@@ -60,7 +60,7 @@ class StatusBarWidget(QFrame):
         self._layout = layout
 
         # ---- Network indicator (Left) ----
-        self._net_dot = StatusDot("#86868b")
+        self._net_dot = StatusDot("#868686")
         self._net_label = QLabel("Checking…")
         self._net_label.setProperty("cssClass", "secondary")
         self._net_label.setStyleSheet("font-size: 11px; font-weight: 500;")
@@ -70,8 +70,8 @@ class StatusBarWidget(QFrame):
         # ---- Active Connection Mode Badge ----
         self._connection_badge = QLabel("• Disconnected")
         self._connection_badge.setStyleSheet(
-            "background-color: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); "
-            "border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #8E8E93;"
+            "background-color: rgba(255, 255, 255, 0.06); border: none; "
+            "border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #8E8E8E;"
         )
         layout.addWidget(self._connection_badge)
 
@@ -84,7 +84,7 @@ class StatusBarWidget(QFrame):
         layout.addWidget(self._mode_label)
 
         # Retained hidden attributes for full backward compatibility
-        self._dev_dot = StatusDot("#86868b")
+        self._dev_dot = StatusDot("#868686")
         self._dev_dot.setVisible(False)
         self._dev_label = QLabel("No device")
         self._dev_label.setVisible(False)
@@ -102,7 +102,7 @@ class StatusBarWidget(QFrame):
         self._progress_bar.setVisible(False)
         self._progress_bar.setStyleSheet(
             "QProgressBar { background-color: rgba(255, 255, 255, 0.08); border-radius: 6px; border: none; } "
-            "QProgressBar::chunk { background-color: #007AFF; border-radius: 6px; }"
+            "QProgressBar::chunk { background-color: #6A6A6A; border-radius: 6px; }"
         )
         layout.addWidget(self._progress_bar)
 
@@ -115,7 +115,7 @@ class StatusBarWidget(QFrame):
         from flashdock import __version__
         self._version_label = QLabel(f"v{__version__}")
         self._version_label.setProperty("cssClass", "secondary")
-        self._version_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; color: #6E7681;")
+        self._version_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; color: #757575;")
         layout.addWidget(self._version_label)
 
         self.apply_theme("dark")
@@ -143,16 +143,16 @@ class StatusBarWidget(QFrame):
         """Apply unified theme canvas to the single bottom bar."""
         if theme == "light":
             self.setStyleSheet(
-                "StatusBarWidget { background-color: #ECEFF4; border-top: 1px solid rgba(0, 0, 0, 0.08); border-bottom: none; }"
+                "StatusBarWidget { background-color: #EFEFEF; border-top: 1px solid rgba(0, 0, 0, 0.08); border-bottom: none; }"
             )
-            self._mode_label.setStyleSheet("font-size: 11px; font-weight: 600; color: #4C566A;")
-            self._version_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; color: #4C566A;")
+            self._mode_label.setStyleSheet("font-size: 11px; font-weight: 600; color: #555555;")
+            self._version_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; color: #555555;")
         else:
             self.setStyleSheet(
-                "StatusBarWidget { background-color: #0D1117; border-top: 1px solid rgba(255, 255, 255, 0.08); border-bottom: none; }"
+                "StatusBarWidget { background-color: #111111; border-top: 1px solid rgba(255, 255, 255, 0.08); border-bottom: none; }"
             )
-            self._mode_label.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E93;")
-            self._version_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; color: #6E7681;")
+            self._mode_label.setStyleSheet("font-size: 11px; font-weight: 600; color: #8E8E8E;")
+            self._version_label.setStyleSheet("font-size: 11px; font-family: 'JetBrains Mono', 'Cascadia Code', monospace; color: #757575;")
         if hasattr(self, "_device_selector") and self._device_selector:
             self._device_selector.apply_theme(theme)
 
@@ -162,24 +162,24 @@ class StatusBarWidget(QFrame):
     def update_network(self, is_online: bool) -> None:
         """Called by NetworkMonitor.on_change (marshalled to the UI thread)."""
         if is_online:
-            self._net_dot.set_color("#22c55e")
+            self._net_dot.set_color("#9B9B9B")
             self._net_label.setText("Online")
-            self._net_label.setStyleSheet("color: #22c55e; font-size: 11px; font-weight: 600;")
+            self._net_label.setStyleSheet("color: #9B9B9B; font-size: 11px; font-weight: 600;")
         else:
-            self._net_dot.set_color("#ef4444")
+            self._net_dot.set_color("#686868")
             self._net_label.setText("Offline")
-            self._net_label.setStyleSheet("color: #ef4444; font-size: 11px; font-weight: 600;")
+            self._net_label.setStyleSheet("color: #686868; font-size: 11px; font-weight: 600;")
 
     @Slot(str, str)
     def update_device(self, mode: str, summary: str) -> None:
         """Called when device detection runs."""
         if mode == "not_connected":
-            self._dev_dot.set_color("#86868b")
+            self._dev_dot.set_color("#868686")
             self._dev_label.setText("No device")
             self._dev_label.setProperty("cssClass", "secondary")
             self._dev_label.setStyleSheet("font-size: 11px;")
         else:
-            self._dev_dot.set_color("#22c55e")
+            self._dev_dot.set_color("#9B9B9B")
             text = summary if summary else f"Connected ({mode})"
             self._dev_label.setText(text)
             self._dev_label.setStyleSheet("font-size: 11px; font-weight: 600;")
@@ -200,8 +200,8 @@ class StatusBarWidget(QFrame):
         if mode in ("disconnected", "not_connected") or not port_or_serial:
             self._connection_badge.setText("• Disconnected")
             self._connection_badge.setStyleSheet(
-                "background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); "
-                "border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #8E8E93;"
+                "background-color: rgba(255, 255, 255, 0.05); border: none; "
+                "border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: #8E8E8E;"
             )
             return
 
@@ -211,18 +211,18 @@ class StatusBarWidget(QFrame):
         # Color badges by mode
         if "BROM" in mode_upper or "EDL" in mode_upper or "SPRD" in mode_upper:
             # High-visibility amber / red for low-level recovery ports
-            color = "#FF9F0A"
-            bg = "rgba(255, 159, 10, 0.15)"
+            color = "#A9A9A9"
+            bg = "rgba(169, 169, 169, 0.15)"
         elif "FASTBOOT" in mode_upper:
-            color = "#0A84FF"
-            bg = "rgba(10, 132, 255, 0.15)"
+            color = "#737373"
+            bg = "rgba(115, 115, 115, 0.15)"
         else:
-            color = "#30D158"
-            bg = "rgba(48, 209, 88, 0.15)"
+            color = "#A6A6A6"
+            bg = "rgba(166, 166, 166, 0.15)"
 
         self._connection_badge.setText(display_text)
         self._connection_badge.setStyleSheet(
-            f"background-color: {bg}; border: 1px solid {color}; "
+            f"background-color: {bg}; border: none; "
             f"border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; color: {color};"
         )
 
@@ -241,6 +241,6 @@ class StatusBarWidget(QFrame):
 
 
 # ============================================================================
-# v1.5.0 Bootloader (#007AFF Cobalt) vs FastbootD (#00E5FF Cyan) Mode Tokens
+# v1.5.0 Bootloader (#6A6A6A Cobalt) vs FastbootD (#B6B6B6 Cyan) Mode Tokens
 # ============================================================================
 from flashdock.ui.theme_tokens import get_mode_badge_palette, get_theme_tokens

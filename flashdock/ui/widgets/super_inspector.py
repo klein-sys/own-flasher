@@ -42,12 +42,12 @@ try:
     from flashdock.ui.theme_tokens import PALETTE
 except ImportError:
     PALETTE = {
-        "surface_card": "#1A1D24",
-        "border_subtle": "#2A2F3A",
-        "text_primary": "#F3F4F6",
-        "text_secondary": "#9CA3AF",
-        "accent_primary": "#3B82F6",
-        "status_success": "#10B981",
+        "surface_card": "#1D1D1D",
+        "border_subtle": "#2F2F2F",
+        "text_primary": "#F4F4F4",
+        "text_secondary": "#A2A2A2",
+        "accent_primary": "#7B7B7B",
+        "status_success": "#919191",
     }
 
 class SuperUnpackWorker(QThread):

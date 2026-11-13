@@ -192,7 +192,7 @@ class FileDropZone(QFrame):
         self.icon_chip = QFrame()
         self.icon_chip.setFixedSize(40, 40)
         self.icon_chip.setStyleSheet("""
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0A84FF, stop:1 #0056B3);
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #737373, stop:1 #4A4A4A);
             border-radius: 20px;
             border: none;
         """)
@@ -205,12 +205,12 @@ class FileDropZone(QFrame):
         layout.addWidget(self.icon_chip, 0, Qt.AlignmentFlag.AlignCenter)
 
         self.title_lbl = QLabel(title)
-        self.title_lbl.setStyleSheet("font-size: 14px; font-weight: 600; color: #E6EDF3;")
+        self.title_lbl.setStyleSheet("font-size: 14px; font-weight: 600; color: #ECECEC;")
         self.title_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.title_lbl)
 
         self.sub_lbl = QLabel(subtitle)
-        self.sub_lbl.setStyleSheet("font-size: 11px; color: #8E8E93;")
+        self.sub_lbl.setStyleSheet("font-size: 11px; color: #8E8E8E;")
         self.sub_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.sub_lbl)
 
@@ -220,37 +220,37 @@ class FileDropZone(QFrame):
         if theme == "light":
             self.setStyleSheet("""
                 QFrame {
-                    background-color: #ECEFF4;
-                    border: 2px dashed #CBD1DC;
+                    background-color: #EFEFEF;
+                    border: 2px dashed #D1D1D1;
                     border-radius: 16px;
                 }
                 QFrame:hover {
-                    background-color: #F4F6F9;
-                    border-color: #007AFF;
+                    background-color: #F6F6F6;
+                    border-color: #6A6A6A;
                 }
             """)
-            self.title_lbl.setStyleSheet("font-size: 14px; font-weight: 600; color: #1C2024; background: transparent;")
-            self.sub_lbl.setStyleSheet("font-size: 11px; color: #5A6572; background: transparent;")
+            self.title_lbl.setStyleSheet("font-size: 14px; font-weight: 600; color: #1F1F1F; background: transparent;")
+            self.sub_lbl.setStyleSheet("font-size: 11px; color: #646464; background: transparent;")
         else:
             self.setStyleSheet("""
                 QFrame {
-                    background-color: #1A212E;
+                    background-color: #202020;
                     border: 2px dashed rgba(255, 255, 255, 0.15);
                     border-radius: 16px;
                 }
                 QFrame:hover {
-                    background-color: #222C3D;
-                    border-color: #0A84FF;
+                    background-color: #2B2B2B;
+                    border-color: #737373;
                 }
             """)
-            self.title_lbl.setStyleSheet("font-size: 14px; font-weight: 600; color: #E6EDF3; background: transparent;")
-            self.sub_lbl.setStyleSheet("font-size: 11px; color: #8B949E; background: transparent;")
+            self.title_lbl.setStyleSheet("font-size: 14px; font-weight: 600; color: #ECECEC; background: transparent;")
+            self.sub_lbl.setStyleSheet("font-size: 11px; color: #939393; background: transparent;")
 
     def _apply_drag_style(self) -> None:
         self.setStyleSheet("""
             QFrame {
-                background-color: rgba(10, 132, 255, 0.15);
-                border: 2px solid #0A84FF;
+                background-color: rgba(115, 115, 115, 0.15);
+                border: none;
                 border-radius: 16px;
             }
         """)
@@ -333,7 +333,7 @@ class SideloadScreen(QWidget):
         icon_box = QFrame()
         icon_box.setFixedSize(36, 36)
         icon_box.setStyleSheet("""
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00E5FF, stop:1 #0097A7);
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #B6B6B6, stop:1 #787878);
             border-radius: 18px;
             border: none;
         """)
@@ -348,9 +348,9 @@ class SideloadScreen(QWidget):
         title_box = QVBoxLayout()
         title_box.setSpacing(2)
         title_lbl = QLabel("Universal Sideloading & App Manager")
-        title_lbl.setStyleSheet("font-size: 16px; font-weight: 700; color: #E6EDF3;")
+        title_lbl.setStyleSheet("font-size: 16px; font-weight: 700; color: #ECECEC;")
         desc_lbl = QLabel("Install APKs, Split Bundles (.xapk), bypass Android 14+ restrictions, & recovery sideload")
-        desc_lbl.setStyleSheet("font-size: 11px; color: #8E8E93;")
+        desc_lbl.setStyleSheet("font-size: 11px; color: #8E8E8E;")
         title_box.addWidget(title_lbl)
         title_box.addWidget(desc_lbl)
         header_row.addLayout(title_box, 1)
@@ -359,7 +359,7 @@ class SideloadScreen(QWidget):
         self._dev_chip = QLabel("No Device Connected")
         self._dev_chip.setStyleSheet("""
             font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 10px;
-            background-color: rgba(255, 69, 58, 0.15); color: #FF453A; border: 1px solid rgba(255, 69, 58, 0.3);
+            background-color: rgba(108, 108, 108, 0.15); color: #6C6C6C; border: none;
         """)
         header_row.addWidget(self._dev_chip)
 
@@ -396,7 +396,7 @@ class SideloadScreen(QWidget):
                 border-radius: 4px;
             }
             QProgressBar::chunk {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #0A84FF, stop:1 #00E5FF);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #737373, stop:1 #B6B6B6);
                 border-radius: 4px;
             }
         """)
@@ -410,9 +410,9 @@ class SideloadScreen(QWidget):
             QPlainTextEdit {
                 font-family: Consolas, 'SF Mono', monospace;
                 font-size: 11px;
-                background-color: #0D1117;
-                color: #58A6FF;
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                background-color: #111111;
+                color: #9C9C9C;
+                border: none;
                 border-radius: 8px;
                 padding: 6px;
             }
@@ -447,8 +447,8 @@ class SideloadScreen(QWidget):
         self._meta_card = QFrame()
         self._meta_card.setStyleSheet("""
             QFrame {
-                background-color: #161D28;
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                background-color: #1C1C1C;
+                border: none;
                 border-radius: 14px;
                 padding: 10px;
             }
@@ -463,10 +463,10 @@ class SideloadScreen(QWidget):
         self._app_icon_lbl.setStyleSheet("""
             background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: none;
         """)
         self._app_icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._app_icon_lbl.setPixmap(get_icon_pixmap("box", width=32, height=32, color="#0A84FF"))
+        self._app_icon_lbl.setPixmap(get_icon_pixmap("box", width=32, height=32, color="#737373"))
         mc_lay.addWidget(self._app_icon_lbl)
 
         # Info column
@@ -475,9 +475,9 @@ class SideloadScreen(QWidget):
         self._meta_title_lbl = QLabel("No package loaded")
         self._meta_title_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #FFFFFF;")
         self._meta_pkg_lbl = QLabel("com.example.app")
-        self._meta_pkg_lbl.setStyleSheet("font-size: 11px; font-family: Consolas, monospace; color: #8E8E93;")
+        self._meta_pkg_lbl.setStyleSheet("font-size: 11px; font-family: Consolas, monospace; color: #8E8E8E;")
         self._meta_details_lbl = QLabel("Size: -- • Version: -- • Min SDK: --")
-        self._meta_details_lbl.setStyleSheet("font-size: 11px; color: #0A84FF;")
+        self._meta_details_lbl.setStyleSheet("font-size: 11px; color: #737373;")
         info_col.addWidget(self._meta_title_lbl)
         info_col.addWidget(self._meta_pkg_lbl)
         info_col.addWidget(self._meta_details_lbl)
@@ -489,11 +489,11 @@ class SideloadScreen(QWidget):
         btn_clear_file.setStyleSheet("""
             QPushButton {
                 background: rgba(255, 255, 255, 0.06);
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                border: none;
                 border-radius: 8px;
                 padding: 6px 12px;
                 font-size: 11px;
-                color: #E6EDF3;
+                color: #ECECEC;
             }
             QPushButton:hover {
                 background: rgba(255, 255, 255, 0.12);
@@ -509,8 +509,8 @@ class SideloadScreen(QWidget):
         flags_card = QFrame()
         flags_card.setStyleSheet("""
             QFrame {
-                background-color: #161D28;
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                background-color: #1C1C1C;
+                border: none;
                 border-radius: 14px;
             }
         """)
@@ -519,7 +519,7 @@ class SideloadScreen(QWidget):
         fc_lay.setSpacing(10)
 
         fc_title = QLabel("Advanced Installation Options & Bypasses")
-        fc_title.setStyleSheet("font-size: 12px; font-weight: 700; color: #E6EDF3;")
+        fc_title.setStyleSheet("font-size: 12px; font-weight: 700; color: #ECECEC;")
         fc_lay.addWidget(fc_title)
 
         grid = QHBoxLayout()
@@ -542,7 +542,7 @@ class SideloadScreen(QWidget):
         col2.setSpacing(8)
         self._chk_bypass_low_sdk = QCheckBox("Bypass Android 14+ Low SDK block (--bypass-low-target-sdk-block)")
         self._chk_bypass_low_sdk.setToolTip("Mandatory to force-install legacy apps blocked by Google Play Protect on Android 14+")
-        self._chk_bypass_low_sdk.setStyleSheet("color: #FF9F0A; font-weight: 600;")
+        self._chk_bypass_low_sdk.setStyleSheet("color: #A9A9A9; font-weight: 600;")
         self._chk_user_0 = QCheckBox("Install for primary user only (--user 0)")
         self._chk_test = QCheckBox("Allow test packages (-t)")
         col2.addWidget(self._chk_bypass_low_sdk)
@@ -561,20 +561,20 @@ class SideloadScreen(QWidget):
         self._btn_install.setEnabled(False)
         self._btn_install.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0A84FF, stop:1 #0056B3);
-                border: 1px solid #0A84FF;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #737373, stop:1 #4A4A4A);
+                border: none;
                 border-radius: 12px;
                 color: #FFFFFF;
                 font-size: 13px;
                 font-weight: 700;
             }
             QPushButton:hover:enabled {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #1F90FF, stop:1 #0066D6);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #808080, stop:1 #585858);
             }
             QPushButton:disabled {
                 background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                color: #6E7681;
+                border: none;
+                color: #757575;
             }
         """)
         self._btn_install.clicked.connect(self._on_install_clicked)
@@ -605,8 +605,8 @@ class SideloadScreen(QWidget):
         rec_card = QFrame()
         rec_card.setStyleSheet("""
             QFrame {
-                background-color: rgba(255, 159, 10, 0.08);
-                border: 1px solid rgba(255, 159, 10, 0.25);
+                background-color: rgba(169, 169, 169, 0.08);
+                border: none;
                 border-radius: 14px;
                 padding: 10px;
             }
@@ -615,9 +615,9 @@ class SideloadScreen(QWidget):
         rc_lay.setSpacing(8)
 
         rc_title = QHBoxLayout()
-        rc_title.addWidget(create_icon_label("warning", 16, color="#FF9F0A"))
+        rc_title.addWidget(create_icon_label("warning", 16, color="#A9A9A9"))
         rc_t_lbl = QLabel("Recovery Mode OTA / ROM Sideload Protocol")
-        rc_t_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #FF9F0A;")
+        rc_t_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #A9A9A9;")
         rc_title.addWidget(rc_t_lbl)
         rc_title.addStretch()
 
@@ -626,10 +626,10 @@ class SideloadScreen(QWidget):
         self._btn_reboot_recovery.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_reboot_recovery.setStyleSheet("""
             QPushButton {
-                background: #FF9F0A; color: #000000; font-weight: 700; font-size: 11px;
+                background: #A9A9A9; color: #000000; font-weight: 700; font-size: 11px;
                 padding: 4px 10px; border-radius: 6px; border: none;
             }
-            QPushButton:hover { background: #FFAA26; }
+            QPushButton:hover { background: #B3B3B3; }
         """)
         self._btn_reboot_recovery.clicked.connect(self._on_reboot_recovery_clicked)
         rc_title.addWidget(self._btn_reboot_recovery)
@@ -642,7 +642,7 @@ class SideloadScreen(QWidget):
             "2. Select or drop your update ZIP file below and click 'Start Recovery Sideload'."
         )
         rc_msg.setWordWrap(True)
-        rc_msg.setStyleSheet("font-size: 11px; color: #CBD1DC; line-height: 1.3;")
+        rc_msg.setStyleSheet("font-size: 11px; color: #D1D1D1; line-height: 1.3;")
         rc_lay.addWidget(rc_msg)
         lay.addWidget(rec_card)
 
@@ -657,7 +657,7 @@ class SideloadScreen(QWidget):
 
         # Selected OTA label
         self._lbl_selected_ota = QLabel("No OTA ZIP package selected.")
-        self._lbl_selected_ota.setStyleSheet("font-size: 12px; color: #8E8E93;")
+        self._lbl_selected_ota.setStyleSheet("font-size: 12px; color: #8E8E8E;")
         lay.addWidget(self._lbl_selected_ota)
 
         # Trigger Sideload Button
@@ -668,20 +668,20 @@ class SideloadScreen(QWidget):
         self._btn_sideload_ota.setEnabled(False)
         self._btn_sideload_ota.setStyleSheet("""
             QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FF9F0A, stop:1 #D35400);
-                border: 1px solid #FF9F0A;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #A9A9A9, stop:1 #696969);
+                border: none;
                 border-radius: 12px;
                 color: #FFFFFF;
                 font-size: 13px;
                 font-weight: 700;
             }
             QPushButton:hover:enabled {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #FFAA26, stop:1 #E65C00);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #B3B3B3, stop:1 #737373);
             }
             QPushButton:disabled {
                 background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                color: #6E7681;
+                border: none;
+                color: #757575;
             }
         """)
         self._btn_sideload_ota.clicked.connect(self._on_sideload_ota_clicked)
@@ -752,14 +752,14 @@ class SideloadScreen(QWidget):
         self._table.verticalHeader().setVisible(False)
         self._table.setStyleSheet("""
             QTableWidget {
-                background-color: #121824;
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                background-color: #181818;
+                border: none;
                 border-radius: 10px;
                 gridline-color: rgba(255, 255, 255, 0.05);
             }
             QHeaderView::section {
-                background-color: #161D28;
-                color: #8E8E93;
+                background-color: #1C1C1C;
+                color: #8E8E8E;
                 font-size: 11px;
                 font-weight: 700;
                 padding: 6px;
@@ -803,11 +803,11 @@ class SideloadScreen(QWidget):
         action_row.addWidget(self._btn_toggle_disable)
 
         self._btn_uninstall = QPushButton("Uninstall Package")
-        self._btn_uninstall.setIcon(get_icon("cross", 12, color="#FF453A"))
+        self._btn_uninstall.setIcon(get_icon("cross", 12, color="#6C6C6C"))
         self._btn_uninstall.setEnabled(False)
         self._btn_uninstall.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_uninstall.setStyleSheet("""
-            QPushButton:enabled { color: #FF453A; font-weight: 600; }
+            QPushButton:enabled { color: #6C6C6C; font-weight: 600; }
         """)
         self._btn_uninstall.clicked.connect(lambda: self._execute_pkg_action("uninstall"))
         action_row.addWidget(self._btn_uninstall)
@@ -830,7 +830,7 @@ class SideloadScreen(QWidget):
             self._dev_chip.setText(f"{dev_name} [{info.mode.upper()}]")
             self._dev_chip.setStyleSheet("""
                 font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 10px;
-                background-color: rgba(48, 209, 88, 0.15); color: #30D158; border: 1px solid rgba(48, 209, 88, 0.3);
+                background-color: rgba(166, 166, 166, 0.15); color: #A6A6A6; border: none;
             """)
             self._device_sdk = self._manager.get_device_sdk(serial=serial)
             if self._device_sdk >= 34:
@@ -841,7 +841,7 @@ class SideloadScreen(QWidget):
             self._dev_chip.setText("No Device Connected")
             self._dev_chip.setStyleSheet("""
                 font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 10px;
-                background-color: rgba(255, 69, 58, 0.15); color: #FF453A; border: 1px solid rgba(255, 69, 58, 0.3);
+                background-color: rgba(108, 108, 108, 0.15); color: #6C6C6C; border: none;
             """)
             self._update_button_states()
 
@@ -879,9 +879,9 @@ class SideloadScreen(QWidget):
                 if not pix.isNull():
                     self._app_icon_lbl.setPixmap(pix.scaled(44, 44, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
                 else:
-                    self._app_icon_lbl.setPixmap(get_icon_pixmap("box", width=32, height=32, color="#0A84FF"))
+                    self._app_icon_lbl.setPixmap(get_icon_pixmap("box", width=32, height=32, color="#737373"))
             else:
-                self._app_icon_lbl.setPixmap(get_icon_pixmap("box", width=32, height=32, color="#0A84FF"))
+                self._app_icon_lbl.setPixmap(get_icon_pixmap("box", width=32, height=32, color="#737373"))
 
             self._meta_card.setVisible(True)
             self._update_button_states()
@@ -971,7 +971,7 @@ class SideloadScreen(QWidget):
     def _on_recovery_file_selected(self, file_path: str) -> None:
         self._selected_ota_path = file_path
         self._lbl_selected_ota.setText(f"Selected: {Path(file_path).name} ({os.path.getsize(file_path) / (1024*1024):.2f} MB)")
-        self._lbl_selected_ota.setStyleSheet("font-size: 12px; font-weight: 600; color: #0A84FF;")
+        self._lbl_selected_ota.setStyleSheet("font-size: 12px; font-weight: 600; color: #737373;")
         self._update_button_states()
 
     @Slot()
@@ -1066,9 +1066,9 @@ class SideloadScreen(QWidget):
             cat_item = QTableWidgetItem(item.category.title())
             status_item = QTableWidgetItem("Enabled" if item.is_enabled else "Frozen")
             if not item.is_enabled:
-                status_item.setForeground(QColor("#FF453A"))
+                status_item.setForeground(QColor("#6C6C6C"))
             else:
-                status_item.setForeground(QColor("#30D158"))
+                status_item.setForeground(QColor("#A6A6A6"))
             path_item = QTableWidgetItem(item.path)
 
             self._table.setItem(row, 0, name_item)
@@ -1179,20 +1179,20 @@ class SideloadScreen(QWidget):
         if self._current_theme == "light":
             self._meta_card.setStyleSheet("""
                 QFrame {
-                    background-color: #ECEFF4;
-                    border: 1px solid #CBD1DC;
+                    background-color: #EFEFEF;
+                    border: none;
                     border-radius: 14px;
                     padding: 10px;
                 }
             """)
-            self._meta_title_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #1C2024;")
+            self._meta_title_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #1F1F1F;")
             self._log_terminal.setStyleSheet("""
                 QPlainTextEdit {
                     font-family: Consolas, 'SF Mono', monospace;
                     font-size: 11px;
-                    background-color: #F8FAFC;
-                    color: #0F172A;
-                    border: 1px solid #CBD1DC;
+                    background-color: #FAFAFA;
+                    color: #171717;
+                    border: none;
                     border-radius: 8px;
                     padding: 6px;
                 }
@@ -1200,8 +1200,8 @@ class SideloadScreen(QWidget):
         else:
             self._meta_card.setStyleSheet("""
                 QFrame {
-                    background-color: #161D28;
-                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    background-color: #1C1C1C;
+                    border: none;
                     border-radius: 14px;
                     padding: 10px;
                 }
@@ -1211,9 +1211,9 @@ class SideloadScreen(QWidget):
                 QPlainTextEdit {
                     font-family: Consolas, 'SF Mono', monospace;
                     font-size: 11px;
-                    background-color: #0D1117;
-                    color: #58A6FF;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    background-color: #111111;
+                    color: #9C9C9C;
+                    border: none;
                     border-radius: 8px;
                     padding: 6px;
                 }

@@ -100,9 +100,9 @@ class ScrcpyDialog(QDialog):
             brand = self._device.brand or ""
             model = self._device.model or ""
             model_str = f"{brand} {model}".strip() or "Android Device"
-            self._device_lbl = QLabel(f"<b>Target:</b> {model_str}  <span style='color:#8E8E93;'>({serial_str})</span>")
+            self._device_lbl = QLabel(f"<b>Target:</b> {model_str}  <span style='color:#8E8E8E;'>({serial_str})</span>")
         else:
-            self._device_lbl = QLabel("<b>Target:</b> <span style='color:#E5A93C;'>No Device Connected</span> — connect phone via USB")
+            self._device_lbl = QLabel("<b>Target:</b> <span style='color:#AEAEAE;'>No Device Connected</span> — connect phone via USB")
         d_lay.addWidget(self._device_lbl)
         d_lay.addStretch()
         layout.addWidget(dev_card)
@@ -211,7 +211,7 @@ class ScrcpyDialog(QDialog):
             ver = self._manager.get_version()
             self._status_lbl.setText(
                 f"<b>scrcpy is Ready:</b> {ver}<br>"
-                f"<span style='color:#8E8E93; font-size:11px;'>Location: {exe}</span>"
+                f"<span style='color:#8E8E8E; font-size:11px;'>Location: {exe}</span>"
             )
             self._dl_btn.setVisible(False)
             self._launch_btn.setEnabled(True)

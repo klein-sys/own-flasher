@@ -41,7 +41,7 @@ class HardwareKeyGuideDialog(QDialog):
         self.setWindowIcon(get_icon("phone", 16))
         self.resize(740, 600)
         self.setMinimumSize(620, 480)
-        self.setStyleSheet("background-color: #0F141C; color: #E6EDF3;")
+        self.setStyleSheet("background-color: #141414; color: #ECECEC;")
         self._adb = adb
         self._serial = serial
 
@@ -69,7 +69,7 @@ class HardwareKeyGuideDialog(QDialog):
             "How to use Volume Up, Volume Down, and Power buttons to navigate device boot menus, "
             "trigger rescue modes, and confirm flashing operations."
         )
-        subtitle.setStyleSheet("font-size: 13px; color: #8B949E;")
+        subtitle.setStyleSheet("font-size: 13px; color: #939393;")
         subtitle.setWordWrap(True)
         header.addWidget(subtitle)
         layout.addLayout(header)
@@ -77,10 +77,10 @@ class HardwareKeyGuideDialog(QDialog):
         # Tabs: 1. Menu Navigation, 2. Brand Key Combos, 3. Virtual Remote Keypad
         tabs = QTabWidget()
         tabs.setStyleSheet(
-            "QTabWidget::pane { border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; background: #131822; padding: 12px; } "
-            "QTabBar::tab { padding: 8px 18px; font-weight: 600; font-size: 13px; color: #8B949E; background: transparent; } "
-            "QTabBar::tab:selected { color: #0A84FF; border-bottom: 2px solid #0A84FF; } "
-            "QTabBar::tab:hover { color: #E6EDF3; }"
+            "QTabWidget::pane { border: none; border-radius: 10px; background: #181818; padding: 12px; } "
+            "QTabBar::tab { padding: 8px 18px; font-weight: 600; font-size: 13px; color: #939393; background: transparent; } "
+            "QTabBar::tab:selected { color: #737373; border-bottom: 2px solid #737373; } "
+            "QTabBar::tab:hover { color: #ECECEC; }"
         )
 
         tab_nav = QWidget()
@@ -105,8 +105,8 @@ class HardwareKeyGuideDialog(QDialog):
         footer.addStretch()
         btn_close = QPushButton("Done")
         btn_close.setStyleSheet(
-            "QPushButton { background: #0A84FF; color: #FFFFFF; border: none; border-radius: 8px; padding: 8px 24px; font-weight: 600; } "
-            "QPushButton:hover { background: #0070E0; }"
+            "QPushButton { background: #737373; color: #FFFFFF; border: none; border-radius: 8px; padding: 8px 24px; font-weight: 600; } "
+            "QPushButton:hover { background: #606060; }"
         )
         btn_close.clicked.connect(self.accept)
         footer.addWidget(btn_close)
@@ -124,17 +124,17 @@ class HardwareKeyGuideDialog(QDialog):
         # Core Rule Banner Card
         rule_card = QFrame()
         rule_card.setStyleSheet(
-            "background: rgba(10, 132, 255, 0.12); border: 1px solid rgba(10, 132, 255, 0.3); border-radius: 10px; padding: 14px;"
+            "background: rgba(115, 115, 115, 0.12); border: none; border-radius: 10px; padding: 14px;"
         )
         r_lay = QVBoxLayout(rule_card)
         r_lay.setSpacing(6)
         r_title = QLabel("Universal Android Boot Menu Rule")
-        r_title.setStyleSheet("font-size: 15px; font-weight: 700; color: #0A84FF;")
+        r_title.setStyleSheet("font-size: 15px; font-weight: 700; color: #737373;")
         r_desc = QLabel(
             "When your phone is in Fastboot, Bootloader, or Recovery mode, the touch screen is usually disabled. "
             "You MUST use the physical hardware buttons on the side of your phone to control the menu:"
         )
-        r_desc.setStyleSheet("font-size: 13px; color: #E6EDF3;")
+        r_desc.setStyleSheet("font-size: 13px; color: #ECECEC;")
         r_desc.setWordWrap(True)
         r_lay.addWidget(r_title)
         r_lay.addWidget(r_desc)
@@ -142,15 +142,15 @@ class HardwareKeyGuideDialog(QDialog):
 
         # 3 Key Cards
         keys = [
-            ("Volume Up", "#10B981", "Scroll UP / Previous Item", "Moves the on-screen selection cursor UP. On some unlock screens, holding Volume Up confirms the bootloader unlock request."),
-            ("Volume Down", "#3B82F6", "Scroll DOWN / Next Item", "Moves the on-screen selection cursor DOWN through options like 'Recovery mode', 'Restart bootloader', and 'Power off'."),
-            ("Power Button", "#EF4444", "SELECT / Enter / Confirm", "Acts as the 'ENTER' key. Press once to execute whichever menu option is currently highlighted on your phone screen."),
+            ("Volume Up", "#919191", "Scroll UP / Previous Item", "Moves the on-screen selection cursor UP. On some unlock screens, holding Volume Up confirms the bootloader unlock request."),
+            ("Volume Down", "#7B7B7B", "Scroll DOWN / Next Item", "Moves the on-screen selection cursor DOWN through options like 'Recovery mode', 'Restart bootloader', and 'Power off'."),
+            ("Power Button", "#686868", "SELECT / Enter / Confirm", "Acts as the 'ENTER' key. Press once to execute whichever menu option is currently highlighted on your phone screen."),
         ]
 
         for k_name, k_color, k_action, k_desc in keys:
             card = QFrame()
             card.setStyleSheet(
-                f"background: #181E26; border: 1px solid rgba(255, 255, 255, 0.08); "
+                f"background: #1D1D1D; border: none; "
                 f"border-left-width: 5px; border-left-color: {k_color}; border-radius: 8px; padding: 12px;"
             )
             c_lay = QVBoxLayout(card)
@@ -159,14 +159,14 @@ class HardwareKeyGuideDialog(QDialog):
             lbl_name = QLabel(k_name)
             lbl_name.setStyleSheet(f"font-size: 15px; font-weight: 700; color: {k_color};")
             lbl_action = QLabel(f"➔  <b>{k_action}</b>")
-            lbl_action.setStyleSheet("font-size: 13px; color: #E6EDF3;")
+            lbl_action.setStyleSheet("font-size: 13px; color: #ECECEC;")
             h.addWidget(lbl_name)
             h.addWidget(lbl_action)
             h.addStretch()
             c_lay.addLayout(h)
 
             lbl_desc = QLabel(k_desc)
-            lbl_desc.setStyleSheet("font-size: 12px; color: #8B949E;")
+            lbl_desc.setStyleSheet("font-size: 12px; color: #939393;")
             lbl_desc.setWordWrap(True)
             c_lay.addWidget(lbl_desc)
             lay.addWidget(card)
@@ -201,27 +201,27 @@ class HardwareKeyGuideDialog(QDialog):
         for brand, keys, target, notes in combos:
             card = QFrame()
             card.setStyleSheet(
-                "background: #181E26; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px;"
+                "background: #1D1D1D; border: none; border-radius: 8px; padding: 10px;"
             )
             c_lay = QVBoxLayout(card)
             c_lay.setSpacing(4)
 
             top = QHBoxLayout()
             b_lbl = QLabel(f"<b>{brand}</b>")
-            b_lbl.setStyleSheet("font-size: 13px; color: #E6EDF3;")
-            t_lbl = QLabel(f"→  <span style='color:#30D158; font-weight:700;'>{target}</span>")
+            b_lbl.setStyleSheet("font-size: 13px; color: #ECECEC;")
+            t_lbl = QLabel(f"→  <span style='color:#A6A6A6; font-weight:700;'>{target}</span>")
             t_lbl.setStyleSheet("font-size: 13px;")
             top.addWidget(b_lbl)
             top.addWidget(t_lbl)
             top.addStretch()
             c_lay.addLayout(top)
 
-            k_lbl = QLabel(f"<b>Keys:</b> <code style='background:rgba(255, 255, 255, 0.08); color:#0A84FF; padding:2px 6px; border-radius:4px;'>{keys}</code>")
-            k_lbl.setStyleSheet("font-size: 12px; color: #E6EDF3;")
+            k_lbl = QLabel(f"<b>Keys:</b> <code style='background:rgba(255, 255, 255, 0.08); color:#737373; padding:2px 6px; border-radius:4px;'>{keys}</code>")
+            k_lbl.setStyleSheet("font-size: 12px; color: #ECECEC;")
             c_lay.addWidget(k_lbl)
 
             n_lbl = QLabel(notes)
-            n_lbl.setStyleSheet("font-size: 11px; color: #8B949E;")
+            n_lbl.setStyleSheet("font-size: 11px; color: #939393;")
             n_lbl.setWordWrap(True)
             c_lay.addWidget(n_lbl)
 
@@ -242,7 +242,7 @@ class HardwareKeyGuideDialog(QDialog):
             "Send virtual hardware keypresses directly to your connected Android phone via ADB "
             "(<code>adb shell input keyevent</code>). Works when the phone is booted with USB debugging."
         )
-        desc.setStyleSheet("font-size: 13px; color: #8B949E;")
+        desc.setStyleSheet("font-size: 13px; color: #939393;")
         desc.setWordWrap(True)
         lay.addWidget(desc)
 
@@ -254,18 +254,18 @@ class HardwareKeyGuideDialog(QDialog):
 
         if self._serial:
             self._conn_banner.setStyleSheet(
-                "background: rgba(52, 199, 89, 0.12); border: 1px solid rgba(52, 199, 89, 0.35); border-radius: 8px;"
+                "background: rgba(160, 160, 160, 0.12); border: none; border-radius: 8px;"
             )
-            b_icon = create_icon_label("check", 14, color="#34C759")
+            b_icon = create_icon_label("check", 14, color="#A0A0A0")
             b_text = QLabel(f"Target Device Connected via ADB: <b>{self._serial}</b>")
-            b_text.setStyleSheet("font-size: 11.5px; color: #34C759;")
+            b_text.setStyleSheet("font-size: 11.5px; color: #A0A0A0;")
         else:
             self._conn_banner.setStyleSheet(
-                "background: rgba(255, 149, 0, 0.12); border: 1px solid rgba(255, 149, 0, 0.35); border-radius: 8px;"
+                "background: rgba(161, 161, 161, 0.12); border: none; border-radius: 8px;"
             )
-            b_icon = create_icon_label("warning", 14, color="#FF9F0A")
+            b_icon = create_icon_label("warning", 14, color="#A9A9A9")
             b_text = QLabel("Please connect a device via USB debugging in normal System mode to use the virtual keypad.")
-            b_text.setStyleSheet("font-size: 11.5px; color: #FF9F0A;")
+            b_text.setStyleSheet("font-size: 11.5px; color: #A9A9A9;")
             b_text.setWordWrap(True)
 
         b_lay.addWidget(b_icon)
@@ -274,7 +274,7 @@ class HardwareKeyGuideDialog(QDialog):
 
         keypad_frame = QFrame()
         keypad_frame.setStyleSheet(
-            "background: #181E26; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 16px;"
+            "background: #1D1D1D; border: none; border-radius: 12px; padding: 16px;"
         )
         grid = QGridLayout(keypad_frame)
         grid.setSpacing(10)
@@ -297,10 +297,10 @@ class HardwareKeyGuideDialog(QDialog):
             btn.setCursor(Qt.PointingHandCursor)
             btn.setMinimumHeight(44)
             btn.setStyleSheet(
-                "QPushButton { background: #212836; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; "
-                "font-weight: 600; font-size: 13px; color: #E6EDF3; } "
-                "QPushButton:hover { background: #2D3748; border-color: #0A84FF; color: #0A84FF; } "
-                "QPushButton:pressed { background: #1A202C; }"
+                "QPushButton { background: #282828; border: none; border-radius: 8px; "
+                "font-weight: 600; font-size: 13px; color: #ECECEC; } "
+                "QPushButton:hover { background: #363636; border-color: #737373; color: #737373; } "
+                "QPushButton:pressed { background: #202020; }"
             )
             btn.clicked.connect(lambda _, code=keycode: self._send_keyevent(code))
             grid.addWidget(btn, r, c)
@@ -308,7 +308,7 @@ class HardwareKeyGuideDialog(QDialog):
         lay.addWidget(keypad_frame)
 
         self._status_lbl = QLabel("Ready. Click any button above to send keyevent.")
-        self._status_lbl.setStyleSheet("font-size: 12px; color: #8B949E; font-style: italic;")
+        self._status_lbl.setStyleSheet("font-size: 12px; color: #939393; font-style: italic;")
         lay.addWidget(self._status_lbl)
         lay.addStretch()
 
@@ -316,7 +316,7 @@ class HardwareKeyGuideDialog(QDialog):
         """Sends adb shell input keyevent <keycode>."""
         if not self._adb or not self._adb.available:
             self._status_lbl.setText("ADB binary not available.")
-            self._status_lbl.setStyleSheet("font-size: 12px; color: #DC2626;")
+            self._status_lbl.setStyleSheet("font-size: 12px; color: #4D4D4D;")
         if not self._serial and self._adb and self._adb.available:
             devs = self._adb.devices()
             ready_devs = [d for d in devs if d.is_ready]
@@ -325,17 +325,17 @@ class HardwareKeyGuideDialog(QDialog):
 
         if not self._serial:
             self._status_lbl.setText("Please connect a device via USB debugging in normal System mode to use the virtual keypad.")
-            self._status_lbl.setStyleSheet("font-size: 12px; color: #D97706;")
+            self._status_lbl.setStyleSheet("font-size: 12px; color: #848484;")
             return
 
         try:
             res = self._adb.shell(f"input keyevent {keycode}", serial=self._serial)
             if res.success:
                 self._status_lbl.setText(f"Sent keyevent {keycode} successfully to {self._serial}.")
-                self._status_lbl.setStyleSheet("font-size: 12px; color: #059669;")
+                self._status_lbl.setStyleSheet("font-size: 12px; color: #747474;")
             else:
                 self._status_lbl.setText(f"Failed to send keyevent: {res.stderr or 'device error'}")
-                self._status_lbl.setStyleSheet("font-size: 12px; color: #D97706;")
+                self._status_lbl.setStyleSheet("font-size: 12px; color: #848484;")
         except Exception as e:
             self._status_lbl.setText(f"Error: {e}")
-            self._status_lbl.setStyleSheet("font-size: 12px; color: #DC2626;")
+            self._status_lbl.setStyleSheet("font-size: 12px; color: #4D4D4D;")

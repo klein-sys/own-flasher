@@ -410,7 +410,7 @@ class ModulesScreen(QWidget):
             name_row = QHBoxLayout()
             name_row.setSpacing(8)
 
-            lbl_name = QLabel(f"<b>{mod['name']}</b> <span style='font-size: 11px; color: #8E8E93;'>by {mod['author']}</span>")
+            lbl_name = QLabel(f"<b>{mod['name']}</b> <span style='font-size: 11px; color: #8E8E8E;'>by {mod['author']}</span>")
             lbl_name.setProperty("cssClass", "subheading")
             name_row.addWidget(lbl_name)
 
