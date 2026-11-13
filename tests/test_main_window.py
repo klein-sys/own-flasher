@@ -292,6 +292,7 @@ class TestMainWindow:
         from pathlib import Path
         from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
         from PySide6.QtGui import QDragEnterEvent, QDropEvent
+        from flashdock.tools.runner import CommandResult
         from flashdock.ui.screens.sideload_screen import SideloadWorker
         qapp = QApplication.instance()
 
@@ -333,14 +334,34 @@ class TestMainWindow:
         assert Path(screen._selected_ota_path) == ota
         assert not screen._btn_sideload_ota.isEnabled()
 
-        monkeypatch.setattr(screen._manager, "get_device_sdk", lambda **_: 33)
+        monkeypatch.setattr(screen._adb, "shell", lambda *_, **__: CommandResult([], 1, "", "offline", 0))
         screen.load_for_device(DeviceInfo(serial="PHONE", mode="system"))
+        qtbot.waitUntil(lambda: screen._version_worker is None)
         started = []
-        monkeypatch.setattr(SideloadWorker, "start", lambda self: started.append(self.action))
+        start_worker = SideloadWorker.start
+        monkeypatch.setattr(SideloadWorker, "start",
+                            lambda self: start_worker(self) if self.action == "installed_version"
+                            else started.append(self.action))
         screen._on_install_clicked()
         assert not started and not screen._btn_install.isEnabled()
-        win._island.write_switch.set_armed(True)
+        assert "Arm Write" in screen._install_status.text()
+        screen._btn_arm_install.click()
+        assert win._island.write_switch.is_armed and not started
         assert screen._btn_install.isEnabled()
+        monkeypatch.setattr(screen, "_confirm_install", lambda *args: False)
+        screen._btn_install.click()
+        assert not started
+
+        def switch_target(*args):
+            screen.load_for_device(DeviceInfo(serial="OTHER", mode="system"))
+            return True
+
+        monkeypatch.setattr(screen, "_confirm_install", switch_target)
+        screen._btn_install.click()
+        assert not started and not screen._write_in_progress
+        screen.load_for_device(DeviceInfo(serial="PHONE", mode="system"))
+        qtbot.waitUntil(lambda: screen._version_worker is None)
+        monkeypatch.setattr(screen, "_confirm_install", lambda *args: True)
         screen._btn_install.click()
         assert started == ["install_single"]
         win._island.write_switch.set_armed(False)

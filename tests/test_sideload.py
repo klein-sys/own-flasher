@@ -357,10 +357,13 @@ class TestSideloadScreenUI:
         screen.load_for_device(dev)
 
         assert "DEV_123" in screen._dev_chip.text() or "Pixel 8 Pro" in screen._dev_chip.text()
-        assert screen._chk_bypass_low_sdk.isChecked() is True
+        assert not screen._chk_bypass_low_sdk.isChecked()
+        assert not screen._chk_permissions.isChecked()
+        assert not screen._chk_downgrade.isChecked()
 
     def test_file_selection_updates_ui(self, qtbot, tmp_path, monkeypatch):
         adb = MagicMock(spec=ADB)
+        adb.shell.return_value = MagicMock(success=True, stdout="versionCode=2\nversionName=2.0")
         screen = SideloadScreen(adb=adb)
 
         dev = DeviceInfo(serial="DEV_123", mode="system", model="Galaxy S24", brand="Samsung")
@@ -372,17 +375,21 @@ class TestSideloadScreenUI:
             zf.writestr("META-INF/CERT.RSA", b"test signature marker")
 
         screen._on_file_selected(str(apk_path))
-        qtbot.waitUntil(lambda: not screen.is_inspecting_package())
+        qtbot.waitUntil(lambda: not screen.is_busy())
 
         assert not screen._meta_card.isHidden()
-        assert "com.example.hello" in screen._meta_pkg_lbl.text()
+        assert screen._meta_title_lbl.text() == "com.example.hello"
+        assert screen._meta_pkg_lbl.isHidden()
         assert not screen._btn_install.isEnabled()
+        screen._cached_meta.version_code = 1
         screen.set_write_armed(True)
+        assert "Downgrade" in screen._install_status.text()
+        assert not screen._btn_install.isEnabled()
+        screen._chk_downgrade.setChecked(True)
         assert screen._btn_install.isEnabled() is True
 
-        from PySide6.QtWidgets import QMessageBox
         warnings = []
-        monkeypatch.setattr(QMessageBox, "warning", lambda *args: warnings.append(args[2]))
+        monkeypatch.setattr(screen, "_show_failure", lambda title, details, **kw: warnings.append(details))
         broken = tmp_path / "broken.apk"
         broken.write_bytes(b"not an APK")
         screen._on_file_selected(str(broken))

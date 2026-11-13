@@ -1,6 +1,6 @@
 # FlashDock — Engineering Handoff & Session State
 
-- **Current Version**: `v1.7.2` (Monochrome Liquid Glass workstation)
+- **Current Version**: `v1.7.3` (Monochrome Liquid Glass workstation)
 - **Repository**: `https://github.com/klein-sys/own-flasher`
 - **Runtime**: Python 3.10–3.14 (verified on Python 3.14.7) | PySide6 (Qt 6.12) | Windows 10/11 x64
 - **Test Suite Status**: 698 tests in the publication snapshot across 57 test modules.
@@ -123,3 +123,7 @@
 ### Milestone 1.7.2 — APK integrity checks
 
 - Inspect packages off the UI thread and keep installation disabled until validation passes. Reject unreadable archive entries without modifying the selected file. Preserve the original APK when installing from a relative path.
+
+### Milestone 1.7.3 - Install review
+
+- Keep readiness and the Arm Write action visible during package selection. Compare the installed app version and review the target, package, and options before writing.

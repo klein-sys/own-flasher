@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller Specification for FlashDock v1.7.2 (Windows x64).
+PyInstaller Specification for FlashDock v1.7.3 (Windows x64).
 Bundles all UI/UX theme token & High-DPI modules, core engines, pure-Python
 binary parsers, Win32 USB/Event transports, and PySide6 Qt6Svg vector plugins.
 """

@@ -24,6 +24,7 @@ Zero raw emojis — 100% vector SVG icons.
 from __future__ import annotations
 
 import os
+import re
 import zipfile
 from pathlib import Path
 from typing import Optional
@@ -70,6 +71,21 @@ from flashdock.ui.icon_assets import create_icon_label, get_icon, get_icon_pixma
 log = get_logger(__name__)
 
 
+def _read_installed_version(adb: ADB, serial: str, package: str) -> tuple[str, int | None]:
+    """Return a version, zero for an absent package, or None if unavailable."""
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+", package):
+        return "", None
+    result = adb.shell(f"dumpsys package {package}", serial=serial, timeout=5)
+    if not result.success or not isinstance(result.stdout, str):
+        return "", None
+    if re.search(rf"(?m)^\s*Unable to find package:\s*{re.escape(package)}\s*$", result.stdout):
+        return "", 0
+    code = re.search(r"(?m)^\s*versionCode=(\d+)\b", result.stdout)
+    name = re.search(r"(?m)^\s*versionName=([^\r\n]+)", result.stdout)
+    return (name[1].strip() if name and name[1].strip() != "null" else "",
+            int(code[1]) if code else None)
+
+
 # ---------------------------------------------------------------------------
 # Background Worker for Non-Blocking Execution
 # ---------------------------------------------------------------------------
@@ -82,6 +98,7 @@ class SideloadWorker(QThread):
     operation_finished = Signal(bool, str)  # success, message
     packages_loaded = Signal(list)          # list[SideloadAppItem]
     package_inspected = Signal(str, object, str)
+    installed_version_read = Signal(object, object)
 
     def __init__(
         self,
@@ -99,6 +116,14 @@ class SideloadWorker(QThread):
         try:
             if self.action == "inspect_package":
                 self._inspect_package()
+            elif self.action == "installed_version":
+                target = self.params["target"]
+                try:
+                    version = _read_installed_version(self.manager.adb, *target)
+                except Exception:
+                    log.exception("Could not read installed app version")
+                    version = ("", None)
+                self.installed_version_read.emit(target, version)
             elif self.action == "install_single":
                 apk_path = self.params["path"]
                 flags = self.params["flags"]
@@ -330,6 +355,7 @@ class SideloadScreen(QWidget):
     """Main Universal Sideloading & App Manager screen (Phase 23)."""
 
     navigate_to_page = Signal(int)
+    write_arm_requested = Signal()
 
     def __init__(
         self,
@@ -343,11 +369,14 @@ class SideloadScreen(QWidget):
         self._manager = SideloadManager(adb=self._adb)
 
         self._current_device: Optional[DeviceInfo] = None
-        self._device_sdk = 0
         self._selected_file_path = ""
         self._cached_meta: Optional[ApkMetadata] = None
         self._package_ready = False
+        self._package_error = False
         self._inspection_worker: Optional[SideloadWorker] = None
+        self._version_worker: Optional[SideloadWorker] = None
+        self._version_target: tuple[str, str] | None = None
+        self._version_result: tuple[str, int | None] | None = None
         self._worker: Optional[SideloadWorker] = None
         self._current_theme = "dark"
         self._write_armed = False
@@ -413,9 +442,9 @@ class SideloadScreen(QWidget):
         self._setup_recovery_tab()
         self._setup_apps_tab()
 
-        self._tabs.addTab(self._tab_install, "Install Packages & Bundles")
+        self._tabs.addTab(self._tab_install, "Packages and Bundles")
         self._tabs.addTab(self._tab_recovery, "Recovery OTA Sideload")
-        self._tabs.addTab(self._tab_apps, "Installed Apps & Debloater")
+        self._tabs.addTab(self._tab_apps, "Installed Apps")
 
         root_layout.addWidget(self._tabs, 1)
 
@@ -564,9 +593,8 @@ class SideloadScreen(QWidget):
         col1 = QVBoxLayout()
         col1.setSpacing(8)
         self._chk_permissions = QCheckBox("Grant all runtime permissions automatically (-g)")
-        self._chk_permissions.setChecked(True)
         self._chk_downgrade = QCheckBox("Allow version downgrade (-d)")
-        self._chk_downgrade.setChecked(True)
+        self._chk_downgrade.toggled.connect(self._update_button_states)
         self._chk_reinstall = QCheckBox("Reinstall existing application (-r)")
         self._chk_reinstall.setChecked(True)
         col1.addWidget(self._chk_permissions)
@@ -590,10 +618,10 @@ class SideloadScreen(QWidget):
         lay.addWidget(flags_card)
 
         # 4. Install Trigger Button
-        self._btn_install = QPushButton("Install Package to Target Device")
+        self._btn_install = QPushButton("Review Install")
         self._btn_install.setIcon(get_icon("play", 16, color="#FFFFFF"))
         self._btn_install.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._btn_install.setFixedHeight(42)
+        self._btn_install.setFixedSize(148, 42)
         self._btn_install.setEnabled(False)
         self._btn_install.setStyleSheet("""
             QPushButton {
@@ -614,13 +642,22 @@ class SideloadScreen(QWidget):
             }
         """)
         self._btn_install.clicked.connect(self._on_install_clicked)
-        lay.addWidget(self._btn_install)
-
         lay.addStretch(1)
         scroll.setWidget(content)
         vbox = QVBoxLayout(self._tab_install)
         vbox.setContentsMargins(0, 0, 0, 0)
         vbox.addWidget(scroll)
+
+        footer = QHBoxLayout()
+        footer.setContentsMargins(12, 2, 12, 4)
+        self._install_status = QLabel()
+        self._install_status.setWordWrap(True)
+        footer.addWidget(self._install_status, 1)
+        self._btn_arm_install = QPushButton("Arm Write")
+        self._btn_arm_install.clicked.connect(self.write_arm_requested)
+        footer.addWidget(self._btn_arm_install)
+        footer.addWidget(self._btn_install)
+        vbox.addLayout(footer)
 
     # -----------------------------------------------------------------------
     # Tab 2: Recovery OTA Sideload
@@ -861,7 +898,6 @@ class SideloadScreen(QWidget):
     def load_for_device(self, info: Optional[DeviceInfo]) -> None:
         """Invoked when switching to this screen or device state changes."""
         self._current_device = info
-        serial = info.serial if info else ""
         if info and info.mode != "not_connected":
             dev_name = getattr(info, "display_name", None) or info.model or info.device or "Device"
             self._dev_chip.setText(f"{dev_name} [{info.mode.upper()}]")
@@ -869,18 +905,14 @@ class SideloadScreen(QWidget):
                 font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 10px;
                 background-color: rgba(166, 166, 166, 0.15); color: #A6A6A6; border: none;
             """)
-            self._device_sdk = self._manager.get_device_sdk(serial=serial) if self._device_in_mode("system") else 0
-            if self._device_sdk >= 34:
-                self._chk_bypass_low_sdk.setChecked(True)
-                self._append_log("INFO", f"Android 14+ (SDK {self._device_sdk}) detected: Low SDK bypass auto-enabled.")
-            self._update_button_states()
         else:
             self._dev_chip.setText("No Device Connected")
             self._dev_chip.setStyleSheet("""
                 font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 10px;
                 background-color: rgba(108, 108, 108, 0.15); color: #6C6C6C; border: none;
             """)
-            self._update_button_states()
+        self._refresh_installed_version()
+        self._update_button_states()
 
     def set_write_armed(self, armed: bool) -> None:
         self._write_armed = armed
@@ -899,9 +931,15 @@ class SideloadScreen(QWidget):
         self._update_button_states()
 
     def _update_button_states(self) -> None:
-        self._btn_install.setEnabled(
-            self._can_write("system") and self._package_ready and os.path.isfile(self._selected_file_path)
+        blocker = self._install_blocker()
+        self._btn_install.setEnabled(not blocker)
+        self._btn_arm_install.setVisible(
+            not self._write_armed and not self._write_in_progress
+            and self._package_ready and self._device_in_mode("system")
+            and os.path.isfile(self._selected_file_path)
         )
+        comparison = self._version_comparison()
+        self._install_status.setText(" · ".join(filter(None, (blocker, comparison))))
         self._btn_reboot_recovery.setEnabled(self._can_write("system", "recovery"))
         self._btn_sideload_ota.setEnabled(
             self._can_write("recovery", "sideload")
@@ -909,21 +947,89 @@ class SideloadScreen(QWidget):
         )
         self._on_table_selection_changed()
 
+    def _install_blocker(self) -> str:
+        if self._write_in_progress:
+            return "A device operation is in progress."
+        if self.is_inspecting_package():
+            return "Checking the selected package…"
+        if self._package_error:
+            return "Package check failed. Select a fresh copy."
+        if not self._package_ready:
+            return "Choose a package to install."
+        if not os.path.isfile(self._selected_file_path):
+            return "The package moved or was deleted. Select it again."
+        if not self._device_in_mode("system"):
+            return "Connect an authorized ADB device in Android."
+        if not self._write_armed:
+            return "Arm Write to review this install."
+        if self._version_result is None:
+            return "Checking the installed version…"
+        if self._version_comparison() == "Downgrade" and not self._chk_downgrade.isChecked():
+            return "Select Allow version downgrade to review."
+        return ""
+
+    def _version_comparison(self) -> str:
+        if not self._package_ready or self._version_result is None or not self._cached_meta:
+            return ""
+        _, installed_code = self._version_result
+        incoming_code = self._cached_meta.version_code
+        if installed_code == 0:
+            return "New install"
+        if installed_code is None or not incoming_code:
+            return "Version comparison unavailable"
+        if incoming_code > installed_code:
+            return "Update"
+        if incoming_code < installed_code:
+            return "Downgrade"
+        return "Reinstall"
+
+    def _refresh_installed_version(self) -> None:
+        target = None
+        if self._package_ready and self._cached_meta and self._device_in_mode("system"):
+            target = (self._current_device.serial, self._cached_meta.package_name)
+        if self._version_target != target:
+            self._version_target = target
+            self._version_result = None
+        if target is None or self._version_worker is not None or self._version_result is not None:
+            return
+        worker = SideloadWorker(self._manager, "installed_version", {"target": target}, self)
+        self._version_worker = worker
+        worker.installed_version_read.connect(self._receive_installed_version)
+        worker.finished.connect(self._finish_version_lookup)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    @Slot(object, object)
+    def _receive_installed_version(self, target: tuple[str, str], version: tuple[str, int | None]) -> None:
+        if target == self._version_target:
+            self._version_result = version
+            self._update_button_states()
+
+    @Slot()
+    def _finish_version_lookup(self) -> None:
+        self._version_worker = None
+        self._refresh_installed_version()
+
+    def is_busy(self) -> bool:
+        return self.is_inspecting_package() or self._version_worker is not None or self._write_in_progress
+
     @Slot(str)
     def _on_file_selected(self, file_path: str) -> None:
-        if self.is_inspecting_package():
+        if self.is_inspecting_package() or self._write_in_progress:
             return
         if Path(file_path).suffix.lower() not in self._dropzone._extensions or not os.path.isfile(file_path):
             return
         self._selected_file_path = file_path
         self._cached_meta = None
         self._package_ready = False
+        self._package_error = False
+        self._refresh_installed_version()
         self._meta_card.hide()
         self._dropzone.setEnabled(False)
-        self._update_button_states()
         self._append_log("INFO", f"Inspecting package: {Path(file_path).name}...")
         worker = SideloadWorker(self._manager, "inspect_package", {"path": file_path}, self)
         self._inspection_worker = worker
+        self._update_button_states()
         worker.package_inspected.connect(self._show_package_result)
         worker.finished.connect(self._finish_inspection)
         worker.finished.connect(worker.deleteLater)
@@ -936,16 +1042,18 @@ class SideloadScreen(QWidget):
     def _finish_inspection(self) -> None:
         self._inspection_worker = None
         self._dropzone.setEnabled(True)
+        self._refresh_installed_version()
+        self._update_button_states()
 
     @Slot(str, object, str)
     def _show_package_result(self, file_path: str, meta: Optional[ApkMetadata], error: str) -> None:
-        if meta is not None:
+        if meta is not None and not error:
             self._render_package_metadata(file_path, meta)
         self._package_ready = meta is not None and not error
-        self._update_button_states()
+        self._package_error = bool(error)
         if error:
             self._append_log("ERROR", f"Package validation failed: {error}")
-            QMessageBox.warning(self, "Package validation failed", error)
+            self._show_failure("Package check failed", error, inspection=True)
         elif meta is not None:
             self._append_log("SUCCESS", f"Package preflight passed: {meta.summary_line}")
 
@@ -953,8 +1061,10 @@ class SideloadScreen(QWidget):
         try:
             self._cached_meta = meta
 
-            self._meta_title_lbl.setText(meta.app_label or Path(file_path).stem)
+            title = meta.app_label or meta.package_name or Path(file_path).stem
+            self._meta_title_lbl.setText(title)
             self._meta_pkg_lbl.setText(meta.package_name)
+            self._meta_pkg_lbl.setVisible(bool(meta.package_name and meta.package_name != title))
 
             type_label = "Split Bundle (.xapk)" if meta.is_split else "Single APK"
             splits_info = f" ({len(meta.split_names)} splits)" if meta.split_names else ""
@@ -994,8 +1104,7 @@ class SideloadScreen(QWidget):
 
     @Slot()
     def _on_install_clicked(self) -> None:
-        if (not self._can_write("system") or not self._package_ready
-                or not os.path.isfile(self._selected_file_path)):
+        if self._install_blocker() or not self._cached_meta:
             return
 
         flags = SideloadFlags(
@@ -1007,9 +1116,19 @@ class SideloadScreen(QWidget):
             install_user_0=self._chk_user_0.isChecked(),
         )
 
-        serial = self._current_device.serial if self._current_device else ""
-        is_split = (self._cached_meta and self._cached_meta.is_split) or (Path(self._selected_file_path).suffix.lower() in (".xapk", ".apks", ".apkm"))
-        action = "install_split" if is_split else "install_single"
+        device = self._current_device
+        serial = device.serial
+        path = self._selected_file_path
+        meta = self._cached_meta
+        version = self._version_result
+        if not self._confirm_install(device, path, meta, flags):
+            return
+        if (self._install_blocker() or self._current_device.serial != serial
+                or self._selected_file_path != path or self._cached_meta is not meta
+                or self._version_result != version):
+            self._append_log("WARN", "Install canceled because the target or package changed during review.")
+            return
+        action = "install_split" if meta.is_split else "install_single"
 
         self._write_in_progress = True
         self._update_button_states()
@@ -1018,13 +1137,71 @@ class SideloadScreen(QWidget):
         self._worker = SideloadWorker(
             manager=self._manager,
             action=action,
-            params={"path": self._selected_file_path, "flags": flags, "serial": serial},
+            params={"path": path, "flags": flags, "serial": serial},
             parent=self,
         )
         self._worker.log_emitted.connect(self._append_log)
         self._worker.operation_finished.connect(self._on_install_finished)
         self._worker.finished.connect(self._finish_write)
         self._worker.start()
+
+    def _confirm_install(self, device: DeviceInfo, path: str, meta: ApkMetadata, flags: SideloadFlags) -> bool:
+        installed_name, installed_code = self._version_result
+        installed = "Unavailable"
+        if installed_code == 0:
+            installed = "Not installed"
+        elif installed_code is not None:
+            installed = f"{installed_name or 'Unknown version'} (code {installed_code})"
+        incoming = f"{meta.version_name or 'Unknown version'} (code {meta.version_code or 'unknown'})"
+        options = [
+            label for enabled, label in (
+                (flags.reinstall, "Replace existing app"),
+                (flags.grant_permissions, "Grant runtime permissions"),
+                (flags.allow_downgrade, "Allow version downgrade"),
+                (flags.bypass_low_sdk_block, "Allow legacy target SDK"),
+                (flags.install_user_0, "Primary user only"),
+                (flags.allow_test_packages, "Allow test packages"),
+            ) if enabled
+        ]
+        name = getattr(device, "display_name", None) or device.model or device.device or "Android device"
+        box = QMessageBox(self)
+        box.setWindowTitle("Review Install")
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setTextFormat(Qt.TextFormat.PlainText)
+        box.setText(self._version_comparison())
+        box.setInformativeText(
+            f"Device: {name} ({device.serial})\n"
+            f"File: {Path(path).name}\n"
+            f"Package: {meta.package_name or 'Unavailable'}\n"
+            f"Incoming version: {incoming}\n"
+            f"Installed version: {installed}\n"
+            f"Options: {', '.join(options) or 'None'}"
+        )
+        cancel = box.addButton(QMessageBox.StandardButton.Cancel)
+        install = box.addButton("Install", QMessageBox.ButtonRole.AcceptRole)
+        box.setDefaultButton(cancel)
+        box.exec()
+        return box.clickedButton() is install
+
+    def _show_failure(self, title: str, details: str, *, inspection: bool = False) -> None:
+        error = details.lower()
+        if any(word in error for word in ("certificate", "signature", "signing", "update_incompatible")):
+            summary = "Android could not verify the package or its signing identity. Use a trusted copy signed by the app publisher."
+        elif inspection:
+            summary = "FlashDock could not validate this package. Select a fresh copy from a trusted source."
+        elif any(word in error for word in ("insufficient_storage", "insufficient free", "no space")):
+            summary = "Free up internal storage on the phone and try again."
+        elif any(word in error for word in ("offline", "not found", "disconnected", "unauthorized", "no devices")):
+            summary = "Reconnect the phone and accept the USB debugging prompt if it appears."
+        else:
+            summary = "The device could not finish installing this package."
+        box = QMessageBox(QMessageBox.Icon.Warning, title, summary, QMessageBox.StandardButton.Ok, self)
+        box.setTextFormat(Qt.TextFormat.PlainText)
+        box.setDetailedText(details)
+        copy = QPushButton("Copy Details", box)
+        box.addButton(copy, QMessageBox.ButtonRole.ActionRole)
+        copy.clicked.connect(lambda: QApplication.clipboard().setText(details))
+        box.exec()
 
     @Slot(bool, str)
     def _on_install_finished(self, success: bool, message: str) -> None:
@@ -1033,11 +1210,13 @@ class SideloadScreen(QWidget):
         self._update_button_states()
 
         if success:
+            self._version_result = None
+            self._refresh_installed_version()
             self._append_log("SUCCESS", f"Installation finished: {message}")
             QMessageBox.information(self, "Installation Complete", message)
         else:
             self._append_log("ERROR", f"Installation failed: {message}")
-            QMessageBox.warning(self, "Installation Failed", message)
+            self._show_failure("Installation Failed", message)
 
     # -----------------------------------------------------------------------
     # Recovery OTA Logic

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.7.2-555555.svg?style=flat-square" alt="Version 1.7.2"></a>
+  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.7.3-555555.svg?style=flat-square" alt="Version 1.7.3"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-30D158.svg?style=flat-square" alt="License MIT"></a>
   <a href="tests/"><img src="https://img.shields.io/badge/tests-698%20%2F%20698%20passing-30D158.svg?style=flat-square" alt="Tests 698/698 Passing"></a>
   <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-Monochrome%20Liquid%20Glass-555555.svg?style=flat-square" alt="Monochrome Liquid Glass"></a>
@@ -28,6 +28,8 @@ The write switch starts Safe and locks write-capable screens until armed. Changi
 Version 1.7.1 lets you drop or browse for Android packages and recovery ZIPs in Write: Safe. Arm Write and connect in the appropriate ADB mode to install a package or apply an OTA.
 
 Version 1.7.2 validates packages in the background. Damaged packages stay blocked and FlashDock asks for a fresh copy.
+
+Version 1.7.3 keeps install readiness visible, compares app versions, and reviews the selected device and options before installing.
 
 The SVG source pack can be regenerated with `python scripts/generate_bw_icons.py`. Its assets and the glass stylesheet are included in the Windows bundle.
 
@@ -312,11 +314,11 @@ python -m pytest tests/ -q
 python scripts/release_build.py
 ```
 
-### Verification Results (v1.7.2)
+### Verification Results (v1.7.3)
 
 * The published source snapshot contains 698 tests across 57 test modules.
-* The unsigned Windows build is at `dist/liquid-glass-v1.7.2/FlashDock_Dist/FlashDock.exe`.
-* The release archive is `dist/FlashDock-v1.7.2-windows-x64.zip`. SHA-256 hashes are recorded in `dist/SHA256SUMS.txt`.
+* The unsigned Windows build is at `dist/liquid-glass-v1.7.3/FlashDock_Dist/FlashDock.exe`.
+* The release archive is `dist/FlashDock-v1.7.3-windows-x64.zip`. SHA-256 hashes are recorded in `dist/SHA256SUMS.txt`.
 * Both themes were visually checked at 1260×780 and the dashboard at 900×600. Previews use sample device telemetry.
 * Native compositor appearance requires a live Windows visual check. Long tool forms and data lists retain scrolling.
 

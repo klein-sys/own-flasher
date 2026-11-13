@@ -760,6 +760,7 @@ class MainWindow(QMainWindow):
             parent=page,
         )
         self._sideload_screen.navigate_to_page.connect(self._stack.setCurrentIndex)
+        self._sideload_screen.write_arm_requested.connect(self._arm_sideload_write)
         page_layout.addWidget(self._sideload_screen, 1)
 
         self._stack.addWidget(page)
@@ -809,6 +810,11 @@ class MainWindow(QMainWindow):
         self._search_input.clear()
         self._sort_combo.setCurrentIndex(0)
         self._filter_tools()
+
+    @Slot()
+    def _arm_sideload_write(self) -> None:
+        if self._island.write_switch.isEnabled():
+            self._island.write_switch.set_armed(True)
 
     @Slot(bool)
     def _apply_write_safety(self, armed: bool) -> None:
@@ -1427,8 +1433,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:  # noqa: N802
         """Save window geometry and stop background threads."""
-        if self._sideload_screen.is_inspecting_package():
-            QMessageBox.information(self, "Package inspection", "Wait for package inspection to finish before closing FlashDock.")
+        if self._sideload_screen.is_busy():
+            QMessageBox.information(self, "Sideload in progress", "Wait for the current sideload operation to finish before closing FlashDock.")
             event.ignore()
             return
         if is_flash_locked():

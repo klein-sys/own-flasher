@@ -1,4 +1,4 @@
-# FlashDock v1.7.2 — Runtime, Packaging & Verification Dependencies
+# FlashDock v1.7.3 — Runtime, Packaging & Verification Dependencies
 # Compatible with Python 3.10 - 3.14 (Verified on Python 3.14.7 / Windows 10 & 11 x64)
 
 PySide6>=6.8.0,<6.13.0
