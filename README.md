@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/klein-sys/own-flasher"><img src="https://img.shields.io/badge/version-1.7.3-555555.svg?style=flat-square" alt="Version 1.7.3"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/source-1.7.3-555555.svg?style=flat-square" alt="Source version 1.7.3"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-30D158.svg?style=flat-square" alt="License MIT"></a>
   <a href="tests/"><img src="https://img.shields.io/badge/tests-698%20%2F%20698%20passing-30D158.svg?style=flat-square" alt="Tests 698/698 Passing"></a>
   <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-Monochrome%20Liquid%20Glass-555555.svg?style=flat-square" alt="Monochrome Liquid Glass"></a>
@@ -18,6 +18,10 @@
 </p>
 
 ---
+
+**Start here** · [GitHub downloads](https://github.com/klein-sys/own-flasher/releases) · [Run from source](#option-b-run-from-source) · [Version history](CHANGELOG.md)
+
+To sideload an app, connect an authorized Android device and open **Sideload & App Manager → Packages and Bundles**. Drop or browse for a package, wait for validation, then select **Arm Write → Review Install**. Check the target phone, versions, and installation options before confirming.
 
 ## Monochrome Liquid Glass workstation
 
@@ -46,7 +50,7 @@ The SVG source pack can be regenerated with `python scripts/generate_bw_icons.py
 | **Protocol Handshakes** | Pure-Python Win32 Transport (`ctypes`) | Zero-dependency Qualcomm Sahara Hello (`0x01`), MediaTek BROM 4-byte echo (`0xA0..0x05` -> `0x5F..0xFA`), and Unisoc HDLC (`0x7E` + CRC-16/XMODEM). |
 | **Hardware Events** | Win32 `WM_DEVICECHANGE` Broadcasts | Instant (<50ms) hardware arrival/removal detection (`DBT_DEVICEARRIVAL`, `DBT_DEVICEREMOVECOMPLETE`) replacing idle registry polling. |
 | **Zero-Copy Streaming** | Python `mmap.mmap` + `memoryview` | Zero-copy slicing for multi-GB OTA `payload.bin` and Samsung `.img.lz4` firmware archives. |
-| **Distribution & Security** | PyInstaller, Authenticode SHA-256 | Standalone Windows executable distribution, Zone.Identifier unblocker scripts, and Smart App Control compliance. |
+| **Distribution** | PyInstaller | Standalone Windows builds. Consult the release notes for signing and checksum information. |
 
 ---
 
@@ -217,7 +221,7 @@ FlashDock/
 │   ├── apply_v150_hardening.py # AST-verified codebase hardening & integration script
 │   ├── release_build.py      # Automated build, test, signing, and ZIP packaging
 │   ├── sign_app.ps1          # Authenticode SHA-256 certificate generation & signing
-│   └── version_info.txt      # Windows PE version resource descriptor (1.5.0.0)
+│   └── version_info.txt      # Windows executable version resource
 ├── tests/                    # 611 unit, integration & binary fuzzing tests across 50 modules
 ├── RELEASE_NOTES_v1.5.0.md   # Official v1.5.0 release notes & architectural change manifest
 ├── main.py                   # Application entry point
@@ -232,13 +236,13 @@ FlashDock/
 ### Prerequisites
 * **Operating System**: Windows 10 (Build 19041+) or Windows 11 (64-bit).
 * **Hardware Connection**: Quality USB 2.0 or USB 3.0 cable connected directly to the motherboard port (avoid unpowered USB hubs).
-* **Android Prerequisites**: `USB Debugging` and `OEM Unlocking` enabled under *Settings > Developer Options*.
+* **Android prerequisites**: Enable USB debugging for ADB features and authorize the computer on the phone. Bootloader workflows have their own device-specific requirements.
 
 ---
 
 ### Option A: Standalone Windows Binary
 
-Download and extract a Windows package from [GitHub Releases](https://github.com/klein-sys/own-flasher/releases), then open `FlashDock.exe`. If Windows Smart App Control blocks the executable, use the source setup below. A standalone build for Smart App Control needs a signature from a trusted publisher.
+Check [GitHub Releases](https://github.com/klein-sys/own-flasher/releases) for the published Windows ZIP and its version. Extract the entire ZIP, then open `FlashDock.exe` from the extracted folder. Use the source setup below to run the current source version or if Smart App Control blocks the executable.
 
 ---
 
@@ -266,7 +270,7 @@ After setup, double-click `Run-Via-Python.bat` to open FlashDock from the checko
 
 ## Recommended Safe Workflow
 
-To guarantee zero-brick operations, follow FlashDock's recommended 5-step lifecycle:
+Follow this workflow to reduce the risk of data loss or a failed flash.
 
 ```text
 [Step 1: Diagnose] ──► [Step 2: Pre-Flight] ──► [Step 3: Backup EFS] ──► [Step 4: Unlock/Flash] ──► [Step 5: Verify]
@@ -316,9 +320,7 @@ python scripts/release_build.py
 
 ### Verification Results (v1.7.3)
 
-* The published source snapshot contains 698 tests across 57 test modules.
-* The unsigned Windows build is at `dist/liquid-glass-v1.7.3/FlashDock_Dist/FlashDock.exe`.
-* The release archive is `dist/FlashDock-v1.7.3-windows-x64.zip`. SHA-256 hashes are recorded in `dist/SHA256SUMS.txt`.
+* All 698 automated tests passed on the v1.7.3 source snapshot. Sideload tests use simulated devices.
 * Both themes were visually checked at 1260×780 and the dashboard at 900×600. Previews use sample device telemetry.
 * Native compositor appearance requires a live Windows visual check. Long tool forms and data lists retain scrolling.
 
