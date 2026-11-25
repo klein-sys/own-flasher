@@ -19,7 +19,7 @@
 
 ---
 
-**Start here** · [GitHub downloads](https://github.com/klein-sys/own-flasher/releases) · [Run from source](#option-b-run-from-source) · [Version history](CHANGELOG.md)
+**Start here** · [GitHub downloads](https://github.com/klein-sys/own-flasher/releases) · [Run from source](#option-b-run-from-source) · [Version history](CHANGELOG.md) · [v1.8 roadmap](V1.8-PLAN.md)
 
 To sideload an app, connect an authorized Android device and open **Sideload & App Manager → Packages and Bundles**. Drop or browse for a package, wait for validation, then select **Arm Write → Review Install**. Check the target phone, versions, and installation options before confirming.
 
