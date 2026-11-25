@@ -1,6 +1,6 @@
 # FlashDock — Engineering Handoff & Session State
 
-- **Current Version**: `v1.7.3` (Monochrome Liquid Glass workstation)
+- **Current Version**: `v1.7.4` (Monochrome Liquid Glass workstation)
 - **Repository**: `https://github.com/klein-sys/own-flasher`
 - **Runtime**: Python 3.10–3.14 (verified on Python 3.14.7) | PySide6 (Qt 6.12) | Windows 10/11 x64
 - **Test Suite Status**: 698 tests in the publication snapshot across 57 test modules.
@@ -127,3 +127,8 @@
 ### Milestone 1.7.3 - Install review
 
 - Keep readiness and the Arm Write action visible during package selection. Compare the installed app version and review the target, package, and options before writing.
+
+### Milestone 1.7.4 — Windows distribution and developer handoff
+
+- Run `Setup-FlashDock.bat` then `build.bat` in a clean source folder. The build verifies tests, stages the Windows runtime, and keeps a previous build in `dist/archive/` when replacing it.
+- The Windows and developer ZIPs have separate quick starts and a shared release checksum file. Read [DEVELOPER-SETUP.md](DEVELOPER-SETUP.md) to continue work on another PC.

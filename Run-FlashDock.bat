@@ -1,17 +1,15 @@
 @echo off
 setlocal
-title FlashDock Workstation Launcher
 cd /d "%~dp0"
+if exist "%~dp0dist\FlashDock_Dist\FlashDock.exe" goto repository
+if exist "%~dp0FlashDock.exe" goto extracted
+echo [ERROR] FlashDock.exe was not found. Extract the full Windows ZIP or run build.bat from the source checkout.
+exit /b 1
 
-echo [FlashDock] Initializing workstation launcher...
-rem Unblock all binaries in this directory to clear Windows Mark-of-the-Web (Zone.Identifier)
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-ChildItem -Path '%~dp0' -Recurse -ErrorAction SilentlyContinue | Unblock-File" >nul 2>&1
+:repository
+start "" /d "%~dp0dist\FlashDock_Dist" "%~dp0dist\FlashDock_Dist\FlashDock.exe" %*
+exit /b
 
-if exist "FlashDock.exe" (
-    start "" "%~dp0FlashDock.exe" %*
-    exit /b 0
-) else (
-    echo [ERROR] FlashDock.exe not found in %~dp0
-    pause
-    exit /b 1
-)
+:extracted
+start "" /d "%~dp0." "%~dp0FlashDock.exe" %*
+exit /b

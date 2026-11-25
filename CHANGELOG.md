@@ -2,6 +2,12 @@
 
 See [GitHub Releases](https://github.com/klein-sys/own-flasher/releases) for published downloads and release notes.
 
+## v1.7.4
+
+- Publish separate Windows x64 and developer ZIPs with SHA-256 checksums.
+- Use a single local packaged executable path and a launcher that works from a checkout or an extracted ZIP.
+- Add project-local Python setup and stage builds before replacing the current output.
+
 ## v1.7.3
 
 - Keep install readiness and **Arm Write** visible while scrolling through package options.

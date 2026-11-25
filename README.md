@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/source-1.7.3-555555.svg?style=flat-square" alt="Source version 1.7.3"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/source-1.7.4-555555.svg?style=flat-square" alt="Source version 1.7.4"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-30D158.svg?style=flat-square" alt="License MIT"></a>
   <a href="tests/"><img src="https://img.shields.io/badge/tests-698%20%2F%20698%20passing-30D158.svg?style=flat-square" alt="Tests 698/698 Passing"></a>
   <a href="flashdock/ui/styles.py"><img src="https://img.shields.io/badge/architecture-Monochrome%20Liquid%20Glass-555555.svg?style=flat-square" alt="Monochrome Liquid Glass"></a>
@@ -78,7 +78,7 @@ Designed specifically for personal device ownership, development, and enthusiast
 * **Root Modules Manager**: Inspects `/data/adb/modules`, toggles modules, and provides an Emergency Bootloop Kill-Switch (`.disable`).
 
 ### 3. Unisoc 1-Click Token Unlocker & Anti-Red-State Shield
-* **Pure-Python Cryptographic Signer**: Queries `fastboot oem get_identifier_token` on Unisoc/Spreadtrum devices (Tecno Pop, Infinix Smart, itel, Realme C, Motorola E), signs the 64-character token using an integrated RSA-2048 community private key via PKCS#1 v1.5 with SHA-256, and dispatches `fastboot flashing unlock_bootloader signature.bin`.
+* **Unisoc token utilities**: The source includes RSA token-handling utilities. The Windows distribution includes no usable built-in private signing key.
 * **Anti-Red-State Shield**: One-click deployment of custom disabled `vbmeta.img` (`fastboot --disable-verity --disable-verification flash vbmeta vbmeta.img`) to prevent immediate bootloops upon unlocking.
 * **Transsion OEM Integration**: Integrated directly into Tecno, Infinix, and itel brand workflow guides.
 
@@ -242,29 +242,13 @@ FlashDock/
 
 ### Option A: Standalone Windows Binary
 
-Check [GitHub Releases](https://github.com/klein-sys/own-flasher/releases) for the published Windows ZIP and its version. Extract the entire ZIP, then open `FlashDock.exe` from the extracted folder. Use the source setup below to run the current source version or if Smart App Control blocks the executable.
+Get the **Windows x64 ZIP** from [GitHub Releases](https://github.com/klein-sys/own-flasher/releases/latest). Extract the entire ZIP, then open `FlashDock.exe` or `Run-FlashDock.bat`. See the [Windows quick start](WINDOWS-QUICKSTART.md) for checksums, Platform-Tools, and the source fallback if Windows blocks the unsigned build.
 
 ---
 
 ### Option B: Run from Source
 
-```powershell
-# 1. Clone the repository
-git clone https://github.com/klein-sys/own-flasher.git
-cd own-flasher
-
-# 2. Create and activate a clean virtual environment
-python -m venv .venv
-.venv\Scripts\activate
-
-# 3. Install core dependencies
-pip install -r requirements.txt
-
-# 4. Launch FlashDock
-.\Run-Via-Python.bat
-```
-
-After setup, double-click `Run-Via-Python.bat` to open FlashDock from the checkout. The launcher prefers the project's `.venv`, then checks the Windows Python launcher and the Python on your PATH.
+Download the **developer ZIP** from [GitHub Releases](https://github.com/klein-sys/own-flasher/releases/latest) or clone the repository for Git history. Install Python x64, run `Setup-FlashDock.bat` from the new folder, then open `Run-Via-Python.bat`. The [developer setup guide](DEVELOPER-SETUP.md) covers testing, rebuilding, and continuing work on another PC.
 
 ---
 
@@ -312,15 +296,15 @@ FlashDock maintains an automated test suite covering all core engines, toolchain
 
 ```powershell
 # Run the complete test suite
-python -m pytest tests/ -q
+.\.venv\Scripts\python.exe -m pytest tests/ -q
 
 # Run automated release verification & compilation
-python scripts/release_build.py
+.\build.bat
 ```
 
-### Verification Results (v1.7.3)
+### Verification Results
 
-* All 698 automated tests passed on the v1.7.3 source snapshot. Sideload tests use simulated devices.
+* All 698 automated tests passed on the v1.7.4 release snapshot. Sideload tests use simulated devices.
 * Both themes were visually checked at 1260×780 and the dashboard at 900×600. Previews use sample device telemetry.
 * Native compositor appearance requires a live Windows visual check. Long tool forms and data lists retain scrolling.
 

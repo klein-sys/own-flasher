@@ -14,7 +14,7 @@ from pathlib import Path
 # Application metadata
 # ---------------------------------------------------------------------------
 APP_NAME = "FlashDock"
-APP_VERSION = "1.7.3"
+APP_VERSION = "1.7.4"
 APP_AUTHOR = "FlashDock Contributors"
 APP_DESCRIPTION = (
     "Personal, one-click Android service toolbox for Windows."
