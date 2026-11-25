@@ -7,6 +7,14 @@
 
 The Windows ZIP runs without a separate Python installation. FlashDock creates local settings in `%LOCALAPPDATA%\FlashDock` on first launch.
 
-This executable is unsigned. If Windows blocks it, use the developer ZIP and follow [the source setup](https://github.com/klein-sys/own-flasher#option-b-run-from-source).
+## If Smart App Control blocks the executable
+
+The v1.7.4 executable is unsigned. `Run-FlashDock.bat` points to that same executable. Use the portable source launcher from the developer ZIP:
+
+1. Extract `FlashDock-v1.7.4-developer.zip` into a separate folder.
+2. Install supported 64-bit Python and run `Setup-FlashDock.bat` in that folder.
+3. Open `Run-Via-Python.bat` from the same folder.
+
+Setup and source launch were verified on Windows 11 x64. See the [developer setup guide](https://github.com/klein-sys/own-flasher/blob/main/DEVELOPER-SETUP.md) for details and [Microsoft's Smart App Control guidance](https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions) for publisher verification.
 
 Get the current Windows and developer downloads from [GitHub Releases](https://github.com/klein-sys/own-flasher/releases/latest).

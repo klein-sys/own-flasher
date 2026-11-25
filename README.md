@@ -244,6 +244,8 @@ FlashDock/
 
 Get the **Windows x64 ZIP** from [GitHub Releases](https://github.com/klein-sys/own-flasher/releases/latest). Extract the entire ZIP, then open `FlashDock.exe` or `Run-FlashDock.bat`. See the [Windows quick start](WINDOWS-QUICKSTART.md) for checksums, Platform-Tools, and the source fallback if Windows blocks the unsigned build.
 
+If you see **Smart App Control blocked an app**, use **Option B** below. The v1.7.4 executable is unsigned, and its batch launcher opens the same executable.
+
 ---
 
 ### Option B: Run from Source
@@ -305,6 +307,7 @@ FlashDock maintains an automated test suite covering all core engines, toolchain
 ### Verification Results
 
 * All 698 automated tests passed on the v1.7.4 release snapshot. Sideload tests use simulated devices.
+* The developer ZIP was extracted into a fresh folder on Windows 11 x64. Setup, source launch, tests, and rebuilding the Windows ZIP passed there. Smart App Control blocked the unsigned packaged executable on that PC, and physical USB workflows are still unverified.
 * Both themes were visually checked at 1260×780 and the dashboard at 900×600. Previews use sample device telemetry.
 * Native compositor appearance requires a live Windows visual check. Long tool forms and data lists retain scrolling.
 
