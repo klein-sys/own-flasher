@@ -1,5 +1,7 @@
 # Run FlashDock on Windows
 
+For Windows 10 Pro x64, see the [Windows 10 download and setup guide](https://github.com/klein-sys/own-flasher/blob/main/WINDOWS-10-QUICKSTART.md).
+
 1. Download the Windows x64 ZIP and its SHA-256 checksum from the same GitHub release.
 2. In PowerShell, run `Get-FileHash .\FlashDock-v1.7.4-windows-x64.zip -Algorithm SHA256` and compare the result with the published checksum.
 3. Extract the entire ZIP into a folder you can write to. Open `FlashDock.exe` or `Run-FlashDock.bat` in that folder. Keep the `_internal` directory beside the executable.
